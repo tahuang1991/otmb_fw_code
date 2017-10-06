@@ -247,7 +247,7 @@
 
   ) ummcm_main (
 
-  .CLKIN1          (tmb_clock0_ibufg),  // In  1-bit Primary clock
+  .CLKIN1          (tmb_clock0d),  // In  1-bit Primary clock
   .CLKIN2          (1'b0),        // In  1-bit Secondary clock
   .CLKINSEL        (1'b1),        // In  1-bit Clock select: 1=primary 0=secondary
         

@@ -546,18 +546,18 @@
   output  [1:0]      mpc_reserved_vme;  // MPC reserved latched for VME
 
 // MPC Injector
-  input          mpc_inject;      // Start MPC test pattern injector, VME
-  input          ttc_mpc_inject;    // Start MPC injector, TTC command
-  input          ttc_mpc_inj_en;    // Enable TTC inject command
-  input  [7:0]      mpc_nframes;    // Number frames to inject
-  input  [3:0]      mpc_wen;      // Select RAM to write
-  input  [3:0]      mpc_ren;      // Select RAM to read 
-  input  [7:0]      mpc_adr;      // Injector RAM read/write address
-  input  [15:0]      mpc_wdata;      // Injector RAM write data
-  output  [15:0]      mpc_rdata;      // Injector RAM read  data
-  output  [3:0]      mpc_accept_rdata;  // MPC response stored in RAM
-  input          mpc_inj_alct_bx0;  // ALCT bx0 injector
-  input          mpc_inj_clct_bx0;  // CLCT bx0 injector
+  input          mpc_inject;       // Start MPC test pattern injector, VME
+  input          ttc_mpc_inject;   // Start MPC injector, TTC command
+  input          ttc_mpc_inj_en;   // Enable TTC inject command
+  input  [7:0]   mpc_nframes;      // Number frames to inject
+  input  [3:0]   mpc_wen;          // Select RAM to write
+  input  [3:0]   mpc_ren;          // Select RAM to read
+  input  [7:0]   mpc_adr;          // Injector RAM read/write address
+  input  [15:0]  mpc_wdata;        // Injector RAM write data
+  output [15:0]  mpc_rdata;        // Injector RAM read  data
+  output [3:0]   mpc_accept_rdata; // MPC response stored in RAM
+  input          mpc_inj_alct_bx0; // ALCT bx0 injector
+  input          mpc_inj_clct_bx0; // CLCT bx0 injector
 
 // Status
   output          alct_vpf_tp;    // Timing test point, FF buffered for IOBs
@@ -1501,7 +1501,7 @@
   else begin
   case (mpc_sm)
   pass:      if (mpc_inj_start ) mpc_sm <= start;
-  start:               mpc_sm <= injecting;
+  start:                         mpc_sm <= injecting;
   injecting: if (mpc_frame_done) mpc_sm <= hold;
   hold:      if (!mpc_inj_start) mpc_sm <= pass;
   default                        mpc_sm <= pass;
