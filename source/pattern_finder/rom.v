@@ -4,31 +4,42 @@ module rom (
   output [MXDATB-1:0] rd0, rd1
 );
 
+//----------------------------------------------------------------------------------------------------------------------
+// Parameters
+//----------------------------------------------------------------------------------------------------------------------
+
 parameter FALLING_EDGE = 0;
+parameter MXADRB       = 12;
+parameter MXDATB       = 9;
+parameter ROMLENGTH    = 1 << MXADRB;
+parameter ROM_FILE     = "../source/pattern_finder/default.dat";
 
-parameter MXADRB  = 12;
-parameter MXDATB  = 9;
-
-parameter ROMLENGTH = 1 << MXADRB;
-
-parameter ROM_FILE = "default.dat";
+//----------------------------------------------------------------------------------------------------------------------
+// Signals
+//----------------------------------------------------------------------------------------------------------------------
 
 reg [MXDATB-1:0] rom [ROMLENGTH-1:0];
-
 reg [MXDATB-1:0] rd_data0, rd_data1;
-
-wire we = 0;
 wire [MXDATB-1:0] din = 0;
-
+wire we = 0;
 wire logic_clock;
+
 generate
 if (FALLING_EDGE) assign logic_clock = ~clock;
 else              assign logic_clock =  clock;
 endgenerate
 
+//----------------------------------------------------------------------------------------------------------------------
+// Read in ROM File
+//----------------------------------------------------------------------------------------------------------------------
+
 initial begin
-  $readmemh(ROM_FILE, rom) ;
+  $readmemh(ROM_FILE, rom);
 end
+
+//----------------------------------------------------------------------------------------------------------------------
+// ROM
+//----------------------------------------------------------------------------------------------------------------------
 
 always @(posedge logic_clock) begin
   if (we)      rom[adr0[MXADRB-1:0]]<=din;  // dummy write to help Xilinx infer a dual port block RAM

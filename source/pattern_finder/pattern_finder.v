@@ -1,7 +1,5 @@
 `timescale 1ns / 1ps
 
-
-
 //`define DEBUG_PATTERN_FINDER  // Turn on debug mode
 //-------------------------------------------------------------------------------------------------------------------
 // Conditional compile flags, normally set by global defines. Override here for standalone debugging
@@ -82,15 +80,17 @@ module pattern_finder (
 
   hs_qlt_1st,
   hs_bnd_1st,
-  hs_qky_1st,
+  hs_car_1st,
+  hs_xky_1st,
 
   hs_hit_2nd,
   hs_pid_2nd,
+  hs_car_2nd,
   hs_key_2nd,
 
   hs_qlt_2nd,
   hs_bnd_2nd,
-  hs_qky_2nd,
+  hs_xky_2nd,
 
   hs_bsy_2nd,
 
@@ -199,17 +199,19 @@ module pattern_finder (
   output [MXPIDB - 1: 0]  hs_pid_1st; // 1st CLCT pattern ID
   output [MXKEYBX - 1: 0] hs_key_1st; // 1st CLCT key 1/2-strip
 
-  output [MXQLTB - 1 : 0] hs_qlt_1st;
-  output [MXBNDB - 1 : 0] hs_bnd_1st;
-  output [MXKEYBX    : 0] hs_qky_1st;
+  output [MXQLTB     - 1 : 0] hs_qlt_1st;
+  output [MXBNDB     - 1 : 0] hs_bnd_1st;
+  output [MXPATC     - 1 : 0] hs_car_1st;
+  output [MXSUBKEYBX - 1 : 0] hs_xky_1st;
 
   output [MXHITB - 1: 0]  hs_hit_2nd; // 2nd CLCT pattern hits
   output [MXPIDB - 1: 0]  hs_pid_2nd; // 2nd CLCT pattern ID
   output [MXKEYBX - 1: 0] hs_key_2nd; // 2nd CLCT key 1/2-strip
 
-  output [MXQLTB - 1 : 0] hs_qlt_2nd;
-  output [MXBNDB - 1 : 0] hs_bnd_2nd;
-  output [MXKEYBX    : 0] hs_qky_2nd;
+  output [MXQLTB     - 1 : 0] hs_qlt_2nd;
+  output [MXBNDB     - 1 : 0] hs_bnd_2nd;
+  output [MXPATC     - 1 : 0] hs_car_2nd;
+  output [MXSUBKEYBX - 1 : 0] hs_xky_2nd;
 
   output                  hs_bsy_2nd; // 2nd CLCT busy, logic error indicator
 
@@ -325,9 +327,9 @@ module pattern_finder (
   reg [2: 0] purge_cnt = 0;
 
   always @(posedge clock) begin
-    if (reset) purge_cnt <= 0;
+    if      (reset)             purge_cnt <= 0;
     else if (purge_sm == purge) purge_cnt <= purge_cnt + 1'b1;
-    else purge_cnt <= 0;
+    else                        purge_cnt <= 0;
   end
 
   wire purge_done = (purge_cnt == 7);
@@ -726,14 +728,12 @@ module pattern_finder (
   // S0 latch: realign with main clock, legacy to maintain sequencer timing
   reg [MXHITB - 1:0] hs_hit_s0   [MXHSX - 1:0];
   reg [MXPIDB - 1:0] hs_pid_s0   [MXHSX - 1:0];
-  reg [MXPATC - 1:0] hs_carry_s0 [MXHSX - 1:0];
 
   generate
     for (ihs = 0; ihs <= MXHSX - 1; ihs = ihs + 1) begin: store_s0
       always @(posedge clock) begin
         hs_hit_s0  [ihs] <= hs_hit_s0ab  [ihs];
         hs_pid_s0  [ihs] <= hs_pid_s0ab  [ihs];
-        hs_carry_s0[ihs] <= hs_carry_s0ab[ihs];
       end
     end
   endgenerate
@@ -751,11 +751,13 @@ module pattern_finder (
 
   // Convert s0 pattern IDs and hits into sort-able pattern numbers, [6:4]=nhits, [3:0]=pattern id
   wire [MXPATB - 1: 0] hs_pat_s0 [MXHSX - 1: 0];
+  wire [MXPATC - 1:0]  hs_carry_s0 [MXHSX - 1:0];
 
   // if using the pattern LUT, bypass the sequencer legacy latch to maintain timing
   generate
     for (ihs = 0; ihs <= MXHSX - 1; ihs = ihs + 1) begin: patcat
-      assign hs_pat_s0[ihs] = (PATLUT) ? {hs_hit_s0ab[ihs], hs_pid_s0ab[ihs]} : {hs_hit_s0[ihs], hs_pid_s0[ihs]};
+      assign hs_pat_s0  [ihs] = (PATLUT) ? {hs_hit_s0ab[ihs], hs_pid_s0ab[ihs]} : {hs_hit_s0[ihs], hs_pid_s0[ihs]};
+      assign hs_carry_s0[ihs] = hs_carry_s0ab[ihs];
     end
   endgenerate
 
@@ -894,15 +896,40 @@ module pattern_finder (
 //-------------------------------------------------------------------------------------------------------------------
 
   // Best 7 of 224 1/2-strip patterns
+
   wire [MXPATB - 1: 0] hs_pat_s1   [6: 0];
   wire [MXKEYB - 1: 0] hs_key_s1   [6: 0]; // partial key for 1 of 32
+  wire [MXPATC-1:0]    hs_carry_s1      [6:0];
+  reg [MXPATB - 1: 0] hs_pat_s1_dly1   [6: 0];
+  reg [MXKEYB - 1: 0] hs_key_s1_dly1   [6: 0]; // partial key for 1 of 32
+  reg  [MXPATC - 1: 0] hs_carry_s1_dly1 [6:0];
+  wire [MXPATB - 1: 0] hs_pat_s1_to_1of7   [6: 0];
+  wire [MXKEYB - 1: 0] hs_key_s1_to_1of7   [6: 0]; // partial key for 1 of 32
+  wire [MXPATC-1:0]    hs_carry_s1_to_1of7   [6:0];
 
-  wire [MXPATC-1:0] hs_carry_s1 [6:0];
-  wire [MXQSB -1:0] hs_qs_s1    [6:0];
-  wire [MXBNDB-1:0] hs_bend_s1  [6:0];
-  wire [MXQLTB-1:0] hs_qlt_s1 [6:0];
 
+  // if using the pattern LUT, delay pat + key by 1 clock to allow for lookup
   genvar i;
+  generate
+    for (i = 0; i <= 6; i = i + 1) begin: data1of7delay
+
+      always @(posedge clock) begin
+        hs_pat_s1_dly1[i]   <= hs_pat_s1[i];
+        hs_key_s1_dly1[i]   <= hs_key_s1[i];
+        hs_carry_s1_dly1[i] <= hs_carry_s1[i];
+      end
+
+      assign hs_pat_s1_to_1of7   [i] = (PATLUT) ? hs_pat_s1_dly1[i]   : hs_pat_s1[i];
+      assign hs_key_s1_to_1of7   [i] = (PATLUT) ? hs_key_s1_dly1[i]   : hs_key_s1[i];
+      assign hs_carry_s1_to_1of7 [i] =            hs_carry_s1_dly1[i];
+
+    end
+  endgenerate
+
+  wire [MXOFFSB -1:0] hs_offs_s1  [6:0];
+  wire [MXBNDB-1:0]   hs_bend_s1  [6:0];
+  wire [MXQLTB-1:0]   hs_qlt_s1   [6:0];
+
   generate
     for (i = 0; i <= 6; i = i + 1) begin: hs_gen
       best_1of32 ubest1of32_1st (
@@ -982,38 +1009,47 @@ module pattern_finder (
   endgenerate
 
   // Best 1 of 7 HalfStrip patterns
-  wire [MXPATB  - 1:0] hs_pat_s2;
-  wire [MXKEYBX - 1:0] hs_key_s2;  // full key for 1 of 224
-  wire [MXKEYBX    :0] hs_qky_s2;
-  wire [MXQLTB  - 1:0] hs_qlt_s2;
-  wire [MXBNDB  - 1:0] hs_bnd_s2;
+  wire [MXPATB     - 1:0] hs_pat_s2;
+  wire [MXKEYBX    - 1:0] hs_key_s2;  // full key for 1 of 224
+  wire [MXSUBKEYBX - 1:0] hs_xky_s2;
+  wire [MXQLTB     - 1:0] hs_qlt_s2;
+  wire [MXBNDB     - 1:0] hs_bnd_s2;
+  wire [MXPATC     - 1:0] hs_car_s2;
 
   best_1of7 #(.PATLUT(PATLUT))
   ubest1of7_1st (
   // pattern inputs
-    .pat0(hs_pat_s1[0]),
-    .pat1(hs_pat_s1[1]),
-    .pat2(hs_pat_s1[2]),
-    .pat3(hs_pat_s1[3]),
-    .pat4(hs_pat_s1[4]),
-    .pat5(hs_pat_s1[5]),
-    .pat6(hs_pat_s1[6]),
+    .pat0(hs_pat_s1_to_1of7[0]),
+    .pat1(hs_pat_s1_to_1of7[1]),
+    .pat2(hs_pat_s1_to_1of7[2]),
+    .pat3(hs_pat_s1_to_1of7[3]),
+    .pat4(hs_pat_s1_to_1of7[4]),
+    .pat5(hs_pat_s1_to_1of7[5]),
+    .pat6(hs_pat_s1_to_1of7[6]),
   // key hs inputs
-    .key0(hs_key_s1[0]),
-    .key1(hs_key_s1[1]),
-    .key2(hs_key_s1[2]),
-    .key3(hs_key_s1[3]),
-    .key4(hs_key_s1[4]),
-    .key5(hs_key_s1[5]),
-    .key6(hs_key_s1[6]),
-  // qs inputs from fit lut
-    .qs0(hs_qs_s1[0]),
-    .qs1(hs_qs_s1[1]),
-    .qs2(hs_qs_s1[2]),
-    .qs3(hs_qs_s1[3]),
-    .qs4(hs_qs_s1[4]),
-    .qs5(hs_qs_s1[5]),
-    .qs6(hs_qs_s1[6]),
+    .key0(hs_key_s1_to_1of7[0]),
+    .key1(hs_key_s1_to_1of7[1]),
+    .key2(hs_key_s1_to_1of7[2]),
+    .key3(hs_key_s1_to_1of7[3]),
+    .key4(hs_key_s1_to_1of7[4]),
+    .key5(hs_key_s1_to_1of7[5]),
+    .key6(hs_key_s1_to_1of7[6]),
+  // carry inputs from fit lut
+    .carry0(hs_carry_s1_to_1of7[0]),
+    .carry1(hs_carry_s1_to_1of7[1]),
+    .carry2(hs_carry_s1_to_1of7[2]),
+    .carry3(hs_carry_s1_to_1of7[3]),
+    .carry4(hs_carry_s1_to_1of7[4]),
+    .carry5(hs_carry_s1_to_1of7[5]),
+    .carry6(hs_carry_s1_to_1of7[6]),
+  // offs inputs from fit lut
+    .offs0(hs_offs_s1[0]),
+    .offs1(hs_offs_s1[1]),
+    .offs2(hs_offs_s1[2]),
+    .offs3(hs_offs_s1[3]),
+    .offs4(hs_offs_s1[4]),
+    .offs5(hs_offs_s1[5]),
+    .offs6(hs_offs_s1[6]),
   // quality inputs from fit lut
     .qlt0(hs_qlt_s1[0]),
     .qlt1(hs_qlt_s1[1]),
@@ -1034,23 +1070,26 @@ module pattern_finder (
     .best_pat (hs_pat_s2),
     .best_key (hs_key_s2),
   // best fit result
-    .best_qkey  (hs_qky_s2),
-    .best_qlt   (hs_qlt_s2),
-    .best_bend  (hs_bnd_s2)
+    .best_subkey (hs_xky_s2),
+    .best_qlt    (hs_qlt_s2),
+    .best_carry  (hs_car_s2),
+    .best_bend   (hs_bnd_s2)
   );
 
   // Latch final hs pattern data for 1st CLCT
-  reg [MXPATB  - 1: 0] hs_pat_1st_nodly;
-  reg [MXKEYBX - 1: 0] hs_key_1st_nodly;
-  reg [MXQLTB  - 1: 0] hs_qlt_1st_nodly;
-  reg [MXBNDB  - 1: 0] hs_bnd_1st_nodly;
-  reg [MXKEYBX    : 0] hs_qky_1st_nodly;
+  reg [MXPATB     - 1:0] hs_pat_1st_nodly;
+  reg [MXKEYBX    - 1:0] hs_key_1st_nodly;
+  reg [MXQLTB     - 1:0] hs_qlt_1st_nodly;
+  reg [MXBNDB     - 1:0] hs_bnd_1st_nodly;
+  reg [MXPATC     - 1:0] hs_car_1st_nodly;
+  reg [MXSUBKEYBX - 1:0] hs_xky_1st_nodly;
 
   always @(posedge clock) begin
     hs_pat_1st_nodly <= hs_pat_s2;
     hs_key_1st_nodly <= hs_key_s2;
-    hs_qky_1st_nodly <= hs_qky_s2;
+    hs_xky_1st_nodly <= hs_xky_s2;
     hs_bnd_1st_nodly <= hs_bnd_s2;
+    hs_car_1st_nodly <= hs_car_s2;
     hs_qlt_1st_nodly <= hs_qlt_s2;
   end
 
@@ -1058,29 +1097,32 @@ module pattern_finder (
 // Stage 6A: Delay 1st CLCT to output at same time as 2nd CLCT
 //-------------------------------------------------------------------------------------------------------------------
 
-  wire [MXPATB  - 1 : 0] hs_pat_1st_dly;
-  wire [MXKEYBX - 1 : 0] hs_key_1st_dly;
-  wire [MXHITB  - 1 : 0] hs_hit_1st_dly;
-  wire [MXQLTB  - 1 : 0] hs_qlt_1st_dly;
-  wire [MXBNDB  - 1 : 0] hs_bnd_1st_dly;
-  wire [MXKEYBX     : 0] hs_qky_1st_dly;
+  wire [MXPATB    -1:0] hs_pat_1st_dly;
+  wire [MXKEYBX   -1:0] hs_key_1st_dly;
+  wire [MXHITB    -1:0] hs_hit_1st_dly;
+  wire [MXQLTB    -1:0] hs_qlt_1st_dly;
+  wire [MXBNDB    -1:0] hs_bnd_1st_dly;
+  wire [MXPATC    -1:0] hs_car_1st_dly;
+  wire [MXSUBKEYBX-1:0] hs_xky_1st_dly;
 
   parameter cdly = 4'd0;
 
-  srl16e_bbl #(MXPATB )   upatbbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_pat_1st_nodly), .q(hs_pat_1st_dly));
-  srl16e_bbl #(MXKEYBX)   ukeybbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_key_1st_nodly), .q(hs_key_1st_dly));
+  srl16e_bbl #(MXPATB )    upatbbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_pat_1st_nodly), .q(hs_pat_1st_dly));
+  srl16e_bbl #(MXKEYBX)    ukeybbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_key_1st_nodly), .q(hs_key_1st_dly));
 
-  srl16e_bbl #(MXQLTB)    uqltbbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_qlt_1st_nodly), .q(hs_qlt_1st_dly));
-  srl16e_bbl #(MXBNDB)    ubndbbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_bnd_1st_nodly), .q(hs_bnd_1st_dly));
-  srl16e_bbl #(MXKEYBX+1) uqkybbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_qky_1st_nodly), .q(hs_qky_1st_dly));
+  srl16e_bbl #(MXQLTB)     uqltbbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_qlt_1st_nodly), .q(hs_qlt_1st_dly));
+  srl16e_bbl #(MXBNDB)     ubndbbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_bnd_1st_nodly), .q(hs_bnd_1st_dly));
+  srl16e_bbl #(MXPATC)     ucarbbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_car_1st_nodly), .q(hs_car_1st_dly));
+  srl16e_bbl #(MXSUBKEYBX) uxkybbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_xky_1st_nodly), .q(hs_xky_1st_dly));
 
   // Final 1st CLCT flipflop
-  reg [MXPIDB  - 1:0] hs_pid_1st;
-  reg [MXHITB  - 1:0] hs_hit_1st;
-  reg [MXKEYBX - 1:0] hs_key_1st;
-  reg [MXQLTB  - 1:0] hs_qlt_1st;
-  reg [MXBNDB  - 1:0] hs_bnd_1st;
-  reg [MXKEYBX    :0] hs_qky_1st;
+  reg [MXPIDB     - 1:0] hs_pid_1st;
+  reg [MXHITB     - 1:0] hs_hit_1st;
+  reg [MXKEYBX    - 1:0] hs_key_1st;
+  reg [MXQLTB     - 1:0] hs_qlt_1st;
+  reg [MXBNDB     - 1:0] hs_bnd_1st;
+  reg [MXPATC     - 1:0] hs_car_1st;
+  reg [MXSUBKEYBX - 1:0] hs_xky_1st;
 
   assign hs_hit_1st_dly = hs_pat_1st_dly[MXPATB - 1: MXPIDB];
 
@@ -1094,7 +1136,8 @@ module pattern_finder (
       hs_key_1st <= 0;
       hs_qlt_1st <= 0;
       hs_bnd_1st <= 0;
-      hs_qky_1st <= 0;
+      hs_car_1st <= 0;
+      hs_xky_1st <= 0;
     end
     else if (lyr_trig_1st) begin        // layer-trigger mode
       hs_pid_1st <= 1;                  // Pattern id=1 for layer triggers
@@ -1102,7 +1145,8 @@ module pattern_finder (
       hs_key_1st <= 0;                  // Dummy key
       hs_qlt_1st <= 0;
       hs_bnd_1st <= 0;
-      hs_qky_1st <= 0;
+      hs_car_1st <= 0;
+      hs_xky_1st <= 0;
     end
     else begin          // else assert final 1st clct
       hs_key_1st <= hs_key_1st_dly;
@@ -1110,7 +1154,8 @@ module pattern_finder (
       hs_hit_1st <= hs_pat_1st_dly[MXPATB - 1: MXPIDB];
       hs_qlt_1st <= hs_qlt_1st_dly;
       hs_bnd_1st <= hs_bnd_1st_dly;
-      hs_qky_1st <= hs_qky_1st_dly;
+      hs_car_1st <= hs_car_1st_dly;
+      hs_xky_1st <= hs_xky_1st_dly;
     end
   end
 
@@ -1232,7 +1277,7 @@ module pattern_finder (
     end
     else begin // CLCT0 is on ME1B cfeb0-cfeb3, limit blanking region to 0-127
       busy_max <= (hs_key_s2 <= 127 - pspan) ? hs_key_s2 + pspan : 8'd127;
-      busy_min <= (hs_key_s2 >= nspan) ? hs_key_s2 - nspan : 8'd0;
+      busy_min <= (hs_key_s2 >=       nspan) ? hs_key_s2 - nspan : 8'd0;
     end
   end
 
@@ -1290,13 +1335,40 @@ module pattern_finder (
 
   // Best 7 of 224 1/2-strip patterns
   wire [MXPATB - 1: 0] hs_pat_s4   [6: 0];
+  reg [MXPATB - 1: 0] hs_pat_s4_dly1   [6: 0];
+  wire [MXPATB - 1: 0] hs_pat_s4_to_1of7   [6: 0];
+
   wire [MXKEYB - 1: 0] hs_key_s4   [6: 0]; // partial key for 1 of 32
+  reg [MXKEYB - 1: 0] hs_key_s4_dly1   [6: 0]; // partial key for 1 of 32
+  wire [MXKEYB - 1: 0] hs_key_s4_to_1of7   [6: 0]; // partial key for 1 of 32
+
   wire [6: 0]          hs_bsy_s4;
 
-  wire [MXPATC-1:0] hs_carry_s4 [6:0];
-  wire [MXQSB -1:0] hs_qs_s4    [6:0];
-  wire [MXBNDB-1:0] hs_bend_s4  [6:0];
-  wire [MXQLTB-1:0] hs_qlt_s4   [6:0];
+  wire [MXOFFSB-1:0] hs_offs_s4       [6:0];
+  wire [MXBNDB -1:0] hs_bend_s4       [6:0];
+
+  wire [MXPATC -1:0] hs_carry_s4      [6:0];
+  reg  [MXPATC -1:0] hs_carry_s4_dly1      [6:0];
+  wire [MXPATC -1:0] hs_carry_s4_to_1of7      [6:0];
+
+  wire [MXQLTB -1:0] hs_qlt_s4        [6:0];
+
+  // if using the pattern LUT, delay pat + key by 1 clock to allow for lookup
+  generate
+    for (i = 0; i <= 6; i = i + 1) begin: data1of7busydelay
+
+      always @(posedge clock) begin
+        hs_pat_s4_dly1[i]   <= hs_pat_s4[i];
+        hs_key_s4_dly1[i]   <= hs_key_s4[i];
+        hs_carry_s4_dly1[i] <= hs_carry_s4[i];
+      end
+
+      assign hs_pat_s4_to_1of7   [i] = (PATLUT) ? hs_pat_s4_dly1[i]   : hs_pat_s4[i];
+      assign hs_key_s4_to_1of7   [i] = (PATLUT) ? hs_key_s4_dly1[i]   : hs_key_s4[i];
+      assign hs_carry_s4_to_1of7 [i] =            hs_carry_s4_dly1[i];
+
+    end
+  endgenerate
 
   generate
     for (i = 0; i <= 6; i = i + 1) begin: hs_2nd_gen
@@ -1378,41 +1450,50 @@ module pattern_finder (
     end
   endgenerate
 
-  // Best 1 of 7 1/2-strip patterns
-  wire [MXPATB  - 1:0] hs_pat_s5;
-  wire [MXKEYBX - 1:0] hs_key_s5;  // full key for 1 of 224
-  wire [MXHITB  - 1:0] hs_hit_s5;
-  wire [MXKEYBX    :0] hs_qky_s5;
-  wire [MXQLTB  - 1:0] hs_qlt_s5;
-  wire [MXBNDB  - 1:0] hs_bnd_s5;
-  wire                 hs_bsy_s5;
+  // Best 1 of 7 1/2 - strip patterns
+  wire [MXPATB    -1:0] hs_pat_s5;
+  wire [MXKEYBX   -1:0] hs_key_s5;  // full key for 1 of 224
+  wire [MXHITB    -1:0] hs_hit_s5;
+  wire [MXSUBKEYBX-1:0] hs_xky_s5;
+  wire [MXQLTB    -1:0] hs_qlt_s5;
+  wire [MXBNDB    -1:0] hs_bnd_s5;
+  wire [MXPATC    -1:0] hs_car_s5;
+  wire                  hs_bsy_s5;
 
   best_1of7_busy #(.PATLUT(PATLUT))
   ubest1of7_2nd (
   // pattern inputs
-    .pat0(hs_pat_s4[0]),
-    .pat1(hs_pat_s4[1]),
-    .pat2(hs_pat_s4[2]),
-    .pat3(hs_pat_s4[3]),
-    .pat4(hs_pat_s4[4]),
-    .pat5(hs_pat_s4[5]),
-    .pat6(hs_pat_s4[6]),
+    .pat0(hs_pat_s4_to_1of7[0]),
+    .pat1(hs_pat_s4_to_1of7[1]),
+    .pat2(hs_pat_s4_to_1of7[2]),
+    .pat3(hs_pat_s4_to_1of7[3]),
+    .pat4(hs_pat_s4_to_1of7[4]),
+    .pat5(hs_pat_s4_to_1of7[5]),
+    .pat6(hs_pat_s4_to_1of7[6]),
   // key hs inputs
-    .key0(hs_key_s4[0]),
-    .key1(hs_key_s4[1]),
-    .key2(hs_key_s4[2]),
-    .key3(hs_key_s4[3]),
-    .key4(hs_key_s4[4]),
-    .key5(hs_key_s4[5]),
-    .key6(hs_key_s4[6]),
-  // qs inputs from fit lut
-    .qs0(hs_qs_s4[0]),
-    .qs1(hs_qs_s4[1]),
-    .qs2(hs_qs_s4[2]),
-    .qs3(hs_qs_s4[3]),
-    .qs4(hs_qs_s4[4]),
-    .qs5(hs_qs_s4[5]),
-    .qs6(hs_qs_s4[6]),
+    .key0(hs_key_s4_to_1of7[0]),
+    .key1(hs_key_s4_to_1of7[1]),
+    .key2(hs_key_s4_to_1of7[2]),
+    .key3(hs_key_s4_to_1of7[3]),
+    .key4(hs_key_s4_to_1of7[4]),
+    .key5(hs_key_s4_to_1of7[5]),
+    .key6(hs_key_s4_to_1of7[6]),
+  // carry inputs from fit lut
+    .carry0(hs_carry_s4_to_1of7[0]),
+    .carry1(hs_carry_s4_to_1of7[1]),
+    .carry2(hs_carry_s4_to_1of7[2]),
+    .carry3(hs_carry_s4_to_1of7[3]),
+    .carry4(hs_carry_s4_to_1of7[4]),
+    .carry5(hs_carry_s4_to_1of7[5]),
+    .carry6(hs_carry_s4_to_1of7[6]),
+  // offs inputs from fit lut
+    .offs0(hs_offs_s4[0]),
+    .offs1(hs_offs_s4[1]),
+    .offs2(hs_offs_s4[2]),
+    .offs3(hs_offs_s4[3]),
+    .offs4(hs_offs_s4[4]),
+    .offs5(hs_offs_s4[5]),
+    .offs6(hs_offs_s4[6]),
   // quality inputs from fit lut
     .qlt0(hs_qlt_s4[0]),
     .qlt1(hs_qlt_s4[1]),
@@ -1441,21 +1522,23 @@ module pattern_finder (
     .best_pat(hs_pat_s5),
     .best_key(hs_key_s5),
   // best fit result
-    .best_qkey  (hs_qky_s5),
+    .best_subkey(hs_xky_s5),
     .best_qlt   (hs_qlt_s5),
     .best_bend  (hs_bnd_s5),
+    .best_carry (hs_car_s5),
   // busy flags
     .best_bsy(hs_bsy_s5)
   );
 
   // Latch final 2nd CLCT
-  reg [MXPIDB  - 1:0] hs_pid_2nd;
-  reg [MXHITB  - 1:0] hs_hit_2nd;
-  reg [MXKEYBX - 1:0] hs_key_2nd;
-  reg [MXQLTB  - 1:0] hs_qlt_2nd;
-  reg [MXBNDB  - 1:0] hs_bnd_2nd;
-  reg [MXKEYBX    :0] hs_qky_2nd;
-  reg hs_bsy_2nd;
+  reg [MXPIDB     - 1:0] hs_pid_2nd;
+  reg [MXHITB     - 1:0] hs_hit_2nd;
+  reg [MXKEYBX    - 1:0] hs_key_2nd;
+  reg [MXQLTB     - 1:0] hs_qlt_2nd;
+  reg [MXBNDB     - 1:0] hs_bnd_2nd;
+  reg [MXPATC     - 1:0] hs_car_2nd;
+  reg [MXSUBKEYBX - 1:0] hs_xky_2nd;
+  reg                    hs_bsy_2nd;
 
   assign hs_hit_s5 = hs_pat_s5[MXPATB - 1: MXPIDB];
   wire blank_2nd    = ((hs_hit_s5 == 0) && (clct_blanking == 1)) || purging;
@@ -1468,7 +1551,8 @@ module pattern_finder (
       hs_key_2nd <= 0;
       hs_qlt_2nd <= 0;
       hs_bnd_2nd <= 0;
-      hs_qky_2nd <= 0;
+      hs_car_2nd <= 0;
+      hs_xky_2nd <= 0;
       hs_bsy_2nd <= hs_bsy_s5;
     end
     else if (lyr_trig_2nd) begin    // layer-trigger mode
@@ -1477,7 +1561,8 @@ module pattern_finder (
       hs_key_2nd <= 0;
       hs_qlt_2nd <= 0;
       hs_bnd_2nd <= 0;
-      hs_qky_2nd <= 0;
+      hs_car_2nd <= 0;
+      hs_xky_2nd <= 0;
       hs_bsy_2nd <= hs_bsy_s5;
     end
     else begin         // else assert final 2nd clct
@@ -1487,7 +1572,8 @@ module pattern_finder (
       hs_bsy_2nd <= hs_bsy_s5;
       hs_qlt_2nd <= hs_qlt_s5;
       hs_bnd_2nd <= hs_bnd_s5;
-      hs_qky_2nd <= hs_qky_s5;
+      hs_car_2nd <= hs_car_s5;
+      hs_xky_2nd <= hs_xky_s5;
     end
   end
 
@@ -1508,8 +1594,8 @@ module pattern_finder (
     .carry00(hs_carry_s1[i]),
     .carry01(hs_carry_s4[i]),
   // LUT Quarterstrip output
-     .qs0(hs_qs_s1[i]),
-     .qs1(hs_qs_s4[i]),
+     .offs0(hs_offs_s1[i]),
+     .offs1(hs_offs_s4[i]),
   // LUT Bend angle output
      .bend0(hs_bend_s1[i]),
      .bend1(hs_bend_s4[i]),
@@ -1630,8 +1716,8 @@ endfunction
   reg[39: 0] purge_sm_dsp;
   always @ * begin
     case (purge_sm)
-      pass: purge_sm_dsp    <= "pass ";
-      purge: purge_sm_dsp   <= "purge";
+      pass:   purge_sm_dsp <= "pass ";
+      purge:  purge_sm_dsp <= "purge";
       default purge_sm_dsp <= "error";
     endcase
   end

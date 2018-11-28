@@ -55,11 +55,11 @@
   reg  [MXPATC-1:0]  carry_s3  [1:0];
   wire [MXPATC-1:0]  carry_s4  [0:0];
 
-  wire [0:0]  key_s0  [15:0];
-  wire [1:0]  key_s1  [7:0];
-  wire [2:0]  key_s2  [3:0];
-  reg  [3:0]  key_s3  [1:0];
-  wire [4:0]  key_s4  [0:0];
+  wire [MXKEYB-5:0]  key_s0  [15:0];
+  wire [MXKEYB-4:0]  key_s1  [7:0];
+  wire [MXKEYB-3:0]  key_s2  [3:0];
+  reg  [MXKEYB-2:0]  key_s3  [1:0];
+  wire [MXKEYB-1:0]  key_s4  [0:0];
 
 // Stage 0: Best 16 of 32
   assign {pat_s0[15],key_s0[15],carry_s0[15]} = (pat31[6:1] > pat30[6:1]) ? {pat31,1'b1,carry31} : {pat30,1'b0,carry30};

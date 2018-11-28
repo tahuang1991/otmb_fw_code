@@ -9,9 +9,10 @@
 
     input      [MXPATC-1:0]  carry00, carry01,
 
-    output reg [MXQSB -1:0]  qs0, qs1,
+    output reg [MXOFFSB -1:0]  offs0, offs1,
     output reg [MXBNDB-1:0]  bend0, bend1,
     output reg [MXQLTB-1:0]  quality0, quality1
+
   );
 
 // Constants
@@ -29,7 +30,11 @@ wire [MXDATB-1:0]   rd0_patA, rd1_patA,
                     rd0_pat5, rd1_pat5,
                     rd0_pat4, rd1_pat4,
                     rd0_pat3, rd1_pat3,
-                    rd0_pat2, rd1_pat2;
+                    rd0_pat2, rd1_pat2,
+                    rd0_blnk, rd1_blnk;
+
+assign rd0_blnk = 0;
+assign rd1_blnk = 0;
 
 //----------------------------------------------------------------------------------------------------------------------
 // ROMS
@@ -38,7 +43,7 @@ wire [MXDATB-1:0]   rd0_patA, rd1_patA,
 generate
 if (pat_en[A])
 rom #(
-  .ROM_FILE("rom_patA.dat"),
+  .ROM_FILE("../source/pattern_finder/rom_patA.mem"),
   .FALLING_EDGE(1'b1),
   .MXADRB(MXADRB),
   .MXDATB(MXDATB)
@@ -57,7 +62,7 @@ endgenerate
 generate
 if (pat_en[9])
 rom #(
-  .ROM_FILE("rom_pat9.dat"),
+  .ROM_FILE("../source/pattern_finder/rom_pat9.mem"),
   .FALLING_EDGE(1'b1),
   .MXADRB(MXADRB),
   .MXDATB(MXDATB)
@@ -75,7 +80,7 @@ endgenerate
 generate
 if (pat_en[8])
 rom #(
-  .ROM_FILE("rom_pat8.dat"),
+  .ROM_FILE("../source/pattern_finder/rom_pat8.mem"),
   .FALLING_EDGE(1'b1),
   .MXADRB(MXADRB),
   .MXDATB(MXDATB)
@@ -93,7 +98,7 @@ endgenerate
 generate
 if (pat_en[7])
 rom #(
-  .ROM_FILE("rom_pat7.dat"),
+  .ROM_FILE("../source/pattern_finder/rom_pat7.mem"),
   .FALLING_EDGE(1'b1),
   .MXADRB(MXADRB),
   .MXDATB(MXDATB)
@@ -111,7 +116,7 @@ endgenerate
 generate
 if (pat_en[6])
 rom #(
-  .ROM_FILE("rom_pat6.dat"),
+  .ROM_FILE("../source/pattern_finder/rom_pat6.mem"),
   .FALLING_EDGE(1'b1),
   .MXADRB(MXADRB),
   .MXDATB(MXDATB)
@@ -129,7 +134,7 @@ endgenerate
 generate
 if (pat_en[5])
 rom #(
-  .ROM_FILE("rom_pat5.dat"),
+  .ROM_FILE("../source/pattern_finder/rom_pat5.mem"),
   .FALLING_EDGE(1'b1),
   .MXADRB(MXADRB),
   .MXDATB(MXDATB)
@@ -147,7 +152,7 @@ endgenerate
 generate
 if (pat_en[4])
 rom #(
-  .ROM_FILE("rom_pat4.dat"),
+  .ROM_FILE("../source/pattern_finder/rom_pat4.mem"),
   .FALLING_EDGE(1'b1),
   .MXADRB(MXADRB),
   .MXDATB(MXDATB)
@@ -165,7 +170,7 @@ endgenerate
 generate
 if (pat_en[3])
 rom #(
-  .ROM_FILE("rom_pat3.dat"),
+  .ROM_FILE("../source/pattern_finder/rom_pat3.mem"),
   .FALLING_EDGE(1'b1),
   .MXADRB(MXADRB),
   .MXDATB(MXDATB)
@@ -183,7 +188,7 @@ endgenerate
 generate
 if (pat_en[2])
   rom #(
-.ROM_FILE("rom_pat2.dat"),
+.ROM_FILE("../source/pattern_finder/rom_pat2.mem"),
 .FALLING_EDGE(1'b1),
   .MXADRB(MXADRB),
   .MXDATB(MXDATB)
@@ -211,47 +216,48 @@ assign hs_pid01 = pat01 [0+:MXPIDB];
 assign hs_hit00 = pat00 [MXPIDB+:MXHITB];
 assign hs_hit01 = pat01 [MXPIDB+:MXHITB];
 
-
 // demultiplex the different lookup registers
 
 reg [MXDATB-1:0] rd0, rd1;
 
 always @(*) begin
   case (hs_pid00)
-    16'hA: rd0 = rd0_patA;
-    16'h9: rd0 = rd0_pat9;
-    16'h8: rd0 = rd0_pat8;
-    16'h7: rd0 = rd0_pat7;
-    16'h6: rd0 = rd0_pat6;
-    16'h5: rd0 = rd0_pat5;
-    16'h4: rd0 = rd0_pat4;
-    16'h3: rd0 = rd0_pat3;
-    16'h2: rd0 = rd0_pat2;
+    16'hA:   rd0 = (pat_en['hA]) ? rd0_patA : rd0_blnk;
+    16'h9:   rd0 = (pat_en['h9]) ? rd0_pat9 : rd0_blnk;
+    16'h8:   rd0 = (pat_en['h8]) ? rd0_pat8 : rd0_blnk;
+    16'h7:   rd0 = (pat_en['h7]) ? rd0_pat7 : rd0_blnk;
+    16'h6:   rd0 = (pat_en['h6]) ? rd0_pat6 : rd0_blnk;
+    16'h5:   rd0 = (pat_en['h5]) ? rd0_pat5 : rd0_blnk;
+    16'h4:   rd0 = (pat_en['h4]) ? rd0_pat4 : rd0_blnk;
+    16'h3:   rd0 = (pat_en['h3]) ? rd0_pat3 : rd0_blnk;
+    16'h2:   rd0 = (pat_en['h2]) ? rd0_pat2 : rd0_blnk;
+    default: rd0 =                            rd0_blnk;
   endcase
 
   case (hs_pid01)
-    16'hA: rd1 = rd1_patA;
-    16'h9: rd1 = rd1_pat9;
-    16'h8: rd1 = rd1_pat8;
-    16'h7: rd1 = rd1_pat7;
-    16'h6: rd1 = rd1_pat6;
-    16'h5: rd1 = rd1_pat5;
-    16'h4: rd1 = rd1_pat4;
-    16'h3: rd1 = rd1_pat3;
-    16'h2: rd1 = rd1_pat2;
+    16'hA:   rd1 = (pat_en['hA]) ? rd1_patA : rd1_blnk;
+    16'h9:   rd1 = (pat_en['h9]) ? rd1_pat9 : rd1_blnk;
+    16'h8:   rd1 = (pat_en['h8]) ? rd1_pat8 : rd1_blnk;
+    16'h7:   rd1 = (pat_en['h7]) ? rd1_pat7 : rd1_blnk;
+    16'h6:   rd1 = (pat_en['h6]) ? rd1_pat6 : rd1_blnk;
+    16'h5:   rd1 = (pat_en['h5]) ? rd1_pat5 : rd1_blnk;
+    16'h4:   rd1 = (pat_en['h4]) ? rd1_pat4 : rd1_blnk;
+    16'h3:   rd1 = (pat_en['h3]) ? rd1_pat3 : rd1_blnk;
+    16'h2:   rd1 = (pat_en['h2]) ? rd1_pat2 : rd1_blnk;
+    default: rd1 =                            rd1_blnk;
   endcase
 end
 
 always @(posedge clock) begin
 
-  qs0 <= rd0[0+:MXQSB];
-  qs1 <= rd1[0+:MXQSB];
+  offs0    <= rd0[17:14];
+  offs1    <= rd1[17:14];
 
-  bend0  <= rd0[MXQSB+:MXBNDB];
-  bend1  <= rd1[MXQSB+:MXBNDB];
+  bend0    <= rd0[13:9];
+  bend1    <= rd1[13:9];
 
-  quality0 <= rd0[(MXQSB+MXBNDB)+:MXQLTB];
-  quality1 <= rd1[(MXQSB+MXBNDB)+:MXQLTB];
+  quality0 <= rd0[8:0];
+  quality1 <= rd1[8:0];
 
 end
 
