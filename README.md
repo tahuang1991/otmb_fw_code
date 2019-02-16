@@ -42,6 +42,8 @@ master branch code is used for Run2 operation and the compiled date is 2016-03-1
 Starting fro 2016, Yuriy, Jason, Andrew and Tao worked on improving OTMB fw performance and several key new features were added:
  - localized dead time zone in cathode pretriggering 
  - CLCT reuse in ALCT-CLCT matching
+ 
+ 
 the branch of this version firmware is renamed to 2018OTMBfw on Tao's github.  This version was tested in the 2018, late of Run2. and significant efficinecy improvement is observed in  PU~40 
 
 The ISE used for compiling is 14.7
