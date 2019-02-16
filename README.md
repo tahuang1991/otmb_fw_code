@@ -35,6 +35,11 @@ parameter "GTX_POWER_SAVE" might be set:
 Default version is ISE 14.5 which allows to bypass the RX Delay Aligner,
 thus saving some power consumption.
 
+
+### Version control
+master branch code is used for Run2 operation and the compiled date is 2016-03-16. the ISE for compiling could be 14.7
+
+
 ### Simulation
 The folder source/simulation contains a test bench, as well as a
 file handler and VME emulator, for the OTMB firmware simulation.
