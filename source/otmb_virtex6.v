@@ -507,7 +507,10 @@
 
   wire [MXCFEB-1:0]  clock_cfeb_rxd;
 
-  IBUFG uibufg_19p      (.I(tmb_clock0    ),.O(tmb_clock0_ibufg));
+  //IBUFG uibufg_19p      (.I(tmb_clock0    ),.O(tmb_clock0_ibufg));
+  //Tao: change the TMB main clock from tmb_clock0 into clk40
+  //IBUFG uibufg_19p      (.I(clk40    ),.O(tmb_clock0_ibufg));
+  wire tmb_clock0_ibufg = clk40;
   clock_ctrl uclock_ctrl
   (
 // Clock inputs

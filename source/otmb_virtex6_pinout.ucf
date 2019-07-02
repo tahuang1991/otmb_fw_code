@@ -896,8 +896,11 @@ NET "led_mezD8"				SLEW=FAST | DRIVE=4;
 #----------------------------------------------------------------------------------------------------------
 # Timing
 #----------------------------------------------------------------------------------------------------------
-NET "tmb_clock0"	TNM_NET = "tmb_clock0";	# TMB main Clock  JRG: this is really tmb_clock05p on the baseboard!  *stoppable*
-TIMESPEC "TS_tmb_clock0" = PERIOD "tmb_clock0"  25.0 ns HIGH 50%;
+#NET "tmb_clock0"	TNM_NET = "tmb_clock0";	# TMB main Clock  JRG: this is really tmb_clock05p on the baseboard!  *stoppable*
+#TIMESPEC "TS_tmb_clock0" = PERIOD "tmb_clock0"  25.0 ns HIGH 50%;
+#Tao, change TMB main closck from tmb_clock0 into clk40
+NET "clk40" 	TNM_NET = "clk40";	# GTX clock
+TIMESPEC "TS_clk40"  = PERIOD "clk40" 25 ns HIGH 50%;
 
 NET "clock_160" 	TNM_NET = "clock_160";	# GTX clock
 TIMESPEC "TS_clock_160"  = PERIOD "clock_160" 6.25 ns HIGH 50%;
