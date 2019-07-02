@@ -48,6 +48,8 @@ the branch of this version firmware is renamed to 2018OTMBfw on Tao's github.  T
 
 The ISE used for compiling is 14.7
 
+2019 July 1st: On top of 2018OTMBfw, we compiled one new version, called 2018OTMBfw_clockchange, by changing the main logic clock from tmb_clock0 into clk40
+
 ### Simulation
 The folder source/simulation contains a test bench, as well as a
 file handler and VME emulator, for the OTMB firmware simulation.
