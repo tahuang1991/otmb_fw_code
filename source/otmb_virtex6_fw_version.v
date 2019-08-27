@@ -21,8 +21,8 @@
   `define FPGAID       16'h6240 // FPGA Type 6240 XC6VLX240T
 
 // Conditional compile flags: Enable only one CSC_TYPE
-//  `define CSC_TYPE_C  04'hC // Normal   ME1B: ME1B   chambers facing toward IR.    ME1B hs =!reversed, ME1A hs = reversed
-  `define CSC_TYPE_D  04'hD    // Reversed ME1B: ME1B   chambers facing away from IR. ME1B hs = reversed, ME1A hs =!reversed
+  `define CSC_TYPE_C  04'hC // Normal   ME1B: ME1B   chambers facing toward IR.    ME1B hs =!reversed, ME1A hs = reversed
+//`define CSC_TYPE_D  04'hD    // Reversed ME1B: ME1B   chambers facing away from IR. ME1B hs = reversed, ME1A hs =!reversed
 
 // Revision log
 //  02/08/2013  Initial Virtex-6 specific

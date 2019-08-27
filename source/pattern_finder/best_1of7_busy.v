@@ -40,13 +40,13 @@ reg [MXOFFSB-1:0] best_offs;
 
 // Choose bits to sort on, either sortable pattern or post-fit quality
 
-  wire [5:0] sort_key0 = (PATLUT) ? qlt0 : pat0[6:1];
-  wire [5:0] sort_key1 = (PATLUT) ? qlt1 : pat1[6:1];
-  wire [5:0] sort_key2 = (PATLUT) ? qlt2 : pat2[6:1];
-  wire [5:0] sort_key3 = (PATLUT) ? qlt3 : pat3[6:1];
-  wire [5:0] sort_key4 = (PATLUT) ? qlt4 : pat4[6:1];
-  wire [5:0] sort_key5 = (PATLUT) ? qlt5 : pat5[6:1];
-  wire [5:0] sort_key6 = (PATLUT) ? qlt6 : pat6[6:1];
+  wire [5:0] sort_key0 = (PATLUT && SORT_ON_PATLUT) ? qlt0 : pat0[6:1];
+  wire [5:0] sort_key1 = (PATLUT && SORT_ON_PATLUT) ? qlt1 : pat1[6:1];
+  wire [5:0] sort_key2 = (PATLUT && SORT_ON_PATLUT) ? qlt2 : pat2[6:1];
+  wire [5:0] sort_key3 = (PATLUT && SORT_ON_PATLUT) ? qlt3 : pat3[6:1];
+  wire [5:0] sort_key4 = (PATLUT && SORT_ON_PATLUT) ? qlt4 : pat4[6:1];
+  wire [5:0] sort_key5 = (PATLUT && SORT_ON_PATLUT) ? qlt5 : pat5[6:1];
+  wire [5:0] sort_key6 = (PATLUT && SORT_ON_PATLUT) ? qlt6 : pat6[6:1];
 
 // Stage 3: Best 1 of 7
 
@@ -154,20 +154,21 @@ reg [MXOFFSB-1:0] best_offs;
       end
   end
 
-  //always @(*) begin
-  //  case (best_key)
-  //    0:       best_subkey = best_offs-2;
-  //    1:       best_subkey = best_offs;
-  //    2:       best_subkey = best_offs+2;
-  //    3:       best_subkey = best_offs+4;
-  //    4:       best_subkey = best_offs+4;
-  //    default: best_subkey = best_offs+best_key*2;
-  //    MXHS:    best_subkey = best_offs+MXHS*2-2;
-  //  endcase
-  //end
+  wire signed [MXOFFSB   -1:0] best_offs_signed   = best_offs;
+  wire signed [MXKEYBX   -1:0] best_key_signed    = best_key;
+  wire        [MXSUBKEYBX-1:0] best_subkey_signed = 4*best_key_signed + best_offs_signed;
 
   always @(*) begin
-  best_subkey = best_offs+best_key*2;
+    if      ((best_key==0   && best_offs<=0) || (best_key==1   && best_offs<=-4))
+      best_subkey <= 0;
+    else if ((best_key==127 && best_offs>=3) || (best_key==126 && best_offs>= 7))
+      best_subkey <= 127*4+3;
+    else if ((best_key==128 && best_offs<=0) || (best_key==129 && best_offs<=-4))
+      best_subkey <= 128*4;
+    else if ((best_key==223 && best_offs>=3) || (best_key==222 && best_offs>= 7))
+      best_subkey <= 223*4+3;
+    else
+      best_subkey <= best_subkey_signed;
   end
 
 //-------------------------------------------------------------------------------------------------------------------

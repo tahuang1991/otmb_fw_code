@@ -8,13 +8,19 @@ use unisim.vcomponents.all;
 entity ccode_checker is
 port(
 
-    valid                  : in std_logic;
-    pat_expect             : in std_logic_vector (3 downto 0);
-    pat_found              : in std_logic_vector (3 downto 0);
-    ccode_expect            : in std_logic_vector (11 downto 0);
+    valid                   : in std_logic;
+
+    check_pat               : in std_logic;
+    pat_found               : in std_logic_vector (3 downto 0);
+    pat_expect              : in std_logic_vector (3 downto 0);
+
+    check_ccode             : in std_logic;
     ccode_found             : in std_logic_vector (11 downto 0);
-    keyhs_expect            : in std_logic_vector (7 downto 0);
+    ccode_expect            : in std_logic_vector (11 downto 0);
+
+    check_keyhs             : in std_logic;
     keyhs_found             : in std_logic_vector (7 downto 0);
+    keyhs_expect            : in std_logic_vector (7 downto 0);
 
     match                   : out std_logic
 
@@ -23,6 +29,9 @@ end ccode_checker;
 
 architecture ccode_checker_arch of ccode_checker is
 
+    signal keyhs_ccode_match  : std_logic;
+    signal pat_match          : std_logic;
+
     signal keyhs_expect_m1    : std_logic_vector (7 downto 0);
     signal keyhs_expect_m2    : std_logic_vector (7 downto 0);
 
@@ -30,31 +39,31 @@ architecture ccode_checker_arch of ccode_checker is
     signal ccode_expect_m2    : std_logic_vector (11 downto 0);
 
     function shift_ccode (
-	layer_ccode : in std_logic_vector(1 downto 0);
-	shift : in integer
-	) return std_logic_vector is
-	    variable shifted : std_logic_vector(1 downto 0);
-	begin
+    layer_ccode : in std_logic_vector(1 downto 0);
+    shift : in integer
+    ) return std_logic_vector is
+        variable shifted : std_logic_vector(1 downto 0);
+    begin
 
-	    if (shift=0) then
-		shifted := layer_ccode;
-	    elsif (shift=1) then
-		if    (layer_ccode="00") then shifted := "00";
-		elsif (layer_ccode="01") then shifted := "10";
-		elsif (layer_ccode="10") then shifted := "11";
-		elsif (layer_ccode="11") then shifted := "00";
-		end if;
-	    elsif (shift=2) then
-		if    (layer_ccode="00") then shifted := "00";
-		elsif (layer_ccode="01") then shifted := "11";
-		elsif (layer_ccode="10") then shifted := "00";
-		elsif (layer_ccode="11") then shifted := "00";
-		end if;
-	    else
-		shifted := "000";
-	    end if;
+        if (shift=0) then
+        shifted := layer_ccode;
+        elsif (shift=1) then
+        if    (layer_ccode="00") then shifted := "00";
+        elsif (layer_ccode="01") then shifted := "10";
+        elsif (layer_ccode="10") then shifted := "11";
+        elsif (layer_ccode="11") then shifted := "00";
+        end if;
+        elsif (shift=2) then
+        if    (layer_ccode="00") then shifted := "00";
+        elsif (layer_ccode="01") then shifted := "11";
+        elsif (layer_ccode="10") then shifted := "00";
+        elsif (layer_ccode="11") then shifted := "00";
+        end if;
+        else
+        shifted := "000";
+        end if;
 
-	return std_logic_vector(shifted);
+    return std_logic_vector(shifted);
     end;
 
 begin
@@ -76,12 +85,15 @@ begin
     ccode_expect_m2(9  downto  8) <= shift_ccode(ccode_expect(9  downto  8) ,2);
     ccode_expect_m2(11 downto 10) <= shift_ccode(ccode_expect(11 downto 10) ,2);
 
-    match <= '1' when
-               valid='1' and (pat_expect = pat_found) and
-	    (((keyhs_expect    = keyhs_found) and (ccode_expect = ccode_found)) or
-             ((keyhs_expect_m1 = keyhs_found) and (ccode_expect_m1 = ccode_found)) or
-             ((keyhs_expect_m2 = keyhs_found) and (ccode_expect_m2 = ccode_found)))
-	    else '0';
+    pat_match <= '1' when check_pat='0' or (pat_expect = pat_found) else '0';
+
+    keyhs_ccode_match <= '1' when
+            (((check_keyhs='0' or keyhs_expect    = keyhs_found) and (check_ccode='0' or ccode_expect = ccode_found)) or
+             ((check_keyhs='0' or keyhs_expect_m1 = keyhs_found) and (check_ccode='0' or ccode_expect_m1 = ccode_found)) or
+             ((check_keyhs='0' or keyhs_expect_m2 = keyhs_found) and (check_ccode='0' or ccode_expect_m2 = ccode_found)))
+         else '0';
+
+    match <= '1' when valid='1' and pat_match='1' and keyhs_ccode_match = '1' else '0';
 
 end ccode_checker_arch;
 

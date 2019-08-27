@@ -23,9 +23,15 @@ parameter MXBNDB  = 4;                 // Bend bits
 parameter MXPID   = 11;                // Number of patterns
 parameter MXPAT   = 5;                 // Number of patterns
 
-parameter PATLUT = 1;                  // 1=use pattern_lut; 0=use traditional pattern finding
+parameter PATLUT = 1;         // 1=use pattern_lut; 0=use traditional pattern finding
+parameter SORT_ON_PATLUT = 0; // 1=best1of7 sorting on pattern_lut; 0=use traditional pattern sorting
 
 parameter A=10;
+parameter B=11;
+parameter C=12;
+parameter D=13;
+parameter E=14;
+parameter F=15;
 
 parameter PRETRIG_SOURCE = 0;          // 0=pretrig, 1=post-fit
 

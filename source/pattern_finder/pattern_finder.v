@@ -77,20 +77,20 @@ module pattern_finder (
   hs_hit_1st,
   hs_pid_1st,
   hs_key_1st,
+  hs_xky_1st,
 
   hs_qlt_1st,
   hs_bnd_1st,
   hs_car_1st,
-  hs_xky_1st,
 
   hs_hit_2nd,
   hs_pid_2nd,
   hs_car_2nd,
   hs_key_2nd,
+  hs_xky_2nd,
 
   hs_qlt_2nd,
   hs_bnd_2nd,
-  hs_xky_2nd,
 
   hs_bsy_2nd,
 
@@ -195,29 +195,29 @@ module pattern_finder (
   output [15: 0] clct_sep_ram_rdata; // CLCT separation RAM read  data VME
 
   // CLCT Pattern-finder results
-  output [MXHITB - 1: 0]  hs_hit_1st; // 1st CLCT pattern hits
-  output [MXPIDB - 1: 0]  hs_pid_1st; // 1st CLCT pattern ID
-  output [MXKEYBX - 1: 0] hs_key_1st; // 1st CLCT key 1/2-strip
+  output [MXHITB - 1: 0]      hs_hit_1st; // 1st CLCT pattern hits
+  output [MXPIDB - 1: 0]      hs_pid_1st; // 1st CLCT pattern ID
+  output [MXKEYBX - 1: 0]     hs_key_1st; // 1st CLCT key 1/2-strip
+  output [MXSUBKEYBX - 1 : 0] hs_xky_1st; // 1st CLCT key 1/8-strip
 
-  output [MXQLTB     - 1 : 0] hs_qlt_1st;
-  output [MXBNDB     - 1 : 0] hs_bnd_1st;
-  output [MXPATC     - 1 : 0] hs_car_1st;
-  output [MXSUBKEYBX - 1 : 0] hs_xky_1st;
+  output [MXQLTB     - 1 : 0] hs_qlt_1st; // 1st CLCT pattern lookup quality
+  output [MXBNDB     - 1 : 0] hs_bnd_1st; // 1st CLCT pattern lookup bend angle
+  output [MXPATC     - 1 : 0] hs_car_1st; // 1st CLCT pattern lookup comparator-code
 
-  output [MXHITB - 1: 0]  hs_hit_2nd; // 2nd CLCT pattern hits
-  output [MXPIDB - 1: 0]  hs_pid_2nd; // 2nd CLCT pattern ID
-  output [MXKEYBX - 1: 0] hs_key_2nd; // 2nd CLCT key 1/2-strip
+  output [MXHITB - 1: 0]      hs_hit_2nd; // 2nd CLCT pattern hits
+  output [MXPIDB - 1: 0]      hs_pid_2nd; // 2nd CLCT pattern ID
+  output [MXKEYBX - 1: 0]     hs_key_2nd; // 2nd CLCT key 1/2-strip
+  output [MXSUBKEYBX - 1 : 0] hs_xky_2nd; // 2nd CLCT key 1/8-strip
 
-  output [MXQLTB     - 1 : 0] hs_qlt_2nd;
-  output [MXBNDB     - 1 : 0] hs_bnd_2nd;
-  output [MXPATC     - 1 : 0] hs_car_2nd;
-  output [MXSUBKEYBX - 1 : 0] hs_xky_2nd;
+  output [MXQLTB     - 1 : 0] hs_qlt_2nd; // 2nd CLCT pattern lookup quality
+  output [MXBNDB     - 1 : 0] hs_bnd_2nd; // 2nd CLCT pattern lookup bend angle
+  output [MXPATC     - 1 : 0] hs_car_2nd; // 2nd CLCT pattern lookup comparator-code
 
-  output                  hs_bsy_2nd; // 2nd CLCT busy, logic error indicator
+  output                      hs_bsy_2nd; // 2nd CLCT busy, logic error indicator
 
-  output                 hs_layer_trig;  // Layer triggered
-  output [MXHITB - 1: 0] hs_nlayers_hit; // Number of layers hit
-  output [MXLY - 1: 0]   hs_layer_or;    // Layer OR
+  output                      hs_layer_trig;  // Layer triggered
+  output [MXHITB - 1: 0]      hs_nlayers_hit; // Number of layers hit
+  output [MXLY - 1: 0]        hs_layer_or;    // Layer OR
 
 `ifdef DEBUG_PATTERN_FINDER
   // Debug
@@ -902,13 +902,12 @@ module pattern_finder (
   wire [MXPATC-1:0]    hs_carry_s1      [6:0];
   reg [MXPATB - 1: 0] hs_pat_s1_dly1   [6: 0];
   reg [MXKEYB - 1: 0] hs_key_s1_dly1   [6: 0]; // partial key for 1 of 32
-  reg  [MXPATC - 1: 0] hs_carry_s1_dly1 [6:0];
   wire [MXPATB - 1: 0] hs_pat_s1_to_1of7   [6: 0];
   wire [MXKEYB - 1: 0] hs_key_s1_to_1of7   [6: 0]; // partial key for 1 of 32
   wire [MXPATC-1:0]    hs_carry_s1_to_1of7   [6:0];
 
 
-  // if using the pattern LUT, delay pat + key by 1 clock to allow for lookup
+  // if NOT using the pattern LUT delay pat + key by 1 clock
   genvar i;
   generate
     for (i = 0; i <= 6; i = i + 1) begin: data1of7delay
@@ -916,12 +915,11 @@ module pattern_finder (
       always @(posedge clock) begin
         hs_pat_s1_dly1[i]   <= hs_pat_s1[i];
         hs_key_s1_dly1[i]   <= hs_key_s1[i];
-        hs_carry_s1_dly1[i] <= hs_carry_s1[i];
       end
 
       assign hs_pat_s1_to_1of7   [i] = (PATLUT) ? hs_pat_s1_dly1[i]   : hs_pat_s1[i];
       assign hs_key_s1_to_1of7   [i] = (PATLUT) ? hs_key_s1_dly1[i]   : hs_key_s1[i];
-      assign hs_carry_s1_to_1of7 [i] =            hs_carry_s1_dly1[i];
+      assign hs_carry_s1_to_1of7 [i] =            hs_carry_s1[i];
 
     end
   endgenerate
@@ -1297,7 +1295,9 @@ module pattern_finder (
 // Stage 7A: 1/2-Strip Priority Encoder
 //    Find 2nd best of 224 patterns, excluding busy region around 1st best key
 //-------------------------------------------------------------------------------------------------------------------
+
   // Delay 1st CLCT pattern numbers to align in time with 1st CLCT busy keys
+  // Transfer both the patterns and the carry bits (comparator codes)
   wire [MXPATB - 1: 0] hs_pat_s3   [MXHSX - 1: 0];
   wire [MXPATC - 1: 0] hs_carry_s3 [MXHSX - 1: 0];
 
@@ -1334,8 +1334,10 @@ module pattern_finder (
   endgenerate
 
   // Best 7 of 224 1/2-strip patterns
+
+  // these are outputs from the 2nd best1of32 sorter
   wire [MXPATB - 1: 0] hs_pat_s4   [6: 0];
-  reg [MXPATB - 1: 0] hs_pat_s4_dly1   [6: 0];
+  reg  [MXPATB - 1: 0] hs_pat_s4_dly1   [6: 0];
   wire [MXPATB - 1: 0] hs_pat_s4_to_1of7   [6: 0];
 
   wire [MXKEYB - 1: 0] hs_key_s4   [6: 0]; // partial key for 1 of 32
@@ -1348,24 +1350,22 @@ module pattern_finder (
   wire [MXBNDB -1:0] hs_bend_s4       [6:0];
 
   wire [MXPATC -1:0] hs_carry_s4      [6:0];
-  reg  [MXPATC -1:0] hs_carry_s4_dly1      [6:0];
   wire [MXPATC -1:0] hs_carry_s4_to_1of7      [6:0];
 
   wire [MXQLTB -1:0] hs_qlt_s4        [6:0];
 
-  // if using the pattern LUT, delay pat + key by 1 clock to allow for lookup
+  // if NOT using the pattern LUT, delay by 1 clock to match latency
   generate
     for (i = 0; i <= 6; i = i + 1) begin: data1of7busydelay
 
       always @(posedge clock) begin
         hs_pat_s4_dly1[i]   <= hs_pat_s4[i];
         hs_key_s4_dly1[i]   <= hs_key_s4[i];
-        hs_carry_s4_dly1[i] <= hs_carry_s4[i];
       end
 
-      assign hs_pat_s4_to_1of7   [i] = (PATLUT) ? hs_pat_s4_dly1[i]   : hs_pat_s4[i];
-      assign hs_key_s4_to_1of7   [i] = (PATLUT) ? hs_key_s4_dly1[i]   : hs_key_s4[i];
-      assign hs_carry_s4_to_1of7 [i] =            hs_carry_s4_dly1[i];
+      assign hs_pat_s4_to_1of7   [i] = (PATLUT) ? hs_pat_s4[i] : hs_pat_s4_dly1[i];
+      assign hs_key_s4_to_1of7   [i] = (PATLUT) ? hs_key_s4[i] : hs_key_s4_dly1[i];
+      assign hs_carry_s4_to_1of7 [i] =            hs_carry_s4[i];
 
     end
   endgenerate
@@ -1583,25 +1583,29 @@ module pattern_finder (
 
   generate
   for (i = 0; i <= 6; i = i + 1) begin: pat_lut
-  pattern_lut
-  upattern_lut (
-  // 40 MHz clock input
+  pattern_lut upattern_lut (
+    // 40 MHz clock input
     .clock(clock),
-  // Sortable pattern inputs
+
+    // Sortable pattern inputs
     .pat00(hs_pat_s1[i]),
     .pat01(hs_pat_s4[i]),
-  // Carried half-strip bits
+
+    // Carried half-strip bits
     .carry00(hs_carry_s1[i]),
     .carry01(hs_carry_s4[i]),
-  // LUT Quarterstrip output
-     .offs0(hs_offs_s1[i]),
-     .offs1(hs_offs_s4[i]),
-  // LUT Bend angle output
-     .bend0(hs_bend_s1[i]),
-     .bend1(hs_bend_s4[i]),
-  // LUT Quality Output
-     .quality0(hs_qlt_s1[i]),
-     .quality1(hs_qlt_s4[i])
+
+    // LUT Quarterstrip output
+    .offs0(hs_offs_s1[i]),
+    .offs1(hs_offs_s4[i]),
+
+    // LUT Bend angle output
+    .bend0(hs_bend_s1[i]),
+    .bend1(hs_bend_s4[i]),
+
+    // LUT Quality Output
+    .quality0(hs_qlt_s1[i]),
+    .quality1(hs_qlt_s4[i])
   );
   end
   endgenerate
