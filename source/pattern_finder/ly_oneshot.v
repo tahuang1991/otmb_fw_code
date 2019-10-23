@@ -7,6 +7,7 @@ module ly_oneshot (
   input reset
 );
 parameter WIDTH = 224;
+parameter BYPASS = 0;
 
 reg  [3:0] width_cnt [WIDTH-1:0];
 wire [WIDTH-1:0] busy;
@@ -25,7 +26,10 @@ generate
         else if (busy[ibit]) width_cnt[ibit] <= width_cnt[ibit]-1'b1; // decrement count down to 0
     end
 
-    assign out[ibit] = busy[ibit] || in[ibit];
+    if (BYPASS)
+      assign out[ibit] = in[ibit];
+    else
+      assign out[ibit] = busy[ibit] || in[ibit];
 
   end
 endgenerate

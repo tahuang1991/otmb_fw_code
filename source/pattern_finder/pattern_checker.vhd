@@ -93,7 +93,8 @@ begin
              ((check_keyhs='0' or keyhs_expect_m2 = keyhs_found) and (check_ccode='0' or ccode_expect_m2 = ccode_found)))
          else '0';
 
-    match <= '1' when valid='1' and pat_match='1' and keyhs_ccode_match = '1' else '0';
+    match <= '1' when pat_match='1' and keyhs_ccode_match = '1' else '0';
+  --match <= '1' when valid='1' and pat_match='1' and keyhs_ccode_match = '1' else '0';
 
 end ccode_checker_arch;
 

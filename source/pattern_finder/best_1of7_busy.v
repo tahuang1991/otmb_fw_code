@@ -67,11 +67,11 @@ reg [MXOFFSB-1:0] best_offs;
       best_bsy   = 0;
       end
 
-  else if((pat5 > pat4) &&
-          (pat5 > pat3) &&
-          (pat5 > pat2) &&
-          (pat5 > pat1) &&
-          (pat5 > pat0) && !bsy5)
+  else if((sort_key5 > sort_key4) &&
+          (sort_key5 > sort_key3) &&
+          (sort_key5 > sort_key2) &&
+          (sort_key5 > sort_key1) &&
+          (sort_key5 > sort_key0) && !bsy5)
       begin
       best_pat   = pat5;
       best_key   = {3'd5,key5};
@@ -96,9 +96,9 @@ reg [MXOFFSB-1:0] best_offs;
       best_bsy   = 0;
       end
 
-  else if((pat3 > pat2) &&
-          (pat3 > pat1) &&
-          (pat3 > pat0) && !bsy3)
+  else if((sort_key3 > sort_key2) &&
+          (sort_key3 > sort_key1) &&
+          (sort_key3 > sort_key0) && !bsy3)
       begin
       best_pat   = pat3;
       best_qlt   = qlt3;

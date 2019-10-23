@@ -248,7 +248,8 @@ always @(*) begin
   endcase
 end
 
-always @(posedge clock) begin
+// FAST
+always @(*) begin
 
   offs0    <= rd0[17:14];
   offs1    <= rd1[17:14];

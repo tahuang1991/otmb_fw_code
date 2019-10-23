@@ -30,8 +30,6 @@ parameter MXADRB       = 10;
 parameter ADR_MAX      = 1 << MXADRB;
 parameter ROM_FILE     = "../source/pattern_finder/default.dat";
 
-reg [MXADRB-1:0] adr=0;
-
 reg [48:0] expect_rom_1st [ADR_MAX-1:0];
 reg [48:0] expect_rom_2nd [ADR_MAX-1:0];
 
@@ -70,12 +68,14 @@ initial begin
   $readmemh("cfeb5.mem",  cfeb5_rom);
   $readmemh("cfeb6.mem",  cfeb6_rom);
 
-  $readmemh("expected0.mem", expect_rom_1st);
-  $readmemh("expected1.mem", expect_rom_2nd);
+  $readmemh("expected_1st.mem", expect_rom_1st);
+  $readmemh("expected_2nd.mem", expect_rom_2nd);
 end
 
 reg stop=1'b0;
 assign done = stop;
+
+reg [MXADRB-1:0] adr='h0;
 
 always @(posedge clock) begin
   if (!stop && increment) begin

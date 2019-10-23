@@ -3903,7 +3903,7 @@
          _gtl_oe
          ;
 
-   wire lut_sump = hs_qlt_1st | hs_bnd_1st | hs_xky_1st | hs_qlt_2nd | hs_bnd_2nd | hs_xky_2nd;
+   wire lut_sump = (|hs_qlt_1st) | (|hs_bnd_1st) | (|hs_xky_1st) | (|hs_qlt_2nd) | (|hs_bnd_2nd) | (|hs_xky_2nd);
 
    // Sump
    assign sump = ccb_sump | alct_sump |   rpc_sump   | sequencer_sump | tmb_sump     | buf_sump  |
