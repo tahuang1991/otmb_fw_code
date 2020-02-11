@@ -88,7 +88,7 @@ begin
     pat_match <= '1' when check_pat='0' or (pat_expect = pat_found) else '0';
 
     keyhs_ccode_match <= '1' when
-            (((check_keyhs='0' or keyhs_expect    = keyhs_found) and (check_ccode='0' or ccode_expect = ccode_found)) or
+            (((check_keyhs='0' or keyhs_expect    = keyhs_found) and (check_ccode='0' or    ccode_expect = ccode_found)) or
              ((check_keyhs='0' or keyhs_expect_m1 = keyhs_found) and (check_ccode='0' or ccode_expect_m1 = ccode_found)) or
              ((check_keyhs='0' or keyhs_expect_m2 = keyhs_found) and (check_ccode='0' or ccode_expect_m2 = ccode_found)))
          else '0';
@@ -97,5 +97,3 @@ begin
   --match <= '1' when valid='1' and pat_match='1' and keyhs_ccode_match = '1' else '0';
 
 end ccode_checker_arch;
-
-

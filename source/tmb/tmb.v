@@ -32,7 +32,7 @@
 //  02/04/2003  Replace match logic and trigger latching, fix mpc_response_ff and mpc vme latching
 //  02/26/2003  Power up uses 2x clock for mpc_tx asyn set
 //  03/02/2003  Added match window location for off-line statistics
-//  03/05/2003  Mod bxn in mpc frame for clct_only or alct_only 
+//  03/05/2003  Mod bxn in mpc frame for clct_only or alct_only
 //  03/06/2003  Fix tmb_busy if match happens on last_clct, fixed match window count
 //  03/07/2003  Fix clct_only and match win
 //  04/30/2003  Remove mpc_wait_done, only use mpc_response_ff, add mpc_accept_tp for scope
@@ -292,7 +292,7 @@
   ,clct_vpf_sre
   ,clct_window_open
   ,clct_window_haslcts
-  ,clct_tag_sr  
+  ,clct_tag_sr
   ,clct_last_vpf
   ,clct_last_tag
   ,clct_last_win
@@ -409,16 +409,16 @@
   parameter MXBADR    = RAM_ADRB;      // Header buffer data address bits
 
 // Constants
-  parameter MXCFEB    =   7;        // Number of CFEBs on CSC
-  parameter MXALCT    =  16;        // Number bits per ALCT word
-  parameter MXCLCT    =  16;        // Number bits per CLCT word
-  parameter MXCLCTC    =  3;        // Number bits per CLCT common data word
-  parameter MXMPCRX    =  2;        // Number bits from MPC
-  parameter MXMPCTX    =  32;        // Number bits sent to MPC
-  parameter MXFRAME    =  16;        // Number bits per muon frame
-  parameter MXALCTPIPE  =  6;        // Number clocks to delay ALCT
-  parameter MXMPCPIPE    =  16;        // Number clocks to delay mpc response
-  parameter MXMPCDLY    =  4;        // MPC delay time bits
+  parameter MXCFEB     = 7;           // Number of CFEBs on CSC
+  parameter MXALCT     = 16;          // Number bits per ALCT word
+  parameter MXCLCT     = 16 + MXXKYB; // Number bits per CLCT word
+  parameter MXCLCTC    = 3;           // Number bits per CLCT common data word
+  parameter MXMPCRX    = 2;           // Number bits from MPC
+  parameter MXMPCTX    = 32;          // Number bits sent to MPC
+  parameter MXFRAME    = 16;          // Number bits per muon frame
+  parameter MXALCTPIPE = 6;           // Number clocks to delay ALCT
+  parameter MXMPCPIPE  = 16;          // Number clocks to delay mpc response
+  parameter MXMPCDLY   = 4;           // MPC delay time bits
 
 //------------------------------------------------------------------------------------------------------------------
 //Ports
@@ -450,25 +450,25 @@
   output          wr_avail_rmpc;    // Buffer available at MPC received
 
 // Sequencer
-  input  [MXCLCT-1:0]  clct0_xtmb;      // First  CLCT
-  input  [MXCLCT-1:0]  clct1_xtmb;      // Second CLCT
-  input  [MXCLCTC-1:0]  clctc_xtmb;      // Common to CLCT0/1 to TMB
-  input  [MXCFEB-1:0]  clctf_xtmb;      // Active feb list to TMB
-  input          bx0_xmpc;      // bx0 to mpc
+  input  [MXCLCT-1:0]  clct0_xtmb; // First  CLCT
+  input  [MXCLCT-1:0]  clct1_xtmb; // Second CLCT
+  input  [MXCLCTC-1:0] clctc_xtmb; // Common to CLCT0/1 to TMB
+  input  [MXCFEB-1:0]  clctf_xtmb; // Active feb list to TMB
+  input                bx0_xmpc;   // bx0 to mpc
 
-  output          tmb_trig_pulse;    // ALCT or CLCT or both triggered
-  output          tmb_trig_keep;    // ALCT or CLCT or both triggered, and trigger is allowed
+  output          tmb_trig_pulse;     // ALCT or CLCT or both triggered
+  output          tmb_trig_keep;      // ALCT or CLCT or both triggered, and trigger is allowed
   output          tmb_non_trig_keep;  // Event did not trigger, but keep it for readout
-  output          tmb_match;      // ALCT and CLCT matched in time
-  output          tmb_alct_only;    // Only ALCT triggered
-  output          tmb_clct_only;    // Only CLCT triggered
-  output  [3:0]      tmb_match_win;    // Location of alct in clct window
-  output  [3:0]      tmb_match_pri;    // Priority of clct in clct window
-  output          tmb_alct_discard;  // ALCT pair was not used for LCT
-  output          tmb_clct_discard;  // CLCT pair was not used for LCT
+  output          tmb_match;          // ALCT and CLCT matched in time
+  output          tmb_alct_only;      // Only ALCT triggered
+  output          tmb_clct_only;      // Only CLCT triggered
+  output  [3:0]   tmb_match_win;      // Location of alct in clct window
+  output  [3:0]   tmb_match_pri;      // Priority of clct in clct window
+  output          tmb_alct_discard;   // ALCT pair was not used for LCT
+  output          tmb_clct_discard;   // CLCT pair was not used for LCT
   output          tmb_clct0_discard;  // CLCT0 was discarded from ME1A
   output          tmb_clct1_discard;  // CLCT1 was discarded from ME1A
-  output  [MXCFEB-1:0]  tmb_aff_list;    // Active CFEBs for CLCT used in TMB match
+  output  [MXCFEB-1:0]  tmb_aff_list; // Active CFEBs for CLCT used in TMB match
 
   output          tmb_match_ro;    // ALCT and CLCT matched in time, non-triggering readout
   output          tmb_alct_only_ro;  // Only ALCT triggered, non-triggering readout
@@ -512,7 +512,7 @@
   input  [3:0]      clct_window;    // CLCT match window width
 
   input  [1:0]      tmb_sync_err_en;  // Allow sync_err to MPC for either muon
-  input          tmb_allow_alct;    // Allow ALCT only 
+  input          tmb_allow_alct;    // Allow ALCT only
   input          tmb_allow_clct;    // Allow CLCT only
   input          tmb_allow_match;  // Allow Match only
 
@@ -563,7 +563,7 @@
   output          alct_vpf_tp;    // Timing test point, FF buffered for IOBs
   output          clct_vpf_tp;    // Timing test point
   output          clct_window_tp;    // Timing test point
-  
+
   output          alct0_vpf_tprt;    // Timing test point, unbuffered real time for internal scope
   output          alct1_vpf_tprt;    // Timing test point
   output          clct_vpf_tprt;    // Timing test point
@@ -600,7 +600,7 @@
   output           clct_window_open;
   output           clct_window_haslcts;
 
-  output  [15:0]      clct_tag_sr;  
+  output  [15:0]      clct_tag_sr;
   output           clct_last_vpf;
   output           clct_last_tag;
   output           clct_last_win;
@@ -621,7 +621,7 @@
   output  [15:0]      win_ena;
 
   output  [71:0]      mpc_sm_dsp;      // Injector state machine ascii states
-  output          mpc_set;      // mpc_tx  sync set at power up  
+  output          mpc_set;      // mpc_tx  sync set at power up
   output  [MXFRAME-1:0]  mpc0_inj0;      // injected 1st muon 1st frame
   output  [MXFRAME-1:0]  mpc0_inj1;      // injected 1st muon 2nd frame
   output  [MXFRAME-1:0]  mpc1_inj0;      // injected 2nd muon 1st frame
@@ -632,42 +632,42 @@
   output          bank23;
 
 // Decompose ALCT muons
-  output          alct0_valid;    // Valid pattern flag
-  output  [1:0]      alct0_quality;    // Pattern quality
-  output          alct0_amu;      // Accelerator muon
-  output  [6:0]      alct0_key;      // Key Wire Group
-  output  [4:0]      alct0_bxn;      // Bunch crossing number, reduced width for mpc
+  output          alct0_valid;   // Valid pattern flag
+  output  [1:0]   alct0_quality; // Pattern quality
+  output          alct0_amu;     // Accelerator muon
+  output  [6:0]   alct0_key;     // Key Wire Group
+  output  [4:0]   alct0_bxn;     // Bunch crossing number, reduced width for mpc
 
-  output          alct1_valid;    // Valid pattern flag
-  output  [1:0]      alct1_quality;    // Pattern quality
-  output          alct1_amu;      // Accelerator muon
-  output  [6:0]      alct1_key;      // Key Wire Group
-  output  [4:0]      alct1_bxn;      // Bunch crossing number, reduced width for mpc
+  output          alct1_valid;   // Valid pattern flag
+  output  [1:0]   alct1_quality; // Pattern quality
+  output          alct1_amu;     // Accelerator muon
+  output  [6:0]   alct1_key;     // Key Wire Group
+  output  [4:0]   alct1_bxn;     // Bunch crossing number, reduced width for mpc
 
 // Decompose CLCT muons
-  output          clct0_valid;    // Valid pattern flag
-  output  [2:0]      clct0_nhit;      // Hits on pattern
-  output  [3:0]      clct0_pat;      // Pattern shape
-  output          clct0_bend;      // Bend direction
-  output  [4:0]      clct0_key;      // Key 1/2-Strip
-  output  [2:0]      clct0_cfeb;      // Key CFEB ID
+  output          clct0_valid; // Valid pattern flag
+  output  [2:0]   clct0_nhit;  // Hits on pattern
+  output  [3:0]   clct0_pat;   // Pattern shape
+  output          clct0_bend;  // Bend direction
+  output  [4:0]   clct0_key;   // Key 1/2-Strip
+  output  [2:0]   clct0_cfeb;  // Key CFEB ID
 
-  output          clct1_valid;    // Valid pattern flag
-  output  [2:0]      clct1_nhit;      // Hits on pattern
-  output  [3:0]      clct1_pat;      // Pattern shape
-  output          clct1_bend;      // Bend direction
-  output  [4:0]      clct1_key;      // Key 1/2-Strip
-  output  [2:0]      clct1_cfeb;      // Key CFEB ID
+  output          clct1_valid; // Valid pattern flag
+  output  [2:0]   clct1_nhit;  // Hits on pattern
+  output  [3:0]   clct1_pat;   // Pattern shape
+  output          clct1_bend;  // Bend direction
+  output  [4:0]   clct1_key;   // Key 1/2-Strip
+  output  [2:0]   clct1_cfeb;  // Key CFEB ID
 
-  output  [1:0]      clct_bxn;      // Bunch crossing number
-  output          clct_sync_err;    // Bx0 disagreed with bxn counter
+  output  [1:0]   clct_bxn;      // Bunch crossing number
+  output          clct_sync_err; // Bx0 disagreed with bxn counter
 
 // CLCT is from ME1A
-  output          clct0_cfeb456;    // CLCT0 is on CFEB4,5,6 hence ME1A
-  output          clct1_cfeb456;    // CLCT1 is on CFEB4,5,6 hence ME1A
-  output          kill_clct0;      // Delete CLCT0 from ME1A
-  output          kill_clct1;      // Delete CLCT1 from ME1A
-  output          kill_trig;      // Kill clct-trig, both CLCTs are ME1As, and there is no alct in alct-only mode
+  output          clct0_cfeb456; // CLCT0 is on CFEB4,5,6 hence ME1A
+  output          clct1_cfeb456; // CLCT1 is on CFEB4,5,6 hence ME1A
+  output          kill_clct0;    // Delete CLCT0 from ME1A
+  output          kill_clct1;    // Delete CLCT1 from ME1A
+  output          kill_trig;     // Kill clct-trig, both CLCTs are ME1As, and there is no alct in alct-only mode
 
 // Trig keep elements
   output          tmb_trig_keep_ff;
@@ -727,6 +727,11 @@
   wire [MXFRAME-1:0]  mpc0_inj1;
   wire [MXFRAME-1:0]  mpc1_inj0;
   wire [MXFRAME-1:0]  mpc1_inj1;
+
+  wire [MXFRAME-1:0]  mpc0_frame0_old, mpc0_frame0_new;
+  wire [MXFRAME-1:0]  mpc0_frame1_old, mpc0_frame1_new;
+  wire [MXFRAME-1:0]  mpc1_frame0_old, mpc1_frame0_new;
+  wire [MXFRAME-1:0]  mpc1_frame1_old, mpc1_frame1_new;
 
   wire [MXFRAME-1:0]  mpc0_frame0;
   wire [MXFRAME-1:0]  mpc0_frame1;
@@ -793,7 +798,7 @@
 
   assign alct0_pipe = (alct_ptr_is_0) ? alct0_tmb : alct0_srl;  // First  CLCT after clct pipe delay
   assign alct1_pipe = (alct_ptr_is_0) ? alct1_tmb : alct1_srl;  // Second CLCT after clct pipe delay
-  assign alcte_pipe = (alct_ptr_is_0) ? alcte_tmb : alcte_srl;  // Second CLCT after clct pipe delay 
+  assign alcte_pipe = (alct_ptr_is_0) ? alcte_tmb : alcte_srl;  // Second CLCT after clct pipe delay
 
   wire   alct0_pipe_vpf = alct0_pipe[0];
   wire   alct1_pipe_vpf = alct1_pipe[0];
@@ -833,7 +838,7 @@
 //------------------------------------------------------------------------------------------------------------------
 // Pre-calculate dynamic clct window parameters
 //------------------------------------------------------------------------------------------------------------------
-// FF buffer clct_window index for fanout, points to 1st position window is closed 
+// FF buffer clct_window index for fanout, points to 1st position window is closed
   reg [3:0] winclosing=0;
 
   always @(posedge clock) begin
@@ -882,7 +887,7 @@
 // ALCT*CLCT Matching Section
 //------------------------------------------------------------------------------------------------------------------
 // Push CLCT vpf into a 16-stage FF shift register for ALCT matching
-  reg  [15:1] clct_vpf_sre=0;        // CLCT valid pattern flag 
+  reg  [15:1] clct_vpf_sre=0;        // CLCT valid pattern flag
   wire [15:0] clct_vpf_sr;        // Extend CLCT vpf shift register 1bx earlier in time to minimize latency
 
   assign clct_vpf_sr[0]    = wr_push_xtmb;// Extend CLCT vpf shift register 1bx earlier in time
@@ -907,7 +912,7 @@
   clct_tag_sr  <= dynamic_zero;      // Load a dynamic 0 on reset, mollify xst
   end
 
-  i=0;                  // Loop over 15 window positions 0 to 14 
+  i=0;                  // Loop over 15 window positions 0 to 14
   while (i<=14) begin
   if (clct_tag_me==1 && clct_tag_win==i && clct_sr_include[i]) clct_tag_sr[i+1] <= 1;
   else                  // Otherwise parallel shift all data left
@@ -982,7 +987,7 @@
   wire [3:0] clct_win_best = win_s2[0];
   wire [3:0] clct_pri_best = pri_s2[0];
 
-// CLCT window width is generated by a pulse propagating down the enabled clct_sr stages  
+// CLCT window width is generated by a pulse propagating down the enabled clct_sr stages
   wire clct_window_open    = |(clct_vpf_sr & clct_sr_include);
   wire clct_window_haslcts = |(clct_vpf_sr & clct_sr_include & ~clct_tag_sr);
 
@@ -1032,7 +1037,7 @@
 
 //  wire trig_pulse    = clct_match || clct_noalct || clct_noalct_lost || alct_noclct;    // Event pulse
   wire trig_pulse    = clct_match || clct_noalct || clct_noalct_lost || alct_only_trig;  // Event pulse
-  
+
   wire trig_keep    = (clct_keep    || alct_keep);                    // Keep event for trigger and readout
   wire non_trig_keep  = (clct_keep_ro || alct_keep_ro);                  // Keep non-triggering event for readout only
 
@@ -1110,7 +1115,7 @@
 // Post FF mod trig_keep for me1a
   assign tmb_trig_keep     = tmb_trig_keep_ff     && (!kill_trig || tmb_alct_only);
   assign tmb_non_trig_keep = tmb_non_trig_keep_ff && !tmb_trig_keep;
-  
+
 // Pipelined CLCTs, aligned in time with trig_pulse
   reg [MXCLCT-1:0]  clct0_real;
   reg [MXCLCT-1:0]  clct1_real;
@@ -1142,7 +1147,7 @@
   assign alct1_vpf_tprt  = alct1_pipe_vpf;
   assign clct_vpf_tprt  = clct_vpf_sr[0];
   assign clct_window_tprt  = clct_window_open;
-  
+
   always @(posedge clock) begin        // FF-buffered for fpga IOBs
   alct_vpf_tp    <= alct0_pipe_vpf;
   clct_vpf_tp    <= clct_vpf_sr[0];
@@ -1153,7 +1158,7 @@
   reg kill_me1a_clcts=0;
 
   always @(posedge clock) begin
-  if (ttc_resync)  kill_me1a_clcts  <= 1;              // Foil xst warning for typeA and typeB compiles 
+  if (ttc_resync)  kill_me1a_clcts  <= 1;              // Foil xst warning for typeA and typeB compiles
   else      kill_me1a_clcts <= mpc_me1a_block && csc_me1ab;  // Kill CLCTs from ME1A if blocking is on
   end
 
@@ -1179,7 +1184,7 @@
   wire  alct1_vpf  = alct1_real[0];
   wire  clct0_vpf  = clct0_real[0];
   wire  clct1_vpf  = clct1_real[0];
-  
+
   wire [1:0] clct_bxn_insert  = clctc_real[1:0];      // CLCT bunch crossing number for events missing alct
 
   wire  tmb_no_alct  = !alct0_vpf;
@@ -1202,7 +1207,7 @@
   reg  [MXCLCT-1:0]  clct0;
   reg  [MXCLCT-1:0]  clct1;
   wire [MXCLCT-1:0]  clct_dummy;
-  
+
   reg  [MXCLCTC-1:0] clctc;
   wire [MXCLCTC-1:0] clctc_dummy;
 
@@ -1211,7 +1216,7 @@
   assign clctc_dummy = 0;                  // Blank  clct common for alct-only events
 
   always @* begin
-  if      (tmb_no_clct  ) begin clct0 <= clct_dummy; clct1 <= clct_dummy; clctc <= clctc_dummy; end // clct0 and clct1 do not exist, use dummy clct  
+  if      (tmb_no_clct  ) begin clct0 <= clct_dummy; clct1 <= clct_dummy; clctc <= clctc_dummy; end // clct0 and clct1 do not exist, use dummy clct
   else if (tmb_dupe_clct) begin clct0 <= clct0_real; clct1 <= clct0_real; clctc <= clctc_real;  end // clct0 exists, but clct1 does not exist, copy clct0 into clct1
   else                    begin clct0 <= clct0_real; clct1 <= clct1_real; clctc <= clctc_real;  end // clct0 and clct1 exist, so use them
   end
@@ -1223,39 +1228,39 @@
   end
 
 // LCT valid pattern flags
-  wire lct0_vpf  = alct0_vpf || clct0_vpf;      // First muon exists
-  wire lct1_vpf  = alct1_vpf || clct1_vpf;      // Second muon exists
+  wire lct0_vpf  = alct0_vpf || clct0_vpf; // First muon exists
+  wire lct1_vpf  = alct1_vpf || clct1_vpf; // Second muon exists
 
 // Decompose ALCT muons
-  wire      alct0_valid    = alct0[0];      // Valid pattern flag
-  wire  [1:0]  alct0_quality  = alct0[2:1];    // Pattern quality
-  wire      alct0_amu    = alct0[3];      // Accelerator muon
-  wire  [6:0]  alct0_key    = alct0[10:4];    // Key Wire Group
-  wire  [4:0]  alct0_bxn    = alct0[15:11];    // Bunch crossing number
+  wire         alct0_valid   = alct0[0];     // Valid pattern flag
+  wire  [1:0]  alct0_quality = alct0[2:1];   // Pattern quality
+  wire         alct0_amu     = alct0[3];     // Accelerator muon
+  wire  [6:0]  alct0_key     = alct0[10:4];  // Key Wire Group
+  wire  [4:0]  alct0_bxn     = alct0[15:11]; // Bunch crossing number
 
-  wire      alct1_valid    = alct1[0];      // Valid pattern flag
-  wire  [1:0]  alct1_quality  = alct1[2:1];    // Pattern quality
-  wire      alct1_amu    = alct1[3];      // Accelerator muon
-  wire  [6:0]  alct1_key    = alct1[10:4];    // Key Wire Group
-  wire  [4:0]  alct1_bxn    = alct1[15:11];    // Bunch crossing number
+  wire         alct1_valid   = alct1[0];     // Valid pattern flag
+  wire  [1:0]  alct1_quality = alct1[2:1];   // Pattern quality
+  wire         alct1_amu     = alct1[3];     // Accelerator muon
+  wire  [6:0]  alct1_key     = alct1[10:4];  // Key Wire Group
+  wire  [4:0]  alct1_bxn     = alct1[15:11]; // Bunch crossing number
 
 // Decompose CLCT muons
-  wire       clct0_valid    = clct0[0];      // Valid pattern flag
-  wire  [2:0]  clct0_nhit    = clct0[3:1];    // Hits on pattern 0-6
-  wire  [3:0]  clct0_pat    = clct0[7:4];    // Pattern shape 0-A
-  wire      clct0_bend    = clct0[4];      // Bend direction, same as pid lsb
-  wire  [4:0]  clct0_key    = clct0[12:8];    // 1/2-strip ID number
-  wire  [2:0]  clct0_cfeb    = clct0[15:13];    // Key CFEB ID
+  wire         clct0_valid = clct0[0];     // Valid pattern flag
+  wire  [2:0]  clct0_nhit  = clct0[3:1];   // Hits on pattern 0-6
+  wire  [3:0]  clct0_pat   = clct0[7:4];   // Pattern shape 0-A
+  wire         clct0_bend  = clct0[4];     // Bend direction, same as pid lsb
+  wire  [4:0]  clct0_key   = clct0[12:8];  // 1/2-strip ID number
+  wire  [2:0]  clct0_cfeb  = clct0[15:13]; // Key CFEB ID
 
-  wire  [1:0]  clct_bxn    = clctc[1:0];    // Bunch crossing number
-  wire      clct_sync_err  = clctc[2];      // Bx0 disagreed with bxn counter
+  wire  [1:0]  clct_bxn      = clctc[1:0]; // Bunch crossing number
+  wire         clct_sync_err = clctc[2];   // Bx0 disagreed with bxn counter
 
-  wire       clct1_valid    = clct1[0];      // Valid pattern flag
-  wire  [2:0]  clct1_nhit    = clct1[3:1];    // Hits on pattern 0-6
-  wire  [3:0]  clct1_pat    = clct1[7:4];    // Pattern shape 0-A
-  wire      clct1_bend    = clct1[4];      // Bend direction, same as pid lsb
-  wire  [4:0]  clct1_key    = clct1[12:8];    // 1/2-strip ID number
-  wire  [2:0]  clct1_cfeb    = clct1[15:13];    // Key CFEB ID
+  wire         clct1_valid = clct1[0];     // Valid pattern flag
+  wire  [2:0]  clct1_nhit  = clct1[3:1];   // Hits on pattern 0-6
+  wire  [3:0]  clct1_pat   = clct1[7:4];   // Pattern shape 0-A
+  wire         clct1_bend  = clct1[4];     // Bend direction, same as pid lsb
+  wire  [4:0]  clct1_key   = clct1[12:8];  // 1/2-strip ID number
+  wire  [2:0]  clct1_cfeb  = clct1[15:13]; // Key CFEB ID
 
 //------------------------------------------------------------------------------------------------------------------
 // LCT Quality
@@ -1326,29 +1331,62 @@
 //------------------------------------------------------------------------------------------------------------------
 // Format MPC output words
 //------------------------------------------------------------------------------------------------------------------
-  assign  mpc0_frame0[6:0]  =  alct0_key[6:0];
-  assign  mpc0_frame0[10:7]  =  clct0_pat[3:0];
-  assign  mpc0_frame0[14:11]  =  lct0_quality[3:0];
-  assign  mpc0_frame0[15]    =  lct0_vpf;
 
-  assign  mpc0_frame1[7:0]  =  {clct0_cfeb[2:0],clct0_key[4:0]};
-  assign  mpc0_frame1[8]    =  clct0_bend;
-  assign  mpc0_frame1[9]    =  clct_sync_err & tmb_sync_err_en[0];
-  assign  mpc0_frame1[10]    =  alct0_bxn[0];
-  assign  mpc0_frame1[11]    =  clct_bx0;  // bx0 gets replaced after mpc_tx_delay, keep here to mollify xst
-  assign  mpc0_frame1[15:12]  =  csc_id[3:0];
+  assign  mpc0_frame0_old[6:0]   = alct0_key[6:0];
+  assign  mpc0_frame0_old[10:7]  = clct0_pat[3:0];
+  assign  mpc0_frame0_old[14:11] = lct0_quality[3:0];
+  assign  mpc0_frame0_old[15]    = lct0_vpf;
 
-  assign  mpc1_frame0[6:0]  =  alct1_key[6:0];
-  assign  mpc1_frame0[10:7]  =  clct1_pat[3:0];
-  assign  mpc1_frame0[14:11]  =  lct1_quality[3:0];
-  assign  mpc1_frame0[15]    =  lct1_vpf;
+  assign  mpc0_frame1_old[7:0]   = {clct0_cfeb[2:0],clct0_key[4:0]};
+  assign  mpc0_frame1_old[8]     = clct0_bend;
+  assign  mpc0_frame1_old[9]     = clct_sync_err & tmb_sync_err_en[0];
+  assign  mpc0_frame1_old[10]    = alct0_bxn[0];
+  assign  mpc0_frame1_old[11]    = clct_bx0;  // bx0 gets replaced after mpc_tx_delay, keep here to mollify xst
+  assign  mpc0_frame1_old[15:12] = csc_id[3:0];
 
-  assign  mpc1_frame1[7:0]  =  {clct1_cfeb[2:0],clct1_key[4:0]};
-  assign  mpc1_frame1[8]    =  clct1_bend;
-  assign  mpc1_frame1[9]    =  clct_sync_err & tmb_sync_err_en[1];
-  assign  mpc1_frame1[10]    =  alct1_bxn[0];
-  assign  mpc1_frame1[11]    =  alct_bx0;  // bx0 gets replaced after mpc_tx_delay, keep here to mollify xst
-  assign  mpc1_frame1[15:12]  =  csc_id[3:0];
+  assign  mpc1_frame0_old[6:0]   = alct1_key[6:0];
+  assign  mpc1_frame0_old[10:7]  = clct1_pat[3:0];
+  assign  mpc1_frame0_old[14:11] = lct1_quality[3:0];
+  assign  mpc1_frame0_old[15]    = lct1_vpf;
+
+  assign  mpc1_frame1_old[7:0]   = {clct1_cfeb[2:0],clct1_key[4:0]};
+  assign  mpc1_frame1_old[8]     = clct1_bend;
+  assign  mpc1_frame1_old[9]     = clct_sync_err & tmb_sync_err_en[1];
+  assign  mpc1_frame1_old[10]    = alct1_bxn[0];
+  assign  mpc1_frame1_old[11]    = alct_bx0;  // bx0 gets replaced after mpc_tx_delay, keep here to mollify xst
+  assign  mpc1_frame1_old[15:12] = csc_id[3:0];
+
+  assign  mpc0_frame0_new[6:0]   = alct0_key[6:0];
+  assign  mpc0_frame0_new[10:7]  = clct0_pat[3:0];
+  assign  mpc0_frame0_new[14:11] = lct0_quality[3:0];
+  assign  mpc0_frame0_new[15]    = lct0_vpf;
+
+  assign  mpc0_frame1_new[9:0]   = clct0_xky[MXXKYB-1:0];
+  assign  mpc0_frame1_new[8]     = clct0_bend;
+  assign  mpc0_frame1_new[9]     = clct_sync_err & tmb_sync_err_en[0];
+  assign  mpc0_frame1_new[10]    = alct0_bxn[0];
+  assign  mpc0_frame1_new[11]    = clct_bx0;  // bx0 gets replaced after mpc_tx_delay, keep here to mollify xst
+  assign  mpc0_frame1_new[15:12] = csc_id[3:0];
+
+  assign  mpc1_frame0_new[6:0]   = alct1_key[6:0];
+  assign  mpc1_frame0_new[10:7]  = clct1_pat[3:0];
+  assign  mpc1_frame0_new[14:11] = lct1_quality[3:0];
+  assign  mpc1_frame0_new[15]    = lct1_vpf;
+
+  assign  mpc1_frame1_new[7:0]   =
+  assign  mpc1_frame1_new[8]     =
+  assign  mpc1_frame1_new[9]     = clct_sync_err & tmb_sync_err_en[1];
+  assign  mpc1_frame1_new[10]    = alct1_bxn[0];
+  assign  mpc1_frame1_new[11]    = alct_bx0;  // bx0 gets replaced after mpc_tx_delay, keep here to mollify xst
+  assign  mpc1_frame1_new[15:12] = csc_id[3:0];
+
+  parameter NEW_DATA_FORMAT = 0;
+
+  assign  mpc0_frame0 = NEW_DATA_FORMAT ? mpc0_frame0_new : mpc0_frame0_old;
+  assign  mpc0_frame1 = NEW_DATA_FORMAT ? mpc0_frame1_new : mpc0_frame1_old;
+
+  assign  mpc1_frame0 = NEW_DATA_FORMAT ? mpc1_frame0_new : mpc1_frame0_old;
+  assign  mpc1_frame1 = NEW_DATA_FORMAT ? mpc1_frame1_new : mpc1_frame1_old;
 
 // Construct MPC output words for MPC, blanked if no muons present, except bx0 [inserted after mpc_tx_delay]
   wire [MXFRAME-1:0]  mpc0_frame0_pulse;
@@ -1569,7 +1607,7 @@
 //  Frame                          "FFFFEEEEDDDDCCCCBBBBAAAA9999888877776666555544443333222211110000"
 //  defparam uinjram23.INIT_00=256'hD007C007D006C006D005C005D004C004D003C003D002C002D001C001D000C000;
 //  defparam uinjram23.INIT_01=256'hD00FC00FD00EC00ED00DC00DD00CC00CD00BC00BD00AC00AD009C009D008C008;
-  
+
 // MPC Injector RAM: first muon
   RAMB36E1 #(
   .INIT_00 (256'hB007A007B006A006B005A005B004A004B003A003B002A002B001A001B000A000),

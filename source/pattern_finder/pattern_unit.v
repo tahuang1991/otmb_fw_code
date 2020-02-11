@@ -54,9 +54,8 @@
 // Pattern LSB = bend direction
 // Hit pattern LUTs for 1 layer: - = don't care, xx= one hit or the other or both
 //------------------------------------------------------------------------------------------------------------------------
-//  wire [MXLY-1:0] pat [MXPID-1:2];  // Ordering 5:0 uses 130 LUTs, but fpga usage is 93%
 
-  wire [0:2]        pat   [MXPID-1:2][0:MXLY-1]; // Ordering 0:5 uses 132 LUTs, and fpga usage is 90%, matches ly3 key result
+  wire [0:2] pat   [MXPID-1:2][0:MXLY-1]; // Ordering 0:LXLY-1 uses 132 LUTs, and fpga usage is 90%, matches ly3 key result
 
 // Pattern A                                                                                                                                       0123456789A
   assign pat[A][0] = {3{pat_en[A]}} &  pat_maskA[15+:3] & {                            ly0[4],ly0[5],ly0[6]                              }; // ly0 ----xxx----

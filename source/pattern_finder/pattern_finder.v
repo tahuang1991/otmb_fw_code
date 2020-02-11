@@ -195,19 +195,19 @@ module pattern_finder (
   output [15: 0] clct_sep_ram_rdata; // CLCT separation RAM read  data VME
 
   // CLCT Pattern-finder results
-  output [MXHITB - 1: 0]      hs_hit_1st; // 1st CLCT pattern hits
-  output [MXPIDB - 1: 0]      hs_pid_1st; // 1st CLCT pattern ID
-  output [MXKEYBX - 1: 0]     hs_key_1st; // 1st CLCT key 1/2-strip
-  output [MXSUBKEYBX - 1 : 0] hs_xky_1st; // 1st CLCT key 1/8-strip
+  output [MXHITB - 1: 0]  hs_hit_1st; // 1st CLCT pattern hits
+  output [MXPIDB - 1: 0]  hs_pid_1st; // 1st CLCT pattern ID
+  output [MXKEYBX - 1: 0] hs_key_1st; // 1st CLCT key 1/2-strip
+  output [MXXKYB - 1 : 0] hs_xky_1st; // 1st CLCT key 1/8-strip
 
   output [MXQLTB     - 1 : 0] hs_qlt_1st; // 1st CLCT pattern lookup quality
   output [MXBNDB     - 1 : 0] hs_bnd_1st; // 1st CLCT pattern lookup bend angle
   output [MXPATC     - 1 : 0] hs_car_1st; // 1st CLCT pattern lookup comparator-code
 
-  output [MXHITB - 1: 0]      hs_hit_2nd; // 2nd CLCT pattern hits
-  output [MXPIDB - 1: 0]      hs_pid_2nd; // 2nd CLCT pattern ID
-  output [MXKEYBX - 1: 0]     hs_key_2nd; // 2nd CLCT key 1/2-strip
-  output [MXSUBKEYBX - 1 : 0] hs_xky_2nd; // 2nd CLCT key 1/8-strip
+  output [MXHITB - 1: 0]  hs_hit_2nd; // 2nd CLCT pattern hits
+  output [MXPIDB - 1: 0]  hs_pid_2nd; // 2nd CLCT pattern ID
+  output [MXKEYBX - 1: 0] hs_key_2nd; // 2nd CLCT key 1/2-strip
+  output [MXXKYB - 1 : 0] hs_xky_2nd; // 2nd CLCT key 1/8-strip
 
   output [MXQLTB     - 1 : 0] hs_qlt_2nd; // 2nd CLCT pattern lookup quality
   output [MXBNDB     - 1 : 0] hs_bnd_2nd; // 2nd CLCT pattern lookup bend angle
@@ -985,12 +985,12 @@ module pattern_finder (
   endgenerate
 
   // Best 1 of 7 HalfStrip patterns
-  wire [MXPATB     - 1:0] hs_pat_s2;
-  wire [MXKEYBX    - 1:0] hs_key_s2;  // full key for 1 of 224
-  wire [MXSUBKEYBX - 1:0] hs_xky_s2;
-  wire [MXQLTB     - 1:0] hs_qlt_s2;
-  wire [MXBNDB     - 1:0] hs_bnd_s2;
-  wire [MXPATC     - 1:0] hs_car_s2;
+  wire [MXPATB - 1:0] hs_pat_s2;
+  wire [MXKEYBX- 1:0] hs_key_s2;  // full key for 1 of 224
+  wire [MXXKYB - 1:0] hs_xky_s2;
+  wire [MXQLTB - 1:0] hs_qlt_s2;
+  wire [MXBNDB - 1:0] hs_bnd_s2;
+  wire [MXPATC - 1:0] hs_car_s2;
 
   best_1of7 #(.PATLUT(PATLUT))
   ubest1of7_1st (
@@ -1053,12 +1053,12 @@ module pattern_finder (
   );
 
   // Latch final hs pattern data for 1st CLCT
-  reg [MXPATB     - 1:0] hs_pat_1st_nodly;
-  reg [MXKEYBX    - 1:0] hs_key_1st_nodly;
-  reg [MXQLTB     - 1:0] hs_qlt_1st_nodly;
-  reg [MXBNDB     - 1:0] hs_bnd_1st_nodly;
-  reg [MXPATC     - 1:0] hs_car_1st_nodly;
-  reg [MXSUBKEYBX - 1:0] hs_xky_1st_nodly;
+  reg [MXPATB - 1:0] hs_pat_1st_nodly;
+  reg [MXKEYBX- 1:0] hs_key_1st_nodly;
+  reg [MXQLTB - 1:0] hs_qlt_1st_nodly;
+  reg [MXBNDB - 1:0] hs_bnd_1st_nodly;
+  reg [MXPATC - 1:0] hs_car_1st_nodly;
+  reg [MXXKYB - 1:0] hs_xky_1st_nodly;
 
   always @(posedge clock) begin
     hs_pat_1st_nodly <= hs_pat_s2;
@@ -1073,32 +1073,32 @@ module pattern_finder (
 // Stage 6A: Delay 1st CLCT to output at same time as 2nd CLCT
 //-------------------------------------------------------------------------------------------------------------------
 
-  wire [MXPATB    -1:0] hs_pat_1st_dly;
-  wire [MXKEYBX   -1:0] hs_key_1st_dly;
-  wire [MXHITB    -1:0] hs_hit_1st_dly;
-  wire [MXQLTB    -1:0] hs_qlt_1st_dly;
-  wire [MXBNDB    -1:0] hs_bnd_1st_dly;
-  wire [MXPATC    -1:0] hs_car_1st_dly;
-  wire [MXSUBKEYBX-1:0] hs_xky_1st_dly;
+  wire [MXPATB -1:0] hs_pat_1st_dly;
+  wire [MXKEYBX-1:0] hs_key_1st_dly;
+  wire [MXHITB -1:0] hs_hit_1st_dly;
+  wire [MXQLTB -1:0] hs_qlt_1st_dly;
+  wire [MXBNDB -1:0] hs_bnd_1st_dly;
+  wire [MXPATC -1:0] hs_car_1st_dly;
+  wire [MXXKYB -1:0] hs_xky_1st_dly;
 
   parameter cdly = 4'd0;
 
-  srl16e_bbl #(MXPATB )    upatbbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_pat_1st_nodly), .q(hs_pat_1st_dly));
-  srl16e_bbl #(MXKEYBX)    ukeybbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_key_1st_nodly), .q(hs_key_1st_dly));
+  srl16e_bbl #(MXPATB ) upatbbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_pat_1st_nodly), .q(hs_pat_1st_dly));
+  srl16e_bbl #(MXKEYBX) ukeybbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_key_1st_nodly), .q(hs_key_1st_dly));
 
-  srl16e_bbl #(MXQLTB)     uqltbbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_qlt_1st_nodly), .q(hs_qlt_1st_dly));
-  srl16e_bbl #(MXBNDB)     ubndbbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_bnd_1st_nodly), .q(hs_bnd_1st_dly));
-  srl16e_bbl #(MXPATC)     ucarbbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_car_1st_nodly), .q(hs_car_1st_dly));
-  srl16e_bbl #(MXSUBKEYBX) uxkybbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_xky_1st_nodly), .q(hs_xky_1st_dly));
+  srl16e_bbl #(MXQLTB) uqltbbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_qlt_1st_nodly), .q(hs_qlt_1st_dly));
+  srl16e_bbl #(MXBNDB) ubndbbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_bnd_1st_nodly), .q(hs_bnd_1st_dly));
+  srl16e_bbl #(MXPATC) ucarbbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_car_1st_nodly), .q(hs_car_1st_dly));
+  srl16e_bbl #(MXXKYB) uxkybbl (.clock(clock), .ce(1'b1), .adr(cdly), .d(hs_xky_1st_nodly), .q(hs_xky_1st_dly));
 
   // Final 1st CLCT flipflop
-  reg [MXPIDB     - 1:0] hs_pid_1st;
-  reg [MXHITB     - 1:0] hs_hit_1st;
-  reg [MXKEYBX    - 1:0] hs_key_1st;
-  reg [MXQLTB     - 1:0] hs_qlt_1st;
-  reg [MXBNDB     - 1:0] hs_bnd_1st;
-  reg [MXPATC     - 1:0] hs_car_1st;
-  reg [MXSUBKEYBX - 1:0] hs_xky_1st;
+  reg [MXPIDB - 1:0] hs_pid_1st;
+  reg [MXHITB - 1:0] hs_hit_1st;
+  reg [MXKEYBX- 1:0] hs_key_1st;
+  reg [MXQLTB - 1:0] hs_qlt_1st;
+  reg [MXBNDB - 1:0] hs_bnd_1st;
+  reg [MXPATC - 1:0] hs_car_1st;
+  reg [MXXKYB - 1:0] hs_xky_1st;
 
   assign hs_hit_1st_dly = hs_pat_1st_dly[MXPATB - 1: MXPIDB];
 
@@ -1403,14 +1403,14 @@ module pattern_finder (
   endgenerate
 
   // Best 1 of 7 1/2 - strip patterns
-  wire [MXPATB    -1:0] hs_pat_s5;
-  wire [MXKEYBX   -1:0] hs_key_s5;  // full key for 1 of 224
-  wire [MXHITB    -1:0] hs_hit_s5;
-  wire [MXSUBKEYBX-1:0] hs_xky_s5;
-  wire [MXQLTB    -1:0] hs_qlt_s5;
-  wire [MXBNDB    -1:0] hs_bnd_s5;
-  wire [MXPATC    -1:0] hs_car_s5;
-  wire                  hs_bsy_s5;
+  wire [MXPATB -1:0] hs_pat_s5;
+  wire [MXKEYBX-1:0] hs_key_s5;  // full key for 1 of 224
+  wire [MXHITB -1:0] hs_hit_s5;
+  wire [MXXKYB -1:0] hs_xky_s5;
+  wire [MXQLTB -1:0] hs_qlt_s5;
+  wire [MXBNDB -1:0] hs_bnd_s5;
+  wire [MXPATC -1:0] hs_car_s5;
+  wire               hs_bsy_s5;
 
   best_1of7_busy #(.PATLUT(PATLUT))
   ubest1of7_2nd (
@@ -1489,7 +1489,7 @@ module pattern_finder (
   reg [MXQLTB     - 1:0] hs_qlt_2nd;
   reg [MXBNDB     - 1:0] hs_bnd_2nd;
   reg [MXPATC     - 1:0] hs_car_2nd;
-  reg [MXSUBKEYBX - 1:0] hs_xky_2nd;
+  reg [MXXKYB - 1:0]     hs_xky_2nd;
   reg                    hs_bsy_2nd;
 
   assign hs_hit_s5 = hs_pat_s5[MXPATB - 1: MXPIDB];

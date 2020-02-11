@@ -22,12 +22,12 @@
   input  [MXBNDB  - 1:0]  bend0  , bend1  , bend2  , bend3  , bend4  , bend5  , bend6  ,
   input  [MXPATC  - 1:0]  carry0 , carry1 , carry2 , carry3 , carry4 , carry5 , carry6 ,
 
-  output reg [MXPATB     - 1:0] best_pat,
-  output reg [MXKEYBX    - 1:0] best_key,
-  output reg [MXBNDB     - 1:0] best_bend,
-  output reg [MXPATC     - 1:0] best_carry,
-  output reg [MXSUBKEYBX - 1:0] best_subkey,
-  output reg [MXQLTB     - 1:0] best_qlt
+  output reg [MXPATB  - 1:0] best_pat,
+  output reg [MXKEYBX - 1:0] best_key,
+  output reg [MXBNDB  - 1:0] best_bend,
+  output reg [MXPATC  - 1:0] best_carry,
+  output reg [MXXKYB  - 1:0] best_subkey,
+  output reg [MXQLTB  - 1:0] best_qlt
   );
 
 // Constants
@@ -135,9 +135,9 @@ reg [MXOFFSB-1:0] best_offs;
       end
   end
 
-  wire signed [MXOFFSB   -1:0] best_offs_signed   = best_offs;
-  wire signed [MXKEYBX   -1:0] best_key_signed    = best_key;
-  wire        [MXSUBKEYBX-1:0] best_subkey_signed = 4*best_key_signed + best_offs_signed;
+  wire signed [MXOFFSB -1:0] best_offs_signed   = best_offs;
+  wire signed [MXKEYBX -1:0] best_key_signed    = best_key;
+  wire        [MXXKYB  -1:0] best_subkey_signed = 4*best_key_signed + best_offs_signed;
 
   always @(*) begin
     if      ((best_key==0   && best_offs<=0) || (best_key==1   && best_offs<=-4))

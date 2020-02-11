@@ -46,7 +46,7 @@ module pattern_finder_tb ();
   wire [MXHITB-1:0]   hit_thresh_pretrig = 'd3;
   wire [MXPIDB-1:0]   pid_thresh_pretrig = 'd2;
 
-  wire [MXHITB-1:0]   hit_thresh_postdrift = 'd4;
+  wire [MXHITB-1:0]   hit_thresh_postdrift = 'd3;
   wire [MXPIDB-1:0]   pid_thresh_postdrift = 'd2;
 
   wire [MXHITB-1:0]   dmb_thresh_pretrig = 'd3;
@@ -64,6 +64,9 @@ module pattern_finder_tb ();
   //
   //--------------------------------------------------------------------------------------------------------------------
 
+  wire [1:0] state_expect;
+  wire [1:0] state_expect_dly;
+
   wire  [7:0]  key_hs_expect_1st , key_hs_expect_dly_1st , key_hs_expect_mem_1st ;
   wire  [11:0] ccode_expect_1st  , ccode_expect_dly_1st  , ccode_expect_mem_1st  ;
   wire  [3:0]  pat_expect_1st    , pat_expect_dly_1st    , pat_expect_mem_1st    ;
@@ -76,7 +79,15 @@ module pattern_finder_tb ();
   wire [MXADRB-1:0] mem_adr;
   wire [MXADRB-1:0] mem_adr_dly;
 
-  parameter [3:0] expect_dly = 7;
+  parameter [3:0] expect_dly = 5;
+
+  srl16e_bbl #(.WIDTH(2)) srl16e_bbl_sm (
+    .clock (clock),
+    .ce    (1'b1),
+    .adr   (expect_dly-4),
+    .d     (state_expect),
+    .q     (state_expect_dly)
+  );
 
   srl16e_bbl #(.WIDTH(8+12+4)) srl16e_bbl_expect_1st (
     .clock (clock),
@@ -102,6 +113,18 @@ module pattern_finder_tb ();
     .q     ({mem_adr_dly})
   );
 
+// CLCT Sequencer State Declarations
+  reg[63:0] state_expect_sm_dsp;
+
+  always @* begin
+    case (state_expect_dly)
+      'h1:       state_expect_sm_dsp <= "idle    ";
+      'h2:       state_expect_sm_dsp <= "flush   ";
+      'h3:       state_expect_sm_dsp <= "pretrig ";
+       default   state_expect_sm_dsp <= "default ";
+    endcase
+  end
+
   assign key_hs_expect_1st = key_hs_expect_dly_1st;
   assign ccode_expect_1st  = ccode_expect_dly_1st;
   assign pat_expect_1st    = pat_expect_dly_1st;
@@ -117,6 +140,7 @@ module pattern_finder_tb ();
   wire [MXHSX - 1: 0] ly4hs_os, ly4hs_mem;
   wire [MXHSX - 1: 0] ly5hs_os, ly5hs_mem;
 
+
   mem_reader #(.MXADRB(MXADRB)) umem_reader (
 
     .clock             (clock),
@@ -127,6 +151,8 @@ module pattern_finder_tb ();
     .ly3               (ly3hs_mem),
     .ly4               (ly4hs_mem),
     .ly5               (ly5hs_mem),
+
+    .state_expect      (state_expect),
 
     .key_hs_expect_1st (key_hs_expect_mem_1st),
     .ccode_expect_1st  (ccode_expect_mem_1st),
@@ -425,10 +451,10 @@ module pattern_finder_tb ();
   wire  [MXKEYBX-1:0] hs_key_1st;
 
   // 1st pattern lookup results
-  wire [MXQLTB - 1   : 0] hs_qlt_1st;
-  wire [MXBNDB - 1   : 0] hs_bnd_1st;
-  wire [MXPATC - 1   : 0] hs_car_1st; // 1st CLCT pattern lookup comparator-code
-  wire [MXSUBKEYBX-1 : 0] hs_xky_1st;
+  wire [MXQLTB - 1 : 0] hs_qlt_1st;
+  wire [MXBNDB - 1 : 0] hs_bnd_1st;
+  wire [MXPATC - 1 : 0] hs_car_1st; // 1st CLCT pattern lookup comparator-code
+  wire [MXXKYB - 1 : 0] hs_xky_1st;
 
   // 2nd clct
   wire  [MXHITB-1:0]  hs_hit_2nd;
@@ -437,10 +463,10 @@ module pattern_finder_tb ();
   wire                hs_bsy_2nd;
 
   // 2nd pattern lookup results
-  wire [MXQLTB - 1   : 0] hs_qlt_2nd;
-  wire [MXBNDB - 1   : 0] hs_bnd_2nd;
-  wire [MXPATC - 1   : 0] hs_car_2nd; // 2nd CLCT pattern lookup comparator-code
-  wire [MXSUBKEYBX-1 : 0] hs_xky_2nd;
+  wire [MXQLTB - 1 : 0] hs_qlt_2nd;
+  wire [MXBNDB - 1 : 0] hs_bnd_2nd;
+  wire [MXPATC - 1 : 0] hs_car_2nd; // 2nd CLCT pattern lookup comparator-code
+  wire [MXXKYB - 1 : 0] hs_xky_2nd;
 
   wire                hs_layer_trig;  // Layer triggered
   wire  [MXHITB-1:0]  hs_nlayers_hit; // Number of layers hit
@@ -576,15 +602,15 @@ module pattern_finder_tb ();
       .valid        (1'b1),
 
       .check_pat    (1'b1),
-      .pat_found    (hs_pid_1st),
+      .pat_found    ({MXPIDB{valid_1st}} & hs_pid_1st),
       .pat_expect   (pat_expect_1st),
 
       .check_ccode  (1'b1),
-      .ccode_found  (hs_car_1st),
+      .ccode_found  ({MXPATC{valid_1st}} & hs_car_1st),
       .ccode_expect (ccode_expect_1st),
 
       .check_keyhs  (1'b1),
-      .keyhs_found  (hs_key_1st),
+      .keyhs_found  ({MXKEYBX{valid_1st}} & hs_key_1st),
       .keyhs_expect (key_hs_expect_1st),
 
       .match        (match_1st)
@@ -627,6 +653,11 @@ module pattern_finder_tb ();
 
   wire clct0_vpf;
   wire clct1_vpf;
+
+  reg err_vec_reg;
+  always @(posedge clock) begin
+    err_vec_reg <= valid_mismatch_1st || valid_mismatch_2nd;
+  end
 
   wire valid_match_1st    = (clct0_vpf && valid_1st &&  match_1st);
   wire valid_mismatch_1st = (clct0_vpf && valid_1st && !match_1st);
@@ -752,7 +783,7 @@ parameter MXBADR       = RAM_ADRB;  // Header buffer data address bits
   parameter flush    = 4; // Flushing event, throttling trigger rate
   parameter halt     = 5; // Halted, waiting for un-halt from VME
 
-  wire clct_pretrig = (clct_sm == pretrig);                        // CLCT pre-triggered
+  wire clct_pretrig   = (clct_sm == pretrig);                    // CLCT pre-triggered
   wire clct_pat_trig  = any_cfeb_hit && clct_pat_trig_en;        // Trigger source is a CLCT pattern
   wire clct_retrigger = clct_pat_trig && noflush && nothrottle;  // Immediate re-trigger
   wire clct_notbusy   = !clct_pretrig_rqst;                      // Ready for next pretrig

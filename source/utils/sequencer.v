@@ -467,10 +467,12 @@
   hs_hit_1st,
   hs_pid_1st,
   hs_key_1st,
+  hs_xky_1st,
 
   hs_hit_2nd,
   hs_pid_2nd,
   hs_key_2nd,
+  hs_xky_2nd,
   hs_bsy_2nd,
 
   hs_layer_trig,
@@ -1043,14 +1045,14 @@
   parameter MXRAMDATA    = 18;        // Number VME Raw Hits RAM data bits, does not include fifo wren
 
 // CLCT arrays
-  parameter MXALCT       = 16;        // Number bits per ALCT word
-  parameter MXCLCT       = 16;        // Number bits per CLCT word
-  parameter MXCLCTA      = 7;         // Number bits per CLCT auxiliary data word
-  parameter MXCLCTC      = 3;         // Number bits per CLCT common data word
-  parameter MXMPCRX      = 2;         // Number bits from MPC
-  parameter MXMPCTX      = 32;        // Number bits sent to MPC
-  parameter MPCTIME      = 3;         // Number clocks to wait for MPC response
-  parameter MXFRAME      = 16;        // Number bits per muon frame
+  parameter MXALCT       = 16;          // Number bits per ALCT word
+  parameter MXCLCT       = 16 + MXXKYB; // Number bits per CLCT word
+  parameter MXCLCTA      = 7;           // Number bits per CLCT auxiliary data word
+  parameter MXCLCTC      = 3;           // Number bits per CLCT common data word
+  parameter MXMPCRX      = 2;           // Number bits from MPC
+  parameter MXMPCTX      = 32;          // Number bits sent to MPC
+  parameter MPCTIME      = 3;           // Number clocks to wait for MPC response
+  parameter MXFRAME      = 16;          // Number bits per muon frame
 
 // RPC Constants
   parameter MXRPC        = 2;         // Number RPCs
@@ -1153,10 +1155,12 @@
   input  [MXHITB-1:0]  hs_hit_1st;        // 1st CLCT pattern hits
   input  [MXPIDB-1:0]  hs_pid_1st;        // 1st CLCT pattern ID
   input  [MXKEYBX-1:0]  hs_key_1st;        // 1st CLCT key 1/2-strip
+  input  [MXXKYBX-1:0]  hs_xky_1st;        // 1st CLCT key 1/8-strip
 
   input  [MXHITB-1:0]  hs_hit_2nd;        // 2nd CLCT pattern hits
   input  [MXPIDB-1:0]  hs_pid_2nd;        // 2nd CLCT pattern ID
   input  [MXKEYBX-1:0]  hs_key_2nd;        // 2nd CLCT key 1/2-strip
+  input  [MXXKYBX-1:0]  hs_xky_2nd;        // 2nd CLCT key 1/8-strip
   input          hs_bsy_2nd;        // 2nd CLCT busy, logic error indicator
 
   input          hs_layer_trig;      // Layer triggered
@@ -2477,15 +2481,17 @@
   wire [MXCLCTC-1:0] clctc, clctc_xtmb;
   wire [MXCFEB-1:0]  clctf, clctf_xtmb;
 
-  assign clct0[0]    = clct0_vpf;       // Valid pattern flag
-  assign clct0[3:1]  = hs_hit_1st[2:0]; // Hits on pattern 0-6
-  assign clct0[7:4]  = hs_pid_1st[3:0]; // Pattern shape 0-A
-  assign clct0[15:8] = hs_key_1st[7:0]; // 1/2-strip ID number
+  assign clct0[0]          = clct0_vpf;       // Valid pattern flag
+  assign clct0[3:1]        = hs_hit_1st[2:0]; // Hits on pattern 0-6
+  assign clct0[7:4]        = hs_pid_1st[3:0]; // Pattern shape 0-A
+  assign clct0[15:8]       = hs_key_1st[7:0]; // 1/2-strip ID number
+  assign clct0[16+:MXXKYB] = hs_xky_1st;      // 1/8-strip ID number
 
-  assign clct1[0]    = clct1_vpf;       // Valid pattern flag
-  assign clct1[3:1]  = hs_hit_2nd[2:0]; // Hits on pattern 0-6
-  assign clct1[7:4]  = hs_pid_2nd[3:0]; // Pattern shape 0-A
-  assign clct1[15:8] = hs_key_2nd[7:0]; // 1/2-strip ID number
+  assign clct1[0]          = clct1_vpf;       // Valid pattern flag
+  assign clct1[3:1]        = hs_hit_2nd[2:0]; // Hits on pattern 0-6
+  assign clct1[7:4]        = hs_pid_2nd[3:0]; // Pattern shape 0-A
+  assign clct1[15:8]       = hs_key_2nd[7:0]; // 1/2-strip ID number
+  assign clct1[16+:MXXKYB] = hs_xky_2nd;      // 1/8-strip ID number
 
   assign clcta[5:0]  = hs_layer_or[5:0]; // Layer ORs at pattern finder output
   assign clcta[6]    = hs_bsy_2nd;       // 2nd CLCT busy, logic error indicator
@@ -2769,16 +2775,17 @@
   assign xpre1_wdata[59:30] = alct_counter[29:0];    // ALCT counter at pre-trigger
 
 // Post-drift: store CLCT data sent to TMB in RAM mapping array
-  parameter MXXTMB = 44;                    // Post drift CLCT data
-  wire [MXXTMB-1:0]  xtmb_wdata;                // Mapping array
-  wire [MXXTMB-1:0]  xtmb_rdata;                // Mapping array
-  
-  assign xtmb_wdata[15:0]  =  clct0_xtmb[15:0]; // CLCT0 after drift
-  assign xtmb_wdata[31:16] =  clct1_xtmb[15:0]; // CLCT1 after drift
-  assign xtmb_wdata[34:32] =  clctc_xtmb[2:0];  // CLCT0/1 common after drift
-  assign xtmb_wdata[41:35] =  clcta_xtmb[6:0];  // CLCT0/1 common after drift
-  assign xtmb_wdata[42]    =  clct_invp[0];     // CLCT had invalid pattern after drift delay
-  assign xtmb_wdata[43]    =  clct_invp[1];     // CLCT had invalid pattern after drift delay
+  parameter MXXTMB = 44 + 2*MXXKYB; // Post drift CLCT data
+  wire [MXXTMB-1:0]  xtmb_wdata;    // Mapping array
+  wire [MXXTMB-1:0]  xtmb_rdata;    // Mapping array
+
+  assign xtmb_wdata[15:0]         = clct0_xtmb[15:0];                                 // CLCT0 after drift
+  assign xtmb_wdata[31:16]        = clct1_xtmb[15:0];                                 // CLCT1 after drift
+  assign xtmb_wdata[34:32]        = clctc_xtmb[2:0];                                  // CLCT0/1 common after drift
+  assign xtmb_wdata[41:35]        = clcta_xtmb[6:0];                                  // CLCT0/1 common after drift
+  assign xtmb_wdata[42]           = clct_invp[0];                                     // CLCT had invalid pattern after drift delay
+  assign xtmb_wdata[43]           = clct_invp[1];                                     // CLCT had invalid pattern after drift delay
+  assign xtmb_wdata[44+:2*MXXKYB] = {clct1_xtmb[16+:MXXKYB], clct0_xtmb[16+:MXXKYB]}; // CLCT had invalid pattern after drift delay
 
 // Post-drift+1bx: store CLCT counter in RAM mapping array
   parameter MXXTMB1 = 30;         // Post drift CLCT counter
