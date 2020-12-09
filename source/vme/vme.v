@@ -699,6 +699,8 @@
   gem_me1b_match_promotequal,     //Out promote quality or not for match in ME1b region 
   gem_me1a_match_promotepat,     //Out promote pattern or not for match in ME1a region, 
   gem_me1b_match_promotepat,     //Out promote pattern or not for match in ME1b region, 
+  gemA_match_enable,
+  gemB_match_enable,
 
 // GEM Configuration Ports
   gemA_rxd_posneg,
@@ -707,15 +709,13 @@
   gemB_rxd_int_delay,
 
 //GEMA trigger match control
-  match_gemA_alct_delay,
+  match_gem_alct_delay,
   match_gem_alct_window,
   match_gem_clct_window,
   gemA_alct_match, 
   gemA_clct_match,
   gemA_fiber_enable,
-
 //GEMB trigger match control
-  match_gemB_alct_delay,
   //match_gemB_alct_window,
   //match_gemB_clct_window,
   gemB_alct_match,
@@ -2402,7 +2402,7 @@
   output [3:0] gemB_rxd_int_delay; // Out gem chamber 1 (fiber2,3) bxn delay
 
   //GEMA trigger match control
-  output [3:0] match_gemA_alct_delay;
+  output [7:0] match_gem_alct_delay;
   output [3:0] match_gem_alct_window;
   output [3:0] match_gem_clct_window;
   input        gemA_alct_match;
@@ -2410,7 +2410,6 @@
   output [1:0] gemA_fiber_enable;
 
   //GEMB trigger match control
-  output [3:0] match_gemB_alct_delay;
   //output [3:0] match_gemB_alct_window;
   //output [3:0] match_gemB_clct_window;
   input        gemB_alct_match;
@@ -2434,6 +2433,8 @@
   output       gem_me1b_match_promotequal;
   output       gem_me1a_match_promotepat;
   output       gem_me1b_match_promotepat;
+  output       gemA_match_enable;
+  output       gemB_match_enable;
 
   output [MXVFAT-1:0] gemA_vfat_hcm;
   output [MXVFAT-1:0] gemB_vfat_hcm;
@@ -8897,7 +8898,7 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
 // GEMA_TRG_CTRL = 0x328 GEMA trigger match control control
 //------------------------------------------------------------------------------------------------------------------
   initial begin
-      gemA_trg_ctrl_wr[ 3: 0]      = 4'b0;  //RW, gemA and ALCT match trigger delay
+      gemA_trg_ctrl_wr[ 3: 0]      = 4'b0;  //RW, NOT USED!! 
       gemA_trg_ctrl_wr[ 7: 4]      = 4'd3;  //RW, gemA and ALCT match window
       gemA_trg_ctrl_wr[11: 8]      = 4'd5;  //RW, gemA and CLCT match window
       gemA_trg_ctrl_wr[   12]      = 1'b0;  //Ronly, gemA and ALCT match
@@ -8905,12 +8906,11 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
       gemA_trg_ctrl_wr[15:14]      = 2'b11;  //RW, gemA two fibers enabled or not
   end
 
-  assign match_gemA_alct_delay            = gemA_trg_ctrl_wr[3:0];
   assign match_gem_alct_window            = gemA_trg_ctrl_wr[7:4];
   assign match_gem_clct_window            = gemA_trg_ctrl_wr[11:8];
   assign gemA_fiber_enable                = gemA_trg_ctrl_wr[15:14];
 
-  assign gemA_trg_ctrl_rd[3:0]            = match_gemA_alct_delay;
+  assign gemA_trg_ctrl_rd[3:0]            = 4'b0; // NOT used
   assign gemA_trg_ctrl_rd[7:4]            = match_gem_alct_window;
   assign gemA_trg_ctrl_rd[11:8]           = match_gem_clct_window;
   assign gemA_trg_ctrl_rd[12]             = gemA_alct_match;
@@ -8922,23 +8922,18 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
 // GEMA_TRG_CTRL = 0x32a GEMB trigger match control control
 //------------------------------------------------------------------------------------------------------------------
   initial begin
-      gemB_trg_ctrl_wr[ 3: 0]      = 4'b0;  //RW,gemB and ALCT match trigger delay
-      gemB_trg_ctrl_wr[ 7: 4]      = 4'd3;  //RW,gemB and ALCT match window
+      gemB_trg_ctrl_wr[ 7: 0]      = 8'b0;  //RW,gem and ALCT match trigger delay
       gemB_trg_ctrl_wr[11: 8]      = 4'd5;  //RW,gemB and CLCT match window
       gemB_trg_ctrl_wr[   12]      = 1'b0;  //R,gemB and ALCT match
       gemB_trg_ctrl_wr[   13]      = 1'b0;  //R, gemB and CLCT match 
       gemB_trg_ctrl_wr[15:14]      = 2'b11; //RW, gemB two fibers enabled or not
   end
 
-  assign match_gemB_alct_delay            = gemB_trg_ctrl_wr[3:0];
-  //assign match_gemB_alct_window           = gemB_trg_ctrl_wr[7:4];
-  //assign match_gemB_clct_window           = gemB_trg_ctrl_wr[11:8];
+  assign match_gem_alct_delay             = gemB_trg_ctrl_wr[7:0];
   assign gemB_fiber_enable                = gemB_trg_ctrl_wr[15:14];
 
-  assign gemB_trg_ctrl_rd[3:0]            = match_gemB_alct_delay;
-  //assign gemB_trg_ctrl_rd[7:4]            = match_gemB_alct_window;
-  //assign gemB_trg_ctrl_rd[11:8]           = match_gemB_clct_window;
-  assign gemB_trg_ctrl_rd[11:4]          = gemB_trg_ctrl_wr [11:4];
+  assign gemB_trg_ctrl_rd[7:0]            = match_gemB_alct_delay;
+  assign gemB_trg_ctrl_rd[11:4]           = gemB_trg_ctrl_wr [11:4];
   assign gemB_trg_ctrl_rd[12]             = gemB_alct_match;
   assign gemB_trg_ctrl_rd[13]             = gemB_clct_match;
   assign gemB_trg_ctrl_rd[15:14]          = gemB_fiber_enable[1:0];
@@ -8960,7 +8955,11 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
   gem_csc_match_ctrl_wr[ 9]   = 1'b1; // RW GEMCSC match, promote quality in me1b with good match
   gem_csc_match_ctrl_wr[10]   = 1'b0; // RW GEMCSC match, promote pattern in me1a with good match
   gem_csc_match_ctrl_wr[11]   = 1'b0; // RW GEMCSC match, promote pattern in me1b with good match
-  gem_csc_match_ctrl_wr[15:12] = 4'b0; // not used
+  gem_csc_match_ctrl_wr[12]   = 1'b1; // RW GEMCSC match, enable GEMA for GEMCSC match
+  gem_csc_match_ctrl_wr[13]   = 1'b1; // RW GEMCSC match, enable GEMA for GEMCSC match
+  gem_csc_match_ctrl_wr[14]   = 1'b1; // NOT used yet
+  gem_csc_match_ctrl_wr[15]   = 1'b1; // NOT used yet
+
   end
 
   assign gem_me1a_match_enable        = gem_csc_match_ctrl_wr[ 0];
@@ -8975,6 +8974,8 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
   assign gem_me1b_match_promotequal   = gem_csc_match_ctrl_wr[ 9];
   assign gem_me1a_match_promotepat    = gem_csc_match_ctrl_wr[10];
   assign gem_me1b_match_promotepat    = gem_csc_match_ctrl_wr[11];
+  assign gemA_match_enable            = gem_csc_match_ctrl_wr[12];
+  assign gemB_match_enable            = gem_csc_match_ctrl_wr[13];
 
   assign gem_csc_match_ctrl_rd        = gem_csc_match_ctrl_wr[15:0];
 

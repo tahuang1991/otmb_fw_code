@@ -2,8 +2,7 @@
 
 // sort CLCT-gem bending angle, pick the small one 
 // should add ALCT-CLCT-GEM match
-module  tree_encoder_gemclct(
-  input [7:0] match_vpf , // ALCT-CLCT-GEM match results 
+module  tree_encoder_alctclctgem(
   input [9:0] win_pri_0 , // bending angle in gem-clct match
   input [9:0] win_pri_1 ,
   input [9:0] win_pri_2 ,
