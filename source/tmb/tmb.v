@@ -262,20 +262,22 @@
   gemB_fiber_enable,
 
   //GEM-CSC match control
+  //Be careful with default value!!!!
   gem_me1a_match_enable,       //Out gem-csc match in me1a
-  gem_me1b_match_enable,       //Out gem-csc match in me1b
+  gem_me1b_match_enable,       //Out gem-csc match in me1b ->tmb_gem_csc_allow!!
   gem_me1a_match_nogem,       //Out gem-csc match without gem is allowed in ME1b, => allow lowQ ALCT-CLCT match
   gem_me1b_match_nogem,       //Out gem-csc match without gem is allowed in ME1a
   gem_me1a_match_noalct,       //Out gem-csc match without alct is allowed in ME1b=> allow GEM-CLCT match to build LCT
   gem_me1b_match_noalct,       //Out gem-csc match without alct is allowed in ME1a 
   gem_me1a_match_noclct,       //Out gem-csc match without clct is allowed in ME1b => allow GEM-ALCT match to build LCT
   gem_me1b_match_noclct,       //Out gem-csc match without clct is allowed in ME1a
-  gem_me1a_match_promotequal,     //Out promote quality or not for match in ME1a region, 
-  gem_me1b_match_promotequal,     //Out promote quality or not for match in ME1b region 
-  gem_me1a_match_promotepat,     //Out promote pattern or not for match in ME1a region, 
-  gem_me1b_match_promotepat,     //Out promote pattern or not for match in ME1b region, 
-  tmb_copad_alct_allow,
-  tmb_copad_clct_allow,
+  //gem_me1a_match_promotequal,     //Out promote quality or not for match in ME1a region, 
+  //gem_me1b_match_promotequal,     //Out promote quality or not for match in ME1b region 
+  //gem_me1a_match_promotepat,     //Out promote pattern or not for match in ME1a region, 
+  //gem_me1b_match_promotepat,     //Out promote pattern or not for match in ME1b region, 
+  //!Attention!!!! gem_me1b_match_noclct->tmb_copad_alct_allow!!!
+  //tmb_copad_alct_allow,
+  //tmb_copad_clct_allow,
 
 // TMB-Sequencer Pipelines
   wr_adr_xtmb,
@@ -2769,11 +2771,12 @@
         Q                     (lct0_qlt_run3[2:0])
     );
 
+  wire tmb_dupe_alctorclct = (tmb_dupe_alct_run3 || tmb_dupe_clct_run3) && !(tmb_dupe_alct_run3 && tmb_dupe_clct_run3);
   lct_quality_run3 ulct1qualityrun3
     (
         .alct_clct_copad_match(alct1_clct1_copad_match_found_pos), 
         .alct_clct_gem_match  (alct1_clct1_gem_match_found_pos), 
-        .alct_clct_match      (alct1_clct1_nogem_match_found_pos), 
+        .alct_clct_match      (alct1_clct1_nogem_match_found_pos || tmb_dupe_alctorclct), //special case: alct or clct is duplicated and by default use them for alct+clct match
         .clct_copad_match     (clct1_copad_match_good), 
         .alct_copad_match     (alct1_copad_match_good),  
         .gemcsc_bend_enable   (gemcsc_bend_enable),
