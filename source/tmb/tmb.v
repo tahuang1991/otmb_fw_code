@@ -1381,6 +1381,7 @@
   //register shift for CCLUT 
   srl16e_bbl #(MXCCLUTB ) uclct0cclut (.clock(clock),.ce(1'b1),.adr(clct_srl_adr),.d(clct0_cclut_xtmb),.q(clct0_cclut_srl));
   srl16e_bbl #(MXCCLUTB ) uclct1cclut (.clock(clock),.ce(1'b1),.adr(clct_srl_adr),.d(clct1_cclut_xtmb),.q(clct1_cclut_srl));
+  //Attention: HMT trigger??? what if CLCT is not found! should delay HMT trigger by ALCT_CLCT_match_win/2 by default???
   srl16e_bbl #(2        ) uhmt        (.clock(clock),.ce(1'b1),.adr(clct_srl_adr),.d(hmt_trigger_xtmb),.q(hmt_trigger_srl));
 
 
@@ -1603,6 +1604,7 @@
 //------------------------------------------------------------------------------------------------------------------
 // Push GEM data into a 1bx to 16bx pipeline delay to do GEM-ALCT match
 //------------------------------------------------------------------------------------------------------------------
+  //Attention!!!
   //first delay GEM signal by match_gemA_alct_delay/match_gemB_alct_delay to do GEM-ALCT match
   //Attention:  Only 4 bits delay is used for now!!!!
   

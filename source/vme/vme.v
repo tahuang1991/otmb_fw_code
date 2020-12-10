@@ -4761,16 +4761,15 @@
 
 
   //Tao, 2020 definition
-  assign revcode_vme_new [05:00] = VERSION_MINOR;// 6 bits = Minor version  (minor features, internal fixes, bug fixes, etc).  
-  assign revcode_vme_new [10:06] = VERSION_MAJOR;//5 bits = Major Version (major features which breaks compatibility, requires changes to other board firmware) 
-  //[14:11], 4bits for DAQ format
+  assign revcode_vme_new [04:00] = VERSION_MINOR;// 6 bits = Minor version  (minor features, internal fixes, bug fixes, etc).  
+  assign revcode_vme_new [08:05] = VERSION_MAJOR;//5 bits = Major Version (major features which breaks compatibility, requires changes to other board firmware) 
+  //[12:09], 4bits for DAQ format
   //0, old TMB
   //1, Run2 OTMB
   //2, Run3 OTMB with CCLUT and without GEM
   //3, Run3 OTMB with CCLUT and GEM 
-  //assign revcode_vme_new [14:11] = (ccLUT_enable && gem_read_enable) ? 4'd3 : (ccLUT_enable ? 4'd2 : 4'd1);
-  assign revcode_vme_new [14:11] = VERSION_FORMAT;
-  assign revcode_vme_new [15] = 1'd0;
+  assign revcode_vme_new [12:09] = VERSION_FORMAT;
+  assign revcode_vme_new [15:13] = 3'd0;
 
   assign revcode[14:0] = (run3_daq_df) ? revcode_vme_new[14:0] : revcode_vme[14:0];  // Sequencer format is 15 bits, VME is 16
 
@@ -8932,8 +8931,8 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
   assign match_gem_alct_delay             = gemB_trg_ctrl_wr[7:0];
   assign gemB_fiber_enable                = gemB_trg_ctrl_wr[15:14];
 
-  assign gemB_trg_ctrl_rd[7:0]            = match_gemB_alct_delay;
-  assign gemB_trg_ctrl_rd[11:4]           = gemB_trg_ctrl_wr [11:4];
+  assign gemB_trg_ctrl_rd[7:0]            = match_gem_alct_delay;
+  assign gemB_trg_ctrl_rd[11:8]           = gemB_trg_ctrl_wr [11:8];
   assign gemB_trg_ctrl_rd[12]             = gemB_alct_match;
   assign gemB_trg_ctrl_rd[13]             = gemB_clct_match;
   assign gemB_trg_ctrl_rd[15:14]          = gemB_fiber_enable[1:0];
