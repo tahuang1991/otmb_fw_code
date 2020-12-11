@@ -267,6 +267,7 @@
   parameter MXGEMB     =  2;  // Number GEM ID bits. 0=gemAfiber0, 1=gemAfiber1, 2=gemBfiber0, 3=gemBfiber1
   parameter MXCLST     =  4;        // Number of GEM Clusters Per Fiber
   parameter CLSTBITS   =  14; // Number bits per GEM cluster
+  parameter WIREBITS     = 7; //wiregroup
   parameter MXCLUSTER_CHAMBER       = 8; // Num GEM clusters  per Chamber
   parameter MXCLUSTER_SUPERCHAMBER  = 16; //Num GEM cluster  per superchamber
   parameter MXGEMHCM   = 16;  // hot channel mask bits for one vfat
@@ -1704,10 +1705,10 @@
   wire       gem_me1b_match_nogem;// no gem is fine for GEM-CSC match
   wire       gem_me1b_match_noalct;// no alct is fine for GEM-CSC match
   wire       gem_me1b_match_noclct;// no clct is fine for GEM-CSC match
-  wire       gem_me1a_match_promotequal;
-  wire       gem_me1b_match_promotequal;
-  wire       gem_me1a_match_promotepat;
-  wire       gem_me1b_match_promotepat;
+  //wire       gem_me1a_match_promotequal;
+  //wire       gem_me1b_match_promotequal;
+  //wire       gem_me1a_match_promotepat;
+  //wire       gem_me1b_match_promotepat;
 
   // Raw Hits FIFO RAM Ports
   wire  [RAM_ADRB-1:0]      fifo_radr_gem;              // FIFO RAM read tbin address
@@ -1950,7 +1951,7 @@
   //--------------------------------------------------------------------------------------------------------------------
   // GEM Co-pad Matching
   //--------------------------------------------------------------------------------------------------------------------
-  wire [7:0]  gem_match;
+  wire [7:0]  copad_match;
   wire [7:0]  gem_match_upper;
   wire [7:0]  gem_match_lower;
   wire        gem_any_match;
@@ -2045,7 +2046,7 @@
 
 
     // 8 bit match flags
-    .match(gem_match[7:0]),
+    .match(copad_match[7:0]),
 
     // 8 bit cluster match was found on upper/lower roll 
     .match_upper (gem_match_upper[7:0]),
@@ -2078,14 +2079,14 @@ always @ (posedge clock) begin
   gem_copad_reg[7] <=  gemA_cluster[7];
 end
 
-  assign gem_copad[0] = gem_match[0] ? gem_copad_reg[0] : {3'd0,11'd1536};
-  assign gem_copad[1] = gem_match[1] ? gem_copad_reg[1] : {3'd0,11'd1536};
-  assign gem_copad[2] = gem_match[2] ? gem_copad_reg[2] : {3'd0,11'd1536};
-  assign gem_copad[3] = gem_match[3] ? gem_copad_reg[3] : {3'd0,11'd1536};
-  assign gem_copad[4] = gem_match[4] ? gem_copad_reg[4] : {3'd0,11'd1536};
-  assign gem_copad[5] = gem_match[5] ? gem_copad_reg[5] : {3'd0,11'd1536};
-  assign gem_copad[6] = gem_match[6] ? gem_copad_reg[6] : {3'd0,11'd1536};
-  assign gem_copad[7] = gem_match[7] ? gem_copad_reg[7] : {3'd0,11'd1536};
+  assign gem_copad[0] = copad_match[0] ? gem_copad_reg[0] : {3'd0,11'd1536};
+  assign gem_copad[1] = copad_match[1] ? gem_copad_reg[1] : {3'd0,11'd1536};
+  assign gem_copad[2] = copad_match[2] ? gem_copad_reg[2] : {3'd0,11'd1536};
+  assign gem_copad[3] = copad_match[3] ? gem_copad_reg[3] : {3'd0,11'd1536};
+  assign gem_copad[4] = copad_match[4] ? gem_copad_reg[4] : {3'd0,11'd1536};
+  assign gem_copad[5] = copad_match[5] ? gem_copad_reg[5] : {3'd0,11'd1536};
+  assign gem_copad[6] = copad_match[6] ? gem_copad_reg[6] : {3'd0,11'd1536};
+  assign gem_copad[7] = copad_match[7] ? gem_copad_reg[7] : {3'd0,11'd1536};
 
 
   wire copad_sump =
@@ -2876,7 +2877,7 @@ end
 
 // Sequencer GEM Ports
   .gem_any_match     (gem_any_match), // In  GEM co-pad match was found
-  .gem_match         (gem_match),     // In  8 Bit GEM Match Flag
+  .gem_match         (copad_match),     // In  8 Bit GEM Match Flag
   .gemA_sync_err     (~gemA_synced),  // In  GEM0 has intra-chamber sync error
   .gemB_sync_err     (~gemB_synced),  // In  GEM1 has intra-chamber sync error
   .gems_sync_err     (~gems_synced),  // In  GEM Super Chamber has sync error
@@ -4189,6 +4190,8 @@ wire [15:0] gemB_bxn_counter;
   .gemB_cluster6_cscwire_hi  (gemB_csc_cluster_cscwire_lo[6]),// In CSC wire group mapped from GEM pad
   .gemB_cluster7_cscwire_hi  (gemB_csc_cluster_cscwire_lo[7]),// In CSC wire group mapped from GEM pad
 
+  .copad_match   (copad_match);
+
   .match_gem_alct_delay   (match_gem_alct_delay[7:0]),  //In gem delay for gem-ALCT match
   .match_gem_alct_window  (match_gem_alct_window[3:0]), //In gem-alct match window
   .match_gem_clct_window  (match_gem_clct_window[3:0]), //In gem-clct match window
@@ -4210,10 +4213,10 @@ wire [15:0] gemB_bxn_counter;
   .gem_me1b_match_noalct       (gem_me1b_match_noalct),     //IN gem-csc match without alct is allowed in ME1a
   .gem_me1a_match_noclct       (gem_me1a_match_noclct),     //IN gem-csc match without clct is allowed in ME1b
   .gem_me1b_match_noclct       (gem_me1b_match_noclct),     //IN gem-csc match without clct is allowed in ME1a
-  .gem_me1a_match_promotequal  (gem_me1a_match_promotequal),//IN promote quality or not for match in ME1a region, 
-  .gem_me1b_match_promotequal  (gem_me1b_match_promotequal),//IN promote quality or not for match in ME1b region 
-  .gem_me1a_match_promotepat   (gem_me1a_match_promotepat), //IN promote pattern or not for match in ME1a region, 
-  .gem_me1b_match_promotepat   (gem_me1b_match_promotepat), //IN promote pattern or not for match in ME1b region, 
+  //.gem_me1a_match_promotequal  (gem_me1a_match_promotequal),//IN promote quality or not for match in ME1a region, 
+  //.gem_me1b_match_promotequal  (gem_me1b_match_promotequal),//IN promote quality or not for match in ME1b region 
+  //.gem_me1a_match_promotepat   (gem_me1a_match_promotepat), //IN promote pattern or not for match in ME1a region, 
+  //.gem_me1b_match_promotepat   (gem_me1b_match_promotepat), //IN promote pattern or not for match in ME1b region, 
 
 // TMB-Sequencer Pipelines
   .wr_adr_xtmb (wr_adr_xtmb[MXBADR-1:0]), // In  Buffer write address after drift time
@@ -5428,10 +5431,10 @@ wire [15:0] gemB_bxn_counter;
       .gem_me1b_match_noalct       (gem_me1b_match_noalct),       //Out gem-csc match without alct is allowed in ME1a
       .gem_me1a_match_noclct       (gem_me1a_match_noclct),       //Out gem-csc match without clct is allowed in ME1b
       .gem_me1b_match_noclct       (gem_me1b_match_noclct),       //Out gem-csc match without clct is allowed in ME1a
-      .gem_me1a_match_promotequal  (gem_me1a_match_promotequal),     //Out promote quality or not for match in ME1a region, 
-      .gem_me1b_match_promotequal  (gem_me1b_match_promotequal),     //Out promote quality or not for match in ME1b region 
-      .gem_me1a_match_promotepat   (gem_me1a_match_promotepat),     //Out promote pattern or not for match in ME1a region, 
-      .gem_me1b_match_promotepat   (gem_me1b_match_promotepat),     //Out promote pattern or not for match in ME1b region 
+      //.gem_me1a_match_promotequal  (gem_me1a_match_promotequal),     //Out promote quality or not for match in ME1a region, 
+      //.gem_me1b_match_promotequal  (gem_me1b_match_promotequal),     //Out promote quality or not for match in ME1b region 
+      //.gem_me1a_match_promotepat   (gem_me1a_match_promotepat),     //Out promote pattern or not for match in ME1a region, 
+      //.gem_me1b_match_promotepat   (gem_me1b_match_promotepat),     //Out promote pattern or not for match in ME1b region 
       .gemA_match_enable           (gemA_match_enable),         // out enable GEMA for match
       .gemB_match_enable           (gemB_match_enable),         // out enable GEMB for match
 

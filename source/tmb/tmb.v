@@ -248,6 +248,8 @@
   gemB_cluster6_cscwire_hi,
   gemB_cluster7_cscwire_hi,
 
+  copad_match,
+
   match_gem_alct_delay,
   match_gem_alct_window,
   match_gem_clct_window,
@@ -619,6 +621,11 @@
   parameter MXBNDB   = 4;                 // Bend bits
   parameter MXXKYB   = 10;            // Number of EightStrip key bits on 7 CFEBs, was 8 bits with traditional pattern finding
   parameter MXCCLUTB = 10+4+9+12;  // New 35bits for CCLUT, new quality, bnd, xky, comparator code 
+
+  //GEM
+  parameter CLSTBITS   =  14; // Number bits per GEM cluster
+  parameter WIREBITS   = 7; //wiregroup
+  parameter MXCLUSTER_CHAMBER       = 8; // Num GEM clusters  per Chamber
 //------------------------------------------------------------------------------------------------------------------
 //Ports
 //------------------------------------------------------------------------------------------------------------------
@@ -748,8 +755,10 @@
   input  [WIREBITS-1:0] gemB_cluster6_cscwire_hi,
   input  [WIREBITS-1:0] gemB_cluster7_cscwire_hi,
 
+  input  [7:0] copad_match;
+
   //GEMA trigger match control
-  input  [3:0]        match_gem_alct_delay;
+  input  [7:0]        match_gem_alct_delay;
   input  [3:0]        match_gem_alct_window;
   input  [3:0]        match_gem_clct_window;
   input               gemA_match_enable;//enable for gemcsc match
@@ -771,10 +780,10 @@
   input               gem_me1b_match_noclct;// no clct is fine for GEM-CSC match
   input               gem_me1b_match_nogem;// no gem is fine for GEM-CSC match
   input               gem_me1b_match_noalct;// no alct is fine for GEM-CSC match
-  input               gem_me1a_match_promotequal;
-  input               gem_me1b_match_promotequal;
-  input               gem_me1a_match_promotepat;
-  input               gem_me1b_match_promotepat;
+  //input               gem_me1a_match_promotequal;
+  //input               gem_me1b_match_promotequal;
+  //input               gem_me1a_match_promotepat;
+  //input               gem_me1b_match_promotepat;
 
   input               gemA_bx0_rx;
   input  [5:0]        gemA_bx0_delay;
@@ -2282,7 +2291,7 @@
   .gemB_cluster6_xky_mi(gemB_cluster_cscxky_lo_pipe[6][MXXKYB-1:0]),
   .gemB_cluster7_xky_mi(gemB_cluster_cscxky_lo_pipe[7][MXXKYB-1:0]),
 
-  .copad_match, // copad 
+  .copad_match  (copad_match), // copad 
 
   .alct0_clct0_copad_best_icluster(alct0_clct0_copad_best_icluster[2:0]),
   .alct0_clct0_copad_best_angle   (alct0_clct0_copad_best_angle[9:0]),
@@ -2403,8 +2412,6 @@
   wire clct_discard_run3 = (clct_match && !tmb_allow_match) || (clct_noalct && !tmb_allow_clct && !clct0_copad_match_good) || clct_noalct_lost || clct_used;
   wire alct_discard =  alct_pulse && !alct_keep_run3;
 
-
-  
 
 // Match window mux
   wire [3:0] match_win;

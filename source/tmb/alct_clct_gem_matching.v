@@ -394,10 +394,20 @@ module  alct_clct_gem_matching(
       clct1_gemA_bend[i]   = clct1_xky > gemA_cluster_cscxky_mi[i];
       clct1_gemB_bend[i]   = clct1_xky > gemB_cluster_cscxky_mi[i];
 
-      clct0_gemA_match_ok[i] = clct0_gemA_match[i] && (clct0_gemA_bend[i] == clct0_bend);
-      clct0_gemB_match_ok[i] = clct0_gemB_match[i] && (clct0_gemB_bend[i] == clct0_bend);
-      clct1_gemA_match_ok[i] = clct1_gemA_match[i] && (clct0_gemA_bend[i] == clct1_bend);
-      clct1_gemB_match_ok[i] = clct1_gemB_match[i] && (clct0_gemB_bend[i] == clct1_bend);
+      //ME1a with CFEB 4, 5,6 while ME1b with CFEB 0, 1,2,3
+      clct0_gemA_ME1a[i]   = clct0_xky[9] && gemA_cluster_cscxky_mi[i][9] ;
+      clct0_gemB_ME1a[i]   = clct0_xky[9] && gemB_cluster_cscxky_mi[i][9] ;
+      clct1_gemA_ME1a[i]   = clct0_xky[9] && gemA_cluster_cscxky_mi[i][9] ;
+      clct1_gemB_ME1a[i]   = clct0_xky[9] && gemB_cluster_cscxky_mi[i][9] ;
+      clct0_gemA_ME1b[i]   = !clct0_xky[9] && !gemA_cluster_cscxky_mi[i][9] ;
+      clct0_gemB_ME1b[i]   = !clct0_xky[9] && !gemB_cluster_cscxky_mi[i][9] ;
+      clct1_gemA_ME1b[i]   = !clct0_xky[9] && !gemA_cluster_cscxky_mi[i][9] ;
+      clct1_gemB_ME1b[i]   = !clct0_xky[9] && !gemB_cluster_cscxky_mi[i][9] ;
+
+      clct0_gemA_match_ok[i] = clct0_gemA_match[i] && (clct0_gemA_bend[i] == clct0_bend) && (clct0_gemA_ME1a[i] || clct0_gemA_ME1b[i]);
+      clct0_gemB_match_ok[i] = clct0_gemB_match[i] && (clct0_gemB_bend[i] == clct0_bend) && (clct0_gemB_ME1a[i] || clct0_gemB_ME1b[i]);
+      clct1_gemA_match_ok[i] = clct1_gemA_match[i] && (clct0_gemA_bend[i] == clct1_bend) && (clct1_gemA_ME1a[i] || clct1_gemA_ME1b[i]);
+      clct1_gemB_match_ok[i] = clct1_gemB_match[i] && (clct0_gemB_bend[i] == clct1_bend) && (clct1_gemB_ME1a[i] || clct1_gemB_ME1b[i]);
 
       //clct0_gemA_angle[i] = clct0_gemA_match_ok[i] ? (clct0_gemA_bend[i] ? clct0_xky-gemA_cluster_cscxky_mi[i] : gemA_cluster_cscxky_mi[i]-clct0_xky) : MAXGEMCSCBND; 
       //clct0_gemB_angle[i] = clct0_gemB_match_ok[i] ? (clct0_gemB_bend[i] ? clct0_xky-gemB_cluster_cscxky_mi[i] : gemB_cluster_cscxky_mi[i]-clct0_xky) : MAXGEMCSCBND; 
