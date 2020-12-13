@@ -8629,8 +8629,8 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
 // ADR_CLCT0_XKY= 0x1A6    1st CLCT new position
 // ADR_CLCT1_XKY= 0x1A8    2nd CLCT new position
 //------------------------------------------------------------------------------------------------------------------
-  assign clct0_cc_rd[MXPATC-1:0] = clct0_vme_carry[MXPATC-1:0]; 
-  assign clct1_cc_rd[MXPATC-1:0] = clct1_vme_carry[MXPATC-1:0]; 
+  assign clct0_cc_rd[MXPATC-1:0]         = clct0_vme_carry[MXPATC-1:0]; 
+  assign clct1_cc_rd[MXPATC-1:0]         = clct1_vme_carry[MXPATC-1:0]; 
   assign clct0_qlt_rd[MXQLTB - 1    : 0] = clct0_vme_qlt[MXQLTB - 1   : 0];
   assign clct0_bnd_rd[MXBNDB - 1    : 0] = clct0_vme_bnd[MXBNDB - 1   : 0];
   assign clct0_xky_rd[MXXKYB - 1    : 0] = clct0_vme_xky[MXXKYB - 1   : 0];
@@ -8654,7 +8654,9 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
   assign run3_daq_df  = run3_format_ctrl_wr[2];
 
   assign run3_format_ctrl_rd[0]    = ccLUT_enable;
-  assign run3_format_ctrl_rd[15:1] = run3_format_ctrl_wr[15:1];
+  assign run3_format_ctrl_rd[1]    = run3_trig_df;
+  assign run3_format_ctrl_rd[2]    = run3_daq_df;
+  assign run3_format_ctrl_rd[15:3] = run3_format_ctrl_wr[15:3];
 
 
 //------------------------------------------------------------------------------------------------------------------
