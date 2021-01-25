@@ -1675,18 +1675,11 @@
   //GEMA trigger match control
   wire  gemA_match_enable;
   wire  gemB_match_enable;
-  wire [7:0]  match_gem_alct_delay;
-  wire [3:0]  match_gem_alct_window;
-  wire [3:0]  match_gem_clct_window;
-  wire        gemA_alct_match; 
-  wire        gemA_clct_match;
   wire [1:0]  gemA_fiber_enable;
 
   //GEMB trigger match control
   //wire [3:0]  match_gemB_alct_window;
   //wire [3:0]  match_gemB_clct_window;
-  wire        gemB_alct_match; 
-  wire        gemB_clct_match;
   wire [1:0]  gemB_fiber_enable;
 
   wire [3:0] gem_fiber_enable = {gemB_fiber_enable, gemA_fiber_enable};
@@ -2914,6 +2907,8 @@ end
   .gemB_csc_cluster_active_cfeb_list     (gemB_csc_cluster_active_cfeb_list),// In active CFEB by converting gemA clusters into CSC keyhs
   .gemcopad_csc_cluster_active_cfeb_list (gemcopad_csc_cluster_active_cfeb_list),// In active CFEB by converting gemA clusters into CSC keyhs
 
+  .copad_match    (copad_match[7:0]);
+
 // Sequencer External Triggers
   .alct_adb_pulse_sync (alct_adb_pulse_sync), // In  ADB Test pulse trigger
   .dmb_ext_trig        (dmb_ext_trig),        // In  DMB Calibration trigger
@@ -3065,6 +3060,11 @@ end
   .tmb_allow_alct_ro  (tmb_allow_alct_ro),  // In  Allow ALCT only  readout, non-triggering
   .tmb_allow_clct_ro  (tmb_allow_clct_ro),  // In  Allow CLCT only  readout, non-triggering
   .tmb_allow_match_ro (tmb_allow_match_ro), // In  Allow Match only readout, non-triggering
+
+  .gemcsc_bend_enable     (gemcsc_bend_enable),             //In GEMCSC bending angle enabled
+  .match_gem_alct_delay   (match_gem_alct_delay[7:0]),  //In gem delay for gem-ALCT match
+  .gem_clct_win           (gem_clct_win[3:0]), // In gem location in GEM-CLCT window
+  .alct_gem_win           (alct_gem_win[2:0]), // In gem location in GEM-ALCT window
 
   .mpc_tx_delay    (mpc_tx_delay[MXMPCDLY-1:0]), // In  MPC transmit delay
   .mpc_sel_ttc_bx0 (mpc_sel_ttc_bx0),            // In  MPC gets ttc_bx0 or bx0_local
@@ -4049,6 +4049,18 @@ wire [15:0] gemB_bxn_counter;
 //    Receives 80MHz MPC desision result, sends de-muxed to Sequencer
 //-------------------------------------------------------------------------------------------------------------------
 // Local
+  wire        gemA_alct_match; 
+  wire        gemA_clct_match;
+  wire        gemB_alct_match; 
+  wire        gemB_clct_match;
+  wire        gemcsc_bend_enable;
+
+  wire [7:0]  match_gem_alct_delay;
+  wire [3:0]  match_gem_alct_window;
+  wire [3:0]  match_gem_clct_window;
+  wire [3:0]  gem_clct_win;
+  wire [3:0]  alct_gem_win;
+
   wire  [1:0]      tmb_sync_err_en;
   wire  [7:0]      mpc_nframes;
   wire  [3:0]      mpc_wen;
@@ -4197,16 +4209,16 @@ wire [15:0] gemB_bxn_counter;
   .gemB_cluster6_cscwire_hi  (gemB_csc_cluster_cscwire_lo[6]),// In CSC wire group mapped from GEM pad
   .gemB_cluster7_cscwire_hi  (gemB_csc_cluster_cscwire_lo[7]),// In CSC wire group mapped from GEM pad
 
-  .copad_match   (copad_match);
+  .copad_match   (copad_match[7:0]);
 
   .match_gem_alct_delay   (match_gem_alct_delay[7:0]),  //In gem delay for gem-ALCT match
   .match_gem_alct_window  (match_gem_alct_window[3:0]), //In gem-alct match window
   .match_gem_clct_window  (match_gem_clct_window[3:0]), //In gem-clct match window
-  .gemA_match_enable      (gemA_match_enable),             //Out gemA+ALCT match
+  .gemA_match_enable      (gemA_match_enable),             //In gemA+ALCT match
   .gemA_alct_match        (gemA_alct_match),             //Out gemA+ALCT match
   .gemA_clct_match        (gemA_clct_match),             //Out gemA+CLCT match
   .gemA_fiber_enable      (gemA_fiber_enable[1:0]),     //In gemA two fibers enabled or not
-  .gemB_match_enable      (gemB_match_enable),             //Out gemA+ALCT match
+  .gemB_match_enable      (gemB_match_enable),             //IN gemB+ALCT match
   .gemB_alct_match        (gemB_alct_match),       // Out gemB+ALCT match or not
   .gemB_clct_match        (gemB_clct_match),      // Out gemB+CLCT match or not
   .gemB_fiber_enable      (gemB_fiber_enable[1:0]),    //In gemB two fibers enabled or not
@@ -4220,10 +4232,15 @@ wire [15:0] gemB_bxn_counter;
   .gem_me1b_match_noalct       (gem_me1b_match_noalct),     //IN gem-csc match without alct is allowed in ME1a
   .gem_me1a_match_noclct       (gem_me1a_match_noclct),     //IN gem-csc match without clct is allowed in ME1b
   .gem_me1b_match_noclct       (gem_me1b_match_noclct),     //IN gem-csc match without clct is allowed in ME1a
+  .gemcsc_bend_enable     (gemcsc_bend_enable),             //In GEMCSC bending angle enabled
   //.gem_me1a_match_promotequal  (gem_me1a_match_promotequal),//IN promote quality or not for match in ME1a region, 
   //.gem_me1b_match_promotequal  (gem_me1b_match_promotequal),//IN promote quality or not for match in ME1b region 
   //.gem_me1a_match_promotepat   (gem_me1a_match_promotepat), //IN promote pattern or not for match in ME1a region, 
   //.gem_me1b_match_promotepat   (gem_me1b_match_promotepat), //IN promote pattern or not for match in ME1b region, 
+
+  .gem_clct_win           (gem_clct_win[3:0]), // out gem location in GEM-CLCT window
+  .alct_gem_win           (alct_gem_win[3:0]), // out ALCT location in GEM-ALCT window
+
 
 // TMB-Sequencer Pipelines
   .wr_adr_xtmb (wr_adr_xtmb[MXBADR-1:0]), // In  Buffer write address after drift time
@@ -5444,6 +5461,7 @@ wire [15:0] gemB_bxn_counter;
       //.gem_me1b_match_promotepat   (gem_me1b_match_promotepat),     //Out promote pattern or not for match in ME1b region 
       .gemA_match_enable           (gemA_match_enable),         // out enable GEMA for match
       .gemB_match_enable           (gemB_match_enable),         // out enable GEMB for match
+      .gemcsc_bend_enable          (gemcsc_bend_enable),         // out enable GEMCSC bending angle for match
 
       // RPC Ports: RAT Control                                                                                      
       .rpc_sync     (rpc_sync),     // Out  Sync mode

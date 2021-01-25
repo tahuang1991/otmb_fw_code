@@ -701,6 +701,7 @@
   //gem_me1b_match_promotepat,     //Out promote pattern or not for match in ME1b region, 
   gemA_match_enable,
   gemB_match_enable,
+  gemcsc_bend_enable,
 
 // GEM Configuration Ports
   gemA_rxd_posneg,
@@ -8958,7 +8959,7 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
   gem_csc_match_ctrl_wr[11]   = 1'b0; // RW GEMCSC match, promote pattern in me1b with good match
   gem_csc_match_ctrl_wr[12]   = 1'b1; // RW GEMCSC match, enable GEMA for GEMCSC match
   gem_csc_match_ctrl_wr[13]   = 1'b1; // RW GEMCSC match, enable GEMA for GEMCSC match
-  gem_csc_match_ctrl_wr[14]   = 1'b1; // NOT used yet
+  gem_csc_match_ctrl_wr[14]   = 1'b1; // RW GEMCSC bending angle enable 
   gem_csc_match_ctrl_wr[15]   = 1'b1; // NOT used yet
 
   end
@@ -8977,6 +8978,7 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
   //assign gem_me1b_match_promotepat    = gem_csc_match_ctrl_wr[11];
   assign gemA_match_enable            = gem_csc_match_ctrl_wr[12];
   assign gemB_match_enable            = gem_csc_match_ctrl_wr[13];
+  assign gemcsc_bend_enable           = gem_csc_match_ctrl_wr[14];
 
   assign gem_csc_match_ctrl_rd        = gem_csc_match_ctrl_wr[15:0];
 
