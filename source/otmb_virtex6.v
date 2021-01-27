@@ -2877,7 +2877,7 @@ end
 
 // Sequencer GEM Ports
   .gem_any_match     (gem_any_match), // In  GEM co-pad match was found
-  .gem_match         (copad_match),     // In  8 Bit GEM Match Flag
+  .copad_match         (copad_match),     // In  8 Bit GEM Match Flag
   .gemA_sync_err     (~gemA_synced),  // In  GEM0 has intra-chamber sync error
   .gemB_sync_err     (~gemB_synced),  // In  GEM1 has intra-chamber sync error
   .gems_sync_err     (~gems_synced),  // In  GEM Super Chamber has sync error
@@ -2906,8 +2906,6 @@ end
   .gemA_csc_cluster_active_cfeb_list     (gemA_csc_cluster_active_cfeb_list),// In active CFEB by converting gemA clusters into CSC keyhs
   .gemB_csc_cluster_active_cfeb_list     (gemB_csc_cluster_active_cfeb_list),// In active CFEB by converting gemA clusters into CSC keyhs
   .gemcopad_csc_cluster_active_cfeb_list (gemcopad_csc_cluster_active_cfeb_list),// In active CFEB by converting gemA clusters into CSC keyhs
-
-  .copad_match    (copad_match[7:0]);
 
 // Sequencer External Triggers
   .alct_adb_pulse_sync (alct_adb_pulse_sync), // In  ADB Test pulse trigger

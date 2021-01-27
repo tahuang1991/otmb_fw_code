@@ -2436,6 +2436,7 @@
   //output       gem_me1b_match_promotepat;
   output       gemA_match_enable;
   output       gemB_match_enable;
+  output       gemcsc_bend_enable;
 
   output [MXVFAT-1:0] gemA_vfat_hcm;
   output [MXVFAT-1:0] gemB_vfat_hcm;

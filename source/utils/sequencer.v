@@ -401,7 +401,7 @@
 
 // GEM
   gem_any_match,
-  gem_match,
+  copad_match,
   gemA_sync_err,
   gemB_sync_err,
   gems_sync_err,
@@ -431,7 +431,6 @@
   gemB_csc_cluster_active_cfeb_list,
   gemcopad_csc_cluster_active_cfeb_list,
 
-  copad_match,
   
 // External Triggers
   alct_adb_pulse_sync,
@@ -585,9 +584,9 @@
   tmb_allow_match_ro,
 
   gemcsc_bend_enable, 
-  gem_alct_delay,
+  match_gem_alct_delay,
   gem_clct_win,
-  gem_alct_win,
+  alct_gem_win,
 
   mpc_tx_delay,
   mpc_sel_ttc_bx0,
@@ -1376,7 +1375,7 @@
 
 // GEM
   input          gem_any_match; // GEM co-pad match was found
-  input [7:0]    gem_match;     // GEM co-pad match was found
+  input [7:0]    copad_match;     // GEM co-pad match was found
   input          gemA_sync_err; // GEM A has sync error
   input          gemB_sync_err; // GEM B has sync error
   input          gems_sync_err; // GEM Super Chamber has sync error
@@ -1406,7 +1405,6 @@
   input [MXCFEB-1:0] gemcopad_csc_cluster_active_cfeb_list;
 
 
-  input [7:0] copad_match;
 // External Triggers
   input          alct_adb_pulse_sync; // ADB Test pulse trigger
   input          dmb_ext_trig;        // DMB Calibration trigger
@@ -1556,7 +1554,7 @@
   input       gemcsc_bend_enable;
   input [7:0] match_gem_alct_delay;
   input [3:0] gem_clct_win;
-  input [2:0] gem_alct_win;
+  input [2:0] alct_gem_win;
 
   input  [MXMPCDLY-1:0] mpc_tx_delay;    // Delay LCT to MPC
   input                 mpc_sel_ttc_bx0; // MPC gets ttc_bx0 or bx0_local
@@ -4860,7 +4858,7 @@
   assign  header11_[14:0]   =  r_clct_counter[14:0];  // CLCT post-drift counter, stop on ovf
   assign  header11_[18:15]  =  0;                     // DDU+DMB control flags
 
-  assign  header12_run3_[7:0] = copad_match[7:0];
+  assign  header12_run3_[7:0] = copad_match[7:0];//Attention: should be delayed to sync with CLCT signal!!
   assign  header12_run3_[  8] = gemA_vpf;
   assign  header12_run3_[  9] = gemB_vpf;
   assign  header12_run3_[ 10] = gemA_overflow;
