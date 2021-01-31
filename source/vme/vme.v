@@ -695,6 +695,8 @@
   gem_me1b_match_noalct,       //Out gem-csc match without alct is allowed in ME1a 
   gem_me1a_match_noclct,       //Out gem-csc match without clct is allowed in ME1b => allow GEM-ALCT match to build LCT
   gem_me1b_match_noclct,       //Out gem-csc match without clct is allowed in ME1a
+  tmb_copad_alct_allow, 
+  tmb_copad_clct_allow,
   //gem_me1a_match_promotequal,     //Out promote quality or not for match in ME1a region, 
   //gem_me1b_match_promotequal,     //Out promote quality or not for match in ME1b region 
   //gem_me1a_match_promotepat,     //Out promote pattern or not for match in ME1a region, 
@@ -1360,7 +1362,7 @@
   parameter MXPATC  = 12;                // Pattern Carry Bits
   parameter MXOFFSB = 4;                 // Quarter-strip bits
   parameter MXQLTB  = 9;                 // Fit quality bits
-  parameter MXBNDB  = 4;                 // Bend bits
+  parameter MXBNDB  = 5;                 // Bend bits
   parameter MXXKYB = 10;            // Number of EightStrip key bits on 7 CFEBs, was 8 bits with traditional pattern finding
 //------------------------------------------------------------------------------------------------------------------
 // VME Addresses
@@ -2430,6 +2432,8 @@
   output       gem_me1b_match_noclct;// no clct is fine for GEM-CSC match
   output       gem_me1b_match_nogem;// no gem is fine for GEM-CSC match
   output       gem_me1b_match_noalct;// no alct is fine for GEM-CSC match
+  output       tmb_copad_alct_allow;
+  output       tmb_copad_clct_allow;
   //output       gem_me1a_match_promotequal;
   //output       gem_me1b_match_promotequal;
   //output       gem_me1a_match_promotepat;
@@ -8949,15 +8953,15 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
   gem_csc_match_ctrl_wr[ 0]   = 1'b1; // RW GEMCSC match, enabled in ME1a or not
   gem_csc_match_ctrl_wr[ 1]   = 1'b1; // RW GEMCSC match, enabled in ME1b or not
   gem_csc_match_ctrl_wr[ 2]   = 1'b1; // RW GEMCSC match, match without gem is allowed in me1a
-  gem_csc_match_ctrl_wr[ 3]   = 1'b0; // RW GEMCSC match, match without gem is allowed in me1b
+  gem_csc_match_ctrl_wr[ 3]   = 1'b1; // RW GEMCSC match, match without gem is allowed in me1b
   gem_csc_match_ctrl_wr[ 4]   = 1'b0; // RW GEMCSC match, match without alct is allowed in me1a
   gem_csc_match_ctrl_wr[ 5]   = 1'b0; // RW GEMCSC match, match without alct is allowed in me1b
-  gem_csc_match_ctrl_wr[ 6]   = 1'b0; // RW GEMCSC match, match without clct is allowed in me1a
-  gem_csc_match_ctrl_wr[ 7]   = 1'b0; // RW GEMCSC match, match without clct is allowed in me1b
-  gem_csc_match_ctrl_wr[ 8]   = 1'b1; // RW GEMCSC match, promote quality in me1a with good match
-  gem_csc_match_ctrl_wr[ 9]   = 1'b1; // RW GEMCSC match, promote quality in me1b with good match
-  gem_csc_match_ctrl_wr[10]   = 1'b0; // RW GEMCSC match, promote pattern in me1a with good match
-  gem_csc_match_ctrl_wr[11]   = 1'b0; // RW GEMCSC match, promote pattern in me1b with good match
+  gem_csc_match_ctrl_wr[ 6]   = 1'b1; // RW GEMCSC match, match without clct is allowed in me1a
+  gem_csc_match_ctrl_wr[ 7]   = 1'b1; // RW GEMCSC match, match without clct is allowed in me1b
+  gem_csc_match_ctrl_wr[ 8]   = 1'b0; // RW GEMCSC match, promote quality in me1a with good match
+  gem_csc_match_ctrl_wr[ 9]   = 1'b0; // RW GEMCSC match, promote quality in me1b with good match
+  gem_csc_match_ctrl_wr[10]   = 1'b1; // RW GEMCSC match, allow  ALCT+Copad match 
+  gem_csc_match_ctrl_wr[11]   = 1'b0; // RW GEMCSC match, allow  CLCT+copad match 
   gem_csc_match_ctrl_wr[12]   = 1'b1; // RW GEMCSC match, enable GEMA for GEMCSC match
   gem_csc_match_ctrl_wr[13]   = 1'b1; // RW GEMCSC match, enable GEMA for GEMCSC match
   gem_csc_match_ctrl_wr[14]   = 1'b1; // RW GEMCSC bending angle enable 
@@ -8977,6 +8981,8 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
   //assign gem_me1b_match_promotequal   = gem_csc_match_ctrl_wr[ 9];
   //assign gem_me1a_match_promotepat    = gem_csc_match_ctrl_wr[10];
   //assign gem_me1b_match_promotepat    = gem_csc_match_ctrl_wr[11];
+  assign tmb_copad_alct_allow         = gem_csc_match_ctrl_wr[10];
+  assign tmb_copad_clct_allow         = gem_csc_match_ctrl_wr[11];
   assign gemA_match_enable            = gem_csc_match_ctrl_wr[12];
   assign gemB_match_enable            = gem_csc_match_ctrl_wr[13];
   assign gemcsc_bend_enable           = gem_csc_match_ctrl_wr[14];

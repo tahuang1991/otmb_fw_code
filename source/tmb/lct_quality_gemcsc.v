@@ -15,6 +15,7 @@ module lct_quality_run3 (alct_clct_copad_match, alct_clct_gem_match, alct_clct_m
   input  alct_clct_match;
   input  clct_copad_match;
   input  alct_copad_match;
+  input  gemcsc_bend_enable;
   output [2:0] Q;
 
 // Quality-by-quality definition
@@ -23,7 +24,7 @@ module lct_quality_run3 (alct_clct_copad_match, alct_clct_gem_match, alct_clct_m
   always @* begin
       if      (alct_clct_copad_match &&  gemcsc_bend_enable ) Q=3'b111;
       else if (alct_clct_copad_match && !gemcsc_bend_enable ) Q=3'b110;
-      else if (alct_clct_gem_match && gemcsc__enable )        Q=3'b101;
+      else if (alct_clct_gem_match && gemcsc_bend_enable )        Q=3'b101;
       else if (alct_clct_gem_match && !gemcsc_bend_enable )   Q=3'b100;
       else if (alct_clct_match )                              Q=3'b011;
       else if (clct_copad_match )                             Q=3'b001;

@@ -1698,6 +1698,8 @@
   wire       gem_me1b_match_nogem;// no gem is fine for GEM-CSC match
   wire       gem_me1b_match_noalct;// no alct is fine for GEM-CSC match
   wire       gem_me1b_match_noclct;// no clct is fine for GEM-CSC match
+  wire       tmb_copad_alct_allow; // allow Copad+ALCT
+  wire       tmb_copad_clct_allow; // allow Copad+CLCT
   //wire       gem_me1a_match_promotequal;
   //wire       gem_me1b_match_promotequal;
   //wire       gem_me1a_match_promotepat;
@@ -2713,6 +2715,19 @@ end
    wire [MXBNDB - 1   : 0] clct1_vme_bnd; // new bending 
    wire [MXXKYB-1     : 0] clct1_vme_xky; // new position with 1/8 precision
    wire [MXPATC-1:0]       clct1_vme_carry;
+   
+   //GEMCSC match
+   wire        gemA_alct_match; 
+   wire        gemA_clct_match;
+   wire        gemB_alct_match; 
+   wire        gemB_clct_match;
+   wire        gemcsc_bend_enable;
+
+   wire [7:0]  match_gem_alct_delay;
+   wire [3:0]  match_gem_alct_window;
+   wire [3:0]  match_gem_clct_window;
+   wire [3:0]  gem_clct_win;
+   wire [3:0]  alct_gem_win;
 
    wire [MXRAMADR-1:0]    dmb_adr;
    wire [MXRAMDATA-1:0]   dmb_wdata;
@@ -4047,17 +4062,6 @@ wire [15:0] gemB_bxn_counter;
 //    Receives 80MHz MPC desision result, sends de-muxed to Sequencer
 //-------------------------------------------------------------------------------------------------------------------
 // Local
-  wire        gemA_alct_match; 
-  wire        gemA_clct_match;
-  wire        gemB_alct_match; 
-  wire        gemB_clct_match;
-  wire        gemcsc_bend_enable;
-
-  wire [7:0]  match_gem_alct_delay;
-  wire [3:0]  match_gem_alct_window;
-  wire [3:0]  match_gem_clct_window;
-  wire [3:0]  gem_clct_win;
-  wire [3:0]  alct_gem_win;
 
   wire  [1:0]      tmb_sync_err_en;
   wire  [7:0]      mpc_nframes;
@@ -4207,7 +4211,7 @@ wire [15:0] gemB_bxn_counter;
   .gemB_cluster6_cscwire_hi  (gemB_csc_cluster_cscwire_lo[6]),// In CSC wire group mapped from GEM pad
   .gemB_cluster7_cscwire_hi  (gemB_csc_cluster_cscwire_lo[7]),// In CSC wire group mapped from GEM pad
 
-  .copad_match   (copad_match[7:0]);
+  .copad_match   (copad_match[7:0]),
 
   .match_gem_alct_delay   (match_gem_alct_delay[7:0]),  //In gem delay for gem-ALCT match
   .match_gem_alct_window  (match_gem_alct_window[3:0]), //In gem-alct match window
@@ -4230,6 +4234,8 @@ wire [15:0] gemB_bxn_counter;
   .gem_me1b_match_noalct       (gem_me1b_match_noalct),     //IN gem-csc match without alct is allowed in ME1a
   .gem_me1a_match_noclct       (gem_me1a_match_noclct),     //IN gem-csc match without clct is allowed in ME1b
   .gem_me1b_match_noclct       (gem_me1b_match_noclct),     //IN gem-csc match without clct is allowed in ME1a
+  .tmb_copad_alct_allow        (tmb_copad_alct_allow),       //In gem-csc match, allow ALCT+copad match
+  .tmb_copad_clct_allow        (tmb_copad_clct_allow),       //In gem-csc match, allow CLCT+copad match
   .gemcsc_bend_enable     (gemcsc_bend_enable),             //In GEMCSC bending angle enabled
   //.gem_me1a_match_promotequal  (gem_me1a_match_promotequal),//IN promote quality or not for match in ME1a region, 
   //.gem_me1b_match_promotequal  (gem_me1b_match_promotequal),//IN promote quality or not for match in ME1b region 
@@ -5453,6 +5459,8 @@ wire [15:0] gemB_bxn_counter;
       .gem_me1b_match_noalct       (gem_me1b_match_noalct),       //Out gem-csc match without alct is allowed in ME1a
       .gem_me1a_match_noclct       (gem_me1a_match_noclct),       //Out gem-csc match without clct is allowed in ME1b
       .gem_me1b_match_noclct       (gem_me1b_match_noclct),       //Out gem-csc match without clct is allowed in ME1a
+      .tmb_copad_alct_allow        (tmb_copad_alct_allow),       //out gem-csc match, allow ALCT+copad match
+      .tmb_copad_clct_allow        (tmb_copad_clct_allow),       //out gem-csc match, allow CLCT+copad match
       //.gem_me1a_match_promotequal  (gem_me1a_match_promotequal),     //Out promote quality or not for match in ME1a region, 
       //.gem_me1b_match_promotequal  (gem_me1b_match_promotequal),     //Out promote quality or not for match in ME1b region 
       //.gem_me1a_match_promotepat   (gem_me1a_match_promotepat),     //Out promote pattern or not for match in ME1a region, 

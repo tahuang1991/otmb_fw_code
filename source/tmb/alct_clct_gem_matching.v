@@ -13,6 +13,8 @@ module  alct_clct_gem_matching(
   input clct1_vpf,
   input [9:0] clct0_xky,
   input [9:0] clct1_xky,
+  input clct0_bend,//l or r
+  input clct1_bend,
 
   input [7:0] gemA_vpf,
   input [7:0] gemB_vpf,
@@ -320,6 +322,9 @@ module  alct_clct_gem_matching(
       gemB_cluster7_xky_hi
       };
 
+  wire [9:0] copad_cluster_cscxky_mi[MXCLUSTER_CHAMBER-1:0];
+
+
   wire [MXCLUSTER_CHAMBER-1:0] alct0_gemA_match; 
   wire [MXCLUSTER_CHAMBER-1:0] alct1_gemA_match; 
   wire [MXCLUSTER_CHAMBER-1:0] clct0_gemA_match; 
@@ -341,20 +346,36 @@ module  alct_clct_gem_matching(
   wire [MXCLUSTER_CHAMBER-1:0] clct0_copad_match_ok; 
   wire [MXCLUSTER_CHAMBER-1:0] clct1_copad_match_ok; 
 
-  //wire [MXCLUSTER_CHAMBER-1:0] alct0_clct0_gem_match; 
-  //wire [MXCLUSTER_CHAMBER-1:0] alct0_clct1_gem_match; 
-  //wire [MXCLUSTER_CHAMBER-1:0] alct1_clct0_gem_match; 
-  //wire [MXCLUSTER_CHAMBER-1:0] alct1_clct1_gem_match; 
+  wire [MXCLUSTER_CHAMBER-1:0] clct0_gemA_ME1a; 
+  wire [MXCLUSTER_CHAMBER-1:0] clct0_gemA_ME1b; 
+  wire [MXCLUSTER_CHAMBER-1:0] clct0_gemB_ME1a; 
+  wire [MXCLUSTER_CHAMBER-1:0] clct0_gemB_ME1b; 
+  wire [MXCLUSTER_CHAMBER-1:0] clct1_gemA_ME1a; 
+  wire [MXCLUSTER_CHAMBER-1:0] clct1_gemA_ME1b; 
+  wire [MXCLUSTER_CHAMBER-1:0] clct1_gemB_ME1a; 
+  wire [MXCLUSTER_CHAMBER-1:0] clct1_gemB_ME1b; 
+  
+
+  wire [MXCLUSTER_CHAMBER-1:0] alct0_clct0_gemA_match; 
+  wire [MXCLUSTER_CHAMBER-1:0] alct0_clct1_gemA_match; 
+  wire [MXCLUSTER_CHAMBER-1:0] alct1_clct0_gemA_match; 
+  wire [MXCLUSTER_CHAMBER-1:0] alct1_clct1_gemA_match; 
+  wire [MXCLUSTER_CHAMBER-1:0] alct0_clct0_gemB_match; 
+  wire [MXCLUSTER_CHAMBER-1:0] alct0_clct1_gemB_match; 
+  wire [MXCLUSTER_CHAMBER-1:0] alct1_clct0_gemB_match; 
+  wire [MXCLUSTER_CHAMBER-1:0] alct1_clct1_gemB_match; 
 
   wire [MXCLUSTER_CHAMBER-1:0] alct0_clct0_copad_match; 
   wire [MXCLUSTER_CHAMBER-1:0] alct0_clct1_copad_match; 
   wire [MXCLUSTER_CHAMBER-1:0] alct1_clct0_copad_match; 
   wire [MXCLUSTER_CHAMBER-1:0] alct1_clct1_copad_match; 
 
-  wire [0]    clct0_gemA_bend [MXCLUSTER_CHAMBER-1:0];
-  wire [0]    clct1_gemA_bend [MXCLUSTER_CHAMBER-1:0];
-  wire [0]    clct0_gemB_bend [MXCLUSTER_CHAMBER-1:0];
-  wire [0]    clct1_gemB_bend [MXCLUSTER_CHAMBER-1:0];
+  wire        clct0_gemA_bend [MXCLUSTER_CHAMBER-1:0];
+  wire        clct1_gemA_bend [MXCLUSTER_CHAMBER-1:0];
+  wire        clct0_gemB_bend [MXCLUSTER_CHAMBER-1:0];
+  wire        clct1_gemB_bend [MXCLUSTER_CHAMBER-1:0];
+  wire [9:0]  clct0_gemA_angle [MXCLUSTER_CHAMBER-1:0];
+  wire [9:0]  clct1_gemA_angle [MXCLUSTER_CHAMBER-1:0];
   wire [9:0]  alct0_clct0_gemA_angle [MXCLUSTER_CHAMBER-1:0];
   wire [9:0]  alct0_clct1_gemA_angle [MXCLUSTER_CHAMBER-1:0];
   wire [9:0]  alct0_clct0_gemB_angle [MXCLUSTER_CHAMBER-1:0];
@@ -380,86 +401,88 @@ module  alct_clct_gem_matching(
   genvar i;
   generate
   for (i=0; i<MXCLUSTER_CHAMBER; i=i+1) begin: gem_csc_match
-      alct0_gemA_match[i] = alct0_vpf && gemA_vpf[i] && alct0_wg  >= gemA_cluster_cscwg_lo[i]  && alct0_wg  <= gemA_cluster_cscwg_hi[i]; 
-      alct1_gemA_match[i] = alct1_vpf && gemA_vpf[i] && alct1_wg  >= gemA_cluster_cscwg_lo[i]  && alct1_wg  <= gemA_cluster_cscwg_hi[i]; 
-      clct0_gemA_match[i] = clct0_vpf && gemA_vpf[i] && clct0_xky >= gemA_cluster_cscxky_lo[i] && clct0_xky <= gemA_cluster_cscxky_hi[i]; 
-      clct1_gemA_match[i] = clct1_vpf && gemA_vpf[i] && clct1_xky >= gemA_cluster_cscxky_lo[i] && clct1_xky <= gemA_cluster_cscxky_hi[i]; 
-      alct0_gemB_match[i] = alct0_vpf && gemB_vpf[i] && alct0_wg  >= gemB_cluster_cscwg_lo[i]  && alct0_wg  <= gemB_cluster_cscwg_hi[i]; 
-      alct1_gemB_match[i] = alct1_vpf && gemB_vpf[i] && alct1_wg  >= gemB_cluster_cscwg_lo[i]  && alct1_wg  <= gemB_cluster_cscwg_hi[i]; 
-      clct0_gemB_match[i] = clct0_vpf && gemB_vpf[i] && clct0_xky >= gemB_cluster_cscxky_lo[i] && clct0_xky <= gemB_cluster_cscxky_hi[i]; 
-      clct1_gemB_match[i] = clct1_vpf && gemB_vpf[i] && clct1_xky >= gemB_cluster_cscxky_lo[i] && clct1_xky <= gemB_cluster_cscxky_hi[i]; 
+      assign alct0_gemA_match[i] = alct0_vpf && gemA_vpf[i] && alct0_wg  >= gemA_cluster_cscwg_lo[i]  && alct0_wg  <= gemA_cluster_cscwg_hi[i]; 
+      assign alct1_gemA_match[i] = alct1_vpf && gemA_vpf[i] && alct1_wg  >= gemA_cluster_cscwg_lo[i]  && alct1_wg  <= gemA_cluster_cscwg_hi[i]; 
+      assign clct0_gemA_match[i] = clct0_vpf && gemA_vpf[i] && clct0_xky >= gemA_cluster_cscxky_lo[i] && clct0_xky <= gemA_cluster_cscxky_hi[i]; 
+      assign clct1_gemA_match[i] = clct1_vpf && gemA_vpf[i] && clct1_xky >= gemA_cluster_cscxky_lo[i] && clct1_xky <= gemA_cluster_cscxky_hi[i]; 
+      assign alct0_gemB_match[i] = alct0_vpf && gemB_vpf[i] && alct0_wg  >= gemB_cluster_cscwg_lo[i]  && alct0_wg  <= gemB_cluster_cscwg_hi[i]; 
+      assign alct1_gemB_match[i] = alct1_vpf && gemB_vpf[i] && alct1_wg  >= gemB_cluster_cscwg_lo[i]  && alct1_wg  <= gemB_cluster_cscwg_hi[i]; 
+      assign clct0_gemB_match[i] = clct0_vpf && gemB_vpf[i] && clct0_xky >= gemB_cluster_cscxky_lo[i] && clct0_xky <= gemB_cluster_cscxky_hi[i]; 
+      assign clct1_gemB_match[i] = clct1_vpf && gemB_vpf[i] && clct1_xky >= gemB_cluster_cscxky_lo[i] && clct1_xky <= gemB_cluster_cscxky_hi[i]; 
 
-      clct0_gemA_bend[i]   = clct0_xky > gemA_cluster_cscxky_mi[i];
-      clct0_gemB_bend[i]   = clct0_xky > gemB_cluster_cscxky_mi[i];
-      clct1_gemA_bend[i]   = clct1_xky > gemA_cluster_cscxky_mi[i];
-      clct1_gemB_bend[i]   = clct1_xky > gemB_cluster_cscxky_mi[i];
+      assign clct0_gemA_bend[i]   = clct0_xky > gemA_cluster_cscxky_mi[i];
+      assign clct0_gemB_bend[i]   = clct0_xky > gemB_cluster_cscxky_mi[i];
+      assign clct1_gemA_bend[i]   = clct1_xky > gemA_cluster_cscxky_mi[i];
+      assign clct1_gemB_bend[i]   = clct1_xky > gemB_cluster_cscxky_mi[i];
 
-      //ME1a with CFEB 4, 5,6 while ME1b with CFEB 0, 1,2,3
-      clct0_gemA_ME1a[i]   = clct0_xky[9] && gemA_cluster_cscxky_mi[i][9] ;
-      clct0_gemB_ME1a[i]   = clct0_xky[9] && gemB_cluster_cscxky_mi[i][9] ;
-      clct1_gemA_ME1a[i]   = clct0_xky[9] && gemA_cluster_cscxky_mi[i][9] ;
-      clct1_gemB_ME1a[i]   = clct0_xky[9] && gemB_cluster_cscxky_mi[i][9] ;
-      clct0_gemA_ME1b[i]   = !clct0_xky[9] && !gemA_cluster_cscxky_mi[i][9] ;
-      clct0_gemB_ME1b[i]   = !clct0_xky[9] && !gemB_cluster_cscxky_mi[i][9] ;
-      clct1_gemA_ME1b[i]   = !clct0_xky[9] && !gemA_cluster_cscxky_mi[i][9] ;
-      clct1_gemB_ME1b[i]   = !clct0_xky[9] && !gemB_cluster_cscxky_mi[i][9] ;
+       //ME1a with CFEB 4, 5,6 while ME1b with CFEB 0, 1,2,3
+      assign clct0_gemA_ME1a[i]   = clct0_xky[9] && gemA_cluster_cscxky_mi[i][9] ;
+      assign clct0_gemB_ME1a[i]   = clct0_xky[9] && gemB_cluster_cscxky_mi[i][9] ;
+      assign clct1_gemA_ME1a[i]   = clct0_xky[9] && gemA_cluster_cscxky_mi[i][9] ;
+      assign clct1_gemB_ME1a[i]   = clct0_xky[9] && gemB_cluster_cscxky_mi[i][9] ;
+      assign clct0_gemA_ME1b[i]   = !clct0_xky[9] && !gemA_cluster_cscxky_mi[i][9] ;
+      assign clct0_gemB_ME1b[i]   = !clct0_xky[9] && !gemB_cluster_cscxky_mi[i][9] ;
+      assign clct1_gemA_ME1b[i]   = !clct0_xky[9] && !gemA_cluster_cscxky_mi[i][9] ;
+      assign clct1_gemB_ME1b[i]   = !clct0_xky[9] && !gemB_cluster_cscxky_mi[i][9] ;
 
-      clct0_gemA_match_ok[i] = clct0_gemA_match[i] && (clct0_gemA_bend[i] == clct0_bend) && (clct0_gemA_ME1a[i] || clct0_gemA_ME1b[i]);
-      clct0_gemB_match_ok[i] = clct0_gemB_match[i] && (clct0_gemB_bend[i] == clct0_bend) && (clct0_gemB_ME1a[i] || clct0_gemB_ME1b[i]);
-      clct1_gemA_match_ok[i] = clct1_gemA_match[i] && (clct0_gemA_bend[i] == clct1_bend) && (clct1_gemA_ME1a[i] || clct1_gemA_ME1b[i]);
-      clct1_gemB_match_ok[i] = clct1_gemB_match[i] && (clct0_gemB_bend[i] == clct1_bend) && (clct1_gemB_ME1a[i] || clct1_gemB_ME1b[i]);
+      assign clct0_gemA_match_ok[i] = clct0_gemA_match[i] && (clct0_gemA_bend[i] == clct0_bend) && (clct0_gemA_ME1a[i] || clct0_gemA_ME1b[i]);
+      assign clct0_gemB_match_ok[i] = clct0_gemB_match[i] && (clct0_gemB_bend[i] == clct0_bend) && (clct0_gemB_ME1a[i] || clct0_gemB_ME1b[i]);
+      assign clct1_gemA_match_ok[i] = clct1_gemA_match[i] && (clct0_gemA_bend[i] == clct1_bend) && (clct1_gemA_ME1a[i] || clct1_gemA_ME1b[i]);
+      assign clct1_gemB_match_ok[i] = clct1_gemB_match[i] && (clct0_gemB_bend[i] == clct1_bend) && (clct1_gemB_ME1a[i] || clct1_gemB_ME1b[i]);
 
       //clct0_gemA_angle[i] = clct0_gemA_match_ok[i] ? (clct0_gemA_bend[i] ? clct0_xky-gemA_cluster_cscxky_mi[i] : gemA_cluster_cscxky_mi[i]-clct0_xky) : MAXGEMCSCBND; 
       //clct0_gemB_angle[i] = clct0_gemB_match_ok[i] ? (clct0_gemB_bend[i] ? clct0_xky-gemB_cluster_cscxky_mi[i] : gemB_cluster_cscxky_mi[i]-clct0_xky) : MAXGEMCSCBND; 
       //clct1_gemA_angle[i] = clct1_gemA_match_ok[i] ? (clct1_gemA_bend[i] ? clct1_xky-gemA_cluster_cscxky_mi[i] : gemA_cluster_cscxky_mi[i]-clct1_xky) : MAXGEMCSCBND; 
       //clct1_gemB_angle[i] = clct1_gemB_match_ok[i] ? (clct1_gemB_bend[i] ? clct1_xky-gemB_cluster_cscxky_mi[i] : gemB_cluster_cscxky_mi[i]-clct1_xky) : MAXGEMCSCBND; 
+      //
+      assign copad_cluster_cscxky_mi[i] = copad_match[i] ? gemA_cluster_cscxky_mi[i] : 10'h3FF;//use all 3FF as default csc coordinate for copad 
 
-      alct0_copad_match[i] = alct0_gemA_match[i] && copad_match[i];
-      alct1_copad_match[i] = alct1_gemA_match[i] && copad_match[i];
-      clct0_copad_match[i] = clct0_gemA_match[i] && copad_match[i];
-      clct1_copad_match[i] = clct1_gemA_match[i] && copad_match[i];
+      assign alct0_copad_match[i] = alct0_gemA_match[i] && copad_match[i];
+      assign alct1_copad_match[i] = alct1_gemA_match[i] && copad_match[i];
+      assign clct0_copad_match[i] = clct0_gemA_match[i] && copad_match[i];
+      assign clct1_copad_match[i] = clct1_gemA_match[i] && copad_match[i];
 
-      clct0_copad_match_ok[i] = clct0_copad_match[i] && clct0_gemA_match_ok[i];
-      clct1_copad_match_ok[i] = clct1_copad_match[i] && clct0_gemB_match_ok[i];
+      assign clct0_copad_match_ok[i] = clct0_copad_match[i] && clct0_gemA_match_ok[i];
+      assign clct1_copad_match_ok[i] = clct1_copad_match[i] && clct0_gemB_match_ok[i];
 
-      clct0_copad_angle[i] = clct0_copad_match_ok[i] ? clct0_gemA_angle[i] : MAXGEMCSCBND;
-      clct1_copad_angle[i] = clct1_copad_match_ok[i] ? clct1_gemA_angle[i] : MAXGEMCSCBND;
-      
-      alct0_copad_angle[i] = alct0_copad_match[i] ? 0 : MAXGEMCSCBND;
-      alct1_copad_angle[i] = alct1_copad_match[i] ? 0 : MAXGEMCSCBND;
+      assign clct0_copad_angle[i] = clct0_copad_match_ok[i] ? clct0_gemA_angle[i] : MAXGEMCSCBND;
+      assign clct1_copad_angle[i] = clct1_copad_match_ok[i] ? clct1_gemA_angle[i] : MAXGEMCSCBND;
+       
+      assign alct0_copad_angle[i] = alct0_copad_match[i] ? 0 : MAXGEMCSCBND;
+      assign alct1_copad_angle[i] = alct1_copad_match[i] ? 0 : MAXGEMCSCBND;
 
-      alct0_clct0_gemA_match[i] = (alct0_gemA_match[i] && clct0_gemA_match_ok[i]);
-      alct0_clct1_gemA_match[i] = (alct0_gemA_match[i] && clct1_gemA_match_ok[i]);
-      alct1_clct0_gemA_match[i] = (alct1_gemA_match[i] && clct0_gemA_match_ok[i]);
-      alct1_clct1_gemA_match[i] = (alct1_gemA_match[i] && clct1_gemA_match_ok[i]);
-      alct0_clct0_gemB_match[i] = (alct0_gemB_match[i] && clct0_gemB_match_ok[i]);
-      alct0_clct1_gemB_match[i] = (alct0_gemB_match[i] && clct1_gemB_match_ok[i]);
-      alct1_clct0_gemB_match[i] = (alct1_gemB_match[i] && clct0_gemB_match_ok[i]);
-      alct1_clct1_gemB_match[i] = (alct1_gemB_match[i] && clct1_gemB_match_ok[i]);
+      assign alct0_clct0_gemA_match[i] = (alct0_gemA_match[i] && clct0_gemA_match_ok[i]);
+      assign alct0_clct1_gemA_match[i] = (alct0_gemA_match[i] && clct1_gemA_match_ok[i]);
+      assign alct1_clct0_gemA_match[i] = (alct1_gemA_match[i] && clct0_gemA_match_ok[i]);
+      assign alct1_clct1_gemA_match[i] = (alct1_gemA_match[i] && clct1_gemA_match_ok[i]);
+      assign alct0_clct0_gemB_match[i] = (alct0_gemB_match[i] && clct0_gemB_match_ok[i]);
+      assign alct0_clct1_gemB_match[i] = (alct0_gemB_match[i] && clct1_gemB_match_ok[i]);
+      assign alct1_clct0_gemB_match[i] = (alct1_gemB_match[i] && clct0_gemB_match_ok[i]);
+      assign alct1_clct1_gemB_match[i] = (alct1_gemB_match[i] && clct1_gemB_match_ok[i]);
 
-      alct0_clct0_gemA_angle[i] = alct0_clct0_gemA_match[i] ? (clct0_gemA_bend[i] ? clct0_xky-gemA_cluster_cscxky_mi[i] : gemA_cluster_cscxky_mi[i]-clct0_xky) : MAXGEMCSCBND; 
-      alct0_clct0_gemB_angle[i] = alct0_clct0_gemB_match[i] ? (clct0_gemB_bend[i] ? clct0_xky-gemB_cluster_cscxky_mi[i] : gemB_cluster_cscxky_mi[i]-clct0_xky) : MAXGEMCSCBND; 
-      alct0_clct1_gemA_angle[i] = alct0_clct1_gemA_match[i] ? (clct1_gemA_bend[i] ? clct1_xky-gemA_cluster_cscxky_mi[i] : gemA_cluster_cscxky_mi[i]-clct1_xky) : MAXGEMCSCBND; 
-      alct0_clct1_gemB_angle[i] = alct0_clct1_gemB_match[i] ? (clct1_gemB_bend[i] ? clct1_xky-gemB_cluster_cscxky_mi[i] : gemB_cluster_cscxky_mi[i]-clct1_xky) : MAXGEMCSCBND; 
-      alct1_clct0_gemA_angle[i] = alct1_clct0_gemA_match[i] ? (clct0_gemA_bend[i] ? clct0_xky-gemA_cluster_cscxky_mi[i] : gemA_cluster_cscxky_mi[i]-clct0_xky) : MAXGEMCSCBND; 
-      alct1_clct0_gemB_angle[i] = alct1_clct0_gemB_match[i] ? (clct0_gemB_bend[i] ? clct0_xky-gemB_cluster_cscxky_mi[i] : gemB_cluster_cscxky_mi[i]-clct0_xky) : MAXGEMCSCBND; 
-      alct1_clct1_gemA_angle[i] = alct1_clct1_gemA_match[i] ? (clct1_gemA_bend[i] ? clct1_xky-gemA_cluster_cscxky_mi[i] : gemA_cluster_cscxky_mi[i]-clct1_xky) : MAXGEMCSCBND; 
-      alct1_clct1_gemB_angle[i] = alct1_clct1_gemB_match[i] ? (clct1_gemB_bend[i] ? clct1_xky-gemB_cluster_cscxky_mi[i] : gemB_cluster_cscxky_mi[i]-clct1_xky) : MAXGEMCSCBND; 
+      assign alct0_clct0_gemA_angle[i] = alct0_clct0_gemA_match[i] ? (clct0_gemA_bend[i] ? clct0_xky-gemA_cluster_cscxky_mi[i] : gemA_cluster_cscxky_mi[i]-clct0_xky) : MAXGEMCSCBND; 
+      assign alct0_clct0_gemB_angle[i] = alct0_clct0_gemB_match[i] ? (clct0_gemB_bend[i] ? clct0_xky-gemB_cluster_cscxky_mi[i] : gemB_cluster_cscxky_mi[i]-clct0_xky) : MAXGEMCSCBND; 
+      assign alct0_clct1_gemA_angle[i] = alct0_clct1_gemA_match[i] ? (clct1_gemA_bend[i] ? clct1_xky-gemA_cluster_cscxky_mi[i] : gemA_cluster_cscxky_mi[i]-clct1_xky) : MAXGEMCSCBND; 
+      assign alct0_clct1_gemB_angle[i] = alct0_clct1_gemB_match[i] ? (clct1_gemB_bend[i] ? clct1_xky-gemB_cluster_cscxky_mi[i] : gemB_cluster_cscxky_mi[i]-clct1_xky) : MAXGEMCSCBND; 
+      assign alct1_clct0_gemA_angle[i] = alct1_clct0_gemA_match[i] ? (clct0_gemA_bend[i] ? clct0_xky-gemA_cluster_cscxky_mi[i] : gemA_cluster_cscxky_mi[i]-clct0_xky) : MAXGEMCSCBND; 
+      assign alct1_clct0_gemB_angle[i] = alct1_clct0_gemB_match[i] ? (clct0_gemB_bend[i] ? clct0_xky-gemB_cluster_cscxky_mi[i] : gemB_cluster_cscxky_mi[i]-clct0_xky) : MAXGEMCSCBND; 
+      assign alct1_clct1_gemA_angle[i] = alct1_clct1_gemA_match[i] ? (clct1_gemA_bend[i] ? clct1_xky-gemA_cluster_cscxky_mi[i] : gemA_cluster_cscxky_mi[i]-clct1_xky) : MAXGEMCSCBND; 
+      assign alct1_clct1_gemB_angle[i] = alct1_clct1_gemB_match[i] ? (clct1_gemB_bend[i] ? clct1_xky-gemB_cluster_cscxky_mi[i] : gemB_cluster_cscxky_mi[i]-clct1_xky) : MAXGEMCSCBND; 
 
       //alct0_clct0_gem_match[i] = (alct0_gemA_match[i] && clct0_gemA_match_ok[i]) || (alct0_gemB_match[i] && clct0_gemB_match_ok[i]);
       //alct0_clct1_gem_match[i] = (alct0_gemA_match[i] && clct1_gemA_match_ok[i]) || (alct0_gemB_match[i] && clct1_gemB_match_ok[i]);
       //alct1_clct0_gem_match[i] = (alct1_gemA_match[i] && clct0_gemA_match_ok[i]) || (alct1_gemB_match[i] && clct0_gemB_match_ok[i]);
       //alct1_clct1_gem_match[i] = (alct1_gemA_match[i] && clct1_gemA_match_ok[i]) || (alct1_gemB_match[i] && clct1_gemB_match_ok[i]);
 
-      alct0_clct0_copad_match[i] = alct0_copad_match[i] && clct0_copad_match_ok[i];
-      alct0_clct1_copad_match[i] = alct0_copad_match[i] && clct1_copad_match_ok[i];
-      alct1_clct0_copad_match[i] = alct1_copad_match[i] && clct0_copad_match_ok[i];
-      alct1_clct1_copad_match[i] = alct1_copad_match[i] && clct1_copad_match_ok[i];
+      assign alct0_clct0_copad_match[i] = alct0_copad_match[i] && clct0_copad_match_ok[i];
+      assign alct0_clct1_copad_match[i] = alct0_copad_match[i] && clct1_copad_match_ok[i];
+      assign alct1_clct0_copad_match[i] = alct1_copad_match[i] && clct0_copad_match_ok[i];
+      assign alct1_clct1_copad_match[i] = alct1_copad_match[i] && clct1_copad_match_ok[i];
 
-      alct0_clct0_copad_angle[i] = alct0_clct0_copad_match[i] ? clct0_gemA_angle[i] : MAXGEMCSCBND;
-      alct0_clct1_copad_angle[i] = alct0_clct1_copad_match[i] ? clct1_gemA_angle[i] : MAXGEMCSCBND;
-      alct1_clct0_copad_angle[i] = alct1_clct0_copad_match[i] ? clct0_gemA_angle[i] : MAXGEMCSCBND;
-      alct1_clct1_copad_angle[i] = alct1_clct1_copad_match[i] ? clct1_gemA_angle[i] : MAXGEMCSCBND;
+      assign alct0_clct0_copad_angle[i] = alct0_clct0_copad_match[i] ? clct0_gemA_angle[i] : MAXGEMCSCBND;
+      assign alct0_clct1_copad_angle[i] = alct0_clct1_copad_match[i] ? clct1_gemA_angle[i] : MAXGEMCSCBND;
+      assign alct1_clct0_copad_angle[i] = alct1_clct0_copad_match[i] ? clct0_gemA_angle[i] : MAXGEMCSCBND;
+      assign alct1_clct1_copad_angle[i] = alct1_clct1_copad_match[i] ? clct1_gemA_angle[i] : MAXGEMCSCBND;
 
     end
   endgenerate 
@@ -471,7 +494,7 @@ module  alct_clct_gem_matching(
   wire [2:0] alct0_clct0_copad_best_icluster;
   wire [9:0] alct0_clct0_copad_best_angle;
   wire [9:0] alct0_clct0_copad_best_cscxky;
-  tree_encoder_alctclctgem ualct0_clct0_copad_match{
+  tree_encoder_alctclctgem ualct0_clct0_copad_match(
       alct0_clct0_copad_angle[0],
       alct0_clct0_copad_angle[1],
       alct0_clct0_copad_angle[2],
@@ -493,12 +516,12 @@ module  alct_clct_gem_matching(
       alct0_clct0_copad_best_cscxky,
       alct0_clct0_copad_best_angle,
       alct0_clct0_copad_best_icluster
-      };
+      );
 
   wire [2:0] alct0_clct1_copad_best_icluster;
   wire [9:0] alct0_clct1_copad_best_angle;
   wire [9:0] alct0_clct1_copad_best_cscxky;
-  tree_encoder_alctclctgem ualct0_clct1_copad_match{
+  tree_encoder_alctclctgem ualct0_clct1_copad_match(
       alct0_clct1_copad_angle[0],
       alct0_clct1_copad_angle[1],
       alct0_clct1_copad_angle[2],
@@ -520,12 +543,12 @@ module  alct_clct_gem_matching(
       alct0_clct1_copad_best_cscxky,
       alct0_clct1_copad_best_angle,
       alct0_clct1_copad_best_icluster
-      };
+      );
 
   wire [2:0] alct1_clct0_copad_best_icluster;
   wire [9:0] alct1_clct0_copad_best_angle;
   wire [9:0] alct1_clct0_copad_best_cscxky;
-  tree_encoder_alctclctgem ualct1_clct0_copad_match{
+  tree_encoder_alctclctgem ualct1_clct0_copad_match(
       alct1_clct0_copad_angle[0],
       alct1_clct0_copad_angle[1],
       alct1_clct0_copad_angle[2],
@@ -547,12 +570,12 @@ module  alct_clct_gem_matching(
       alct1_clct0_copad_best_cscxky,
       alct1_clct0_copad_best_angle,
       alct1_clct0_copad_best_icluster
-      };
+      );
 
   wire [2:0] alct1_clct1_copad_best_icluster;
   wire [9:0] alct1_clct1_copad_best_angle;
   wire [9:0] alct1_clct1_copad_best_cscxky;
-  tree_encoder_alctclctgem ualct1_clct1_copad_match{
+  tree_encoder_alctclctgem ualct1_clct1_copad_match(
       alct1_clct1_copad_angle[0],
       alct1_clct1_copad_angle[1],
       alct1_clct1_copad_angle[2],
@@ -574,7 +597,7 @@ module  alct_clct_gem_matching(
       alct1_clct1_copad_best_cscxky,
       alct1_clct1_copad_best_angle,
       alct1_clct1_copad_best_icluster
-      };
+      );
 
   wire alct0_clct0_copad_match_any = |alct0_clct0_copad_match;
   wire alct0_clct1_copad_match_any = |alct0_clct1_copad_match;
@@ -633,7 +656,7 @@ module  alct_clct_gem_matching(
   wire [2:0] alct0_clct0_gemA_best_icluster;
   wire [9:0] alct0_clct0_gemA_best_angle;
   wire [9:0] alct0_clct0_gemA_best_cscxky;
-  tree_encoder_alctclctgem ualct0_clct0_gemA_match{
+  tree_encoder_alctclctgem ualct0_clct0_gemA_match(
       alct0_clct0_gemA_angle[0],
       alct0_clct0_gemA_angle[1],
       alct0_clct0_gemA_angle[2],
@@ -655,13 +678,13 @@ module  alct_clct_gem_matching(
       alct0_clct0_gemA_best_cscxky,
       alct0_clct0_gemA_best_angle,
       alct0_clct0_gemA_best_icluster
-      };
+      );
 
 
   wire [2:0] alct0_clct0_gemB_best_icluster;
   wire [9:0] alct0_clct0_gemB_best_angle;
   wire [9:0] alct0_clct0_gemB_best_cscxky;
-  tree_encoder_alctclctgem ualct0_clct0_gemB_match{
+  tree_encoder_alctclctgem ualct0_clct0_gemB_match(
       alct0_clct0_gemB_angle[0],
       alct0_clct0_gemB_angle[1],
       alct0_clct0_gemB_angle[2],
@@ -683,12 +706,12 @@ module  alct_clct_gem_matching(
       alct0_clct0_gemB_best_cscxky,
       alct0_clct0_gemB_best_angle,
       alct0_clct0_gemB_best_icluster
-      };
+      );
 
   wire [2:0] alct1_clct0_gemA_best_icluster;
   wire [9:0] alct1_clct0_gemA_best_angle;
   wire [9:0] alct1_clct0_gemA_best_cscxky;
-  tree_encoder_alctclctgem ualct1_clct0_gemA_match{
+  tree_encoder_alctclctgem ualct1_clct0_gemA_match(
       alct1_clct0_gemA_angle[0],
       alct1_clct0_gemA_angle[1],
       alct1_clct0_gemA_angle[2],
@@ -710,13 +733,13 @@ module  alct_clct_gem_matching(
       alct1_clct0_gemA_best_cscxky,
       alct1_clct0_gemA_best_angle,
       alct1_clct0_gemA_best_icluster
-      };
+      );
 
 
   wire [2:0] alct1_clct0_gemB_best_icluster;
   wire [9:0] alct1_clct0_gemB_best_angle;
   wire [9:0] alct1_clct0_gemB_best_cscxky;
-  tree_encoder_alctclctgem ualct1_clct0_gemB_match{
+  tree_encoder_alctclctgem ualct1_clct0_gemB_match(
       alct1_clct0_gemB_angle[0],
       alct1_clct0_gemB_angle[1],
       alct1_clct0_gemB_angle[2],
@@ -738,13 +761,13 @@ module  alct_clct_gem_matching(
       alct1_clct0_gemB_best_cscxky,
       alct1_clct0_gemB_best_angle,
       alct1_clct0_gemB_best_icluster
-      };
+      );
 
 
   wire [2:0] alct0_clct1_gemA_best_icluster;
   wire [9:0] alct0_clct1_gemA_best_angle;
   wire [9:0] alct0_clct1_gemA_best_cscxky;
-  tree_encoder_alctclctgem ualct0_clct1_gemA_match{
+  tree_encoder_alctclctgem ualct0_clct1_gemA_match(
       alct0_clct1_gemA_angle[0],
       alct0_clct1_gemA_angle[1],
       alct0_clct1_gemA_angle[2],
@@ -766,13 +789,13 @@ module  alct_clct_gem_matching(
       alct0_clct1_gemA_best_cscxky,
       alct0_clct1_gemA_best_angle,
       alct0_clct1_gemA_best_icluster
-      };
+      );
 
 
   wire [2:0] alct0_clct1_gemB_best_icluster;
   wire [9:0] alct0_clct1_gemB_best_angle;
   wire [9:0] alct0_clct1_gemB_best_cscxky;
-  tree_encoder_alctclctgem ualct0_clct1_gemB_match{
+  tree_encoder_alctclctgem ualct0_clct1_gemB_match(
       alct0_clct1_gemB_angle[0],
       alct0_clct1_gemB_angle[1],
       alct0_clct1_gemB_angle[2],
@@ -794,12 +817,12 @@ module  alct_clct_gem_matching(
       alct0_clct1_gemB_best_cscxky,
       alct0_clct1_gemB_best_angle,
       alct0_clct1_gemB_best_icluster
-      };
+      );
 
   wire [2:0] alct1_clct1_gemA_best_icluster;
   wire [9:0] alct1_clct1_gemA_best_angle;
   wire [9:0] alct1_clct1_gemA_best_cscxky;
-  tree_encoder_alctclctgem ualct1_clct1_gemA_match{
+  tree_encoder_alctclctgem ualct1_clct1_gemA_match(
       alct1_clct1_gemA_angle[0],
       alct1_clct1_gemA_angle[1],
       alct1_clct1_gemA_angle[2],
@@ -821,13 +844,13 @@ module  alct_clct_gem_matching(
       alct1_clct1_gemA_best_cscxky,
       alct1_clct1_gemA_best_angle,
       alct1_clct1_gemA_best_icluster
-      };
+      );
 
 
   wire [2:0] alct1_clct1_gemB_best_icluster;
   wire [9:0] alct1_clct1_gemB_best_angle;
   wire [9:0] alct1_clct1_gemB_best_cscxky;
-  tree_encoder_alctclctgem ualct1_clct1_gemB_match{
+  tree_encoder_alctclctgem ualct1_clct1_gemB_match(
       alct1_clct1_gemB_angle[0],
       alct1_clct1_gemB_angle[1],
       alct1_clct1_gemB_angle[2],
@@ -849,7 +872,7 @@ module  alct_clct_gem_matching(
       alct1_clct1_gemB_best_cscxky,
       alct1_clct1_gemB_best_angle,
       alct1_clct1_gemB_best_icluster
-      };
+      );
 
 
   wire alct0_clct0_gemA_match_any  = |alct0_clct0_gemA_match;
@@ -962,7 +985,7 @@ module  alct_clct_gem_matching(
   wire [2:0] clct0_copad_best_icluster;
   wire [9:0] clct0_copad_best_angle;
   wire [9:0] clct0_copad_best_cscxky;
-  tree_encoder_gemclct uclct0_copad_match{
+  tree_encoder_alctclctgem uclct0_copad_match(
       clct0_copad_angle[0],
       clct0_copad_angle[1],
       clct0_copad_angle[2],
@@ -984,12 +1007,12 @@ module  alct_clct_gem_matching(
       clct0_copad_best_cscxky,
       clct0_copad_best_angle,
       clct0_copad_best_icluster
-      };
+      );
 
   wire [2:0] clct1_copad_best_icluster;
   wire [9:0] clct1_copad_best_angle;
   wire [9:0] clct1_copad_best_cscxky;
-  tree_encoder_gemclct uclct1_copad_match{
+  tree_encoder_alctclctgem uclct1_copad_match(
       clct1_copad_angle[0],
       clct1_copad_angle[1],
       clct1_copad_angle[2],
@@ -1011,14 +1034,14 @@ module  alct_clct_gem_matching(
       clct1_copad_best_cscxky,
       clct1_copad_best_angle,
       clct1_copad_best_icluster
-      };
+      );
 
   // clct1_copad match could be from 
   // no alct1 is found.
 
   //still need to find out wire group of GEM pad
   wire clct0_copad_match_found  = !alct0_vpf && ((clct0_copad_best_angle != MAXGEMCSCBND) || (clct1_copad_best_angle != MAXGEMCSCBND));
-  wire clct1_copad_match_found  = !alct1_vpf && ((clct0_copad_best_angle != MAXGEMCSCBND) && (clct1_copad_best_angle != MAXGEMCSCBND))
+  wire clct1_copad_match_found  = !alct1_vpf && ((clct0_copad_best_angle != MAXGEMCSCBND) && (clct1_copad_best_angle != MAXGEMCSCBND));
   wire swapclct_clctcopad_match = clct0_copad_match_found && (clct0_copad_best_angle > clct1_copad_best_angle);
   //wire clct1_copad_required     = !alct1_clct1_gem_match_found && !alct1_clct1_copad_match_found && !alct1_clct1_nogem_match_found;
   //wire clct1_copad_match_found  = !alct1_vpf && (clct0_copad_best_angle != MAXGEMCSCBND) && (clct1_copad_best_angle != MAXGEMCSCBND);
@@ -1032,7 +1055,7 @@ module  alct_clct_gem_matching(
   wire [2:0] alct0_copad_best_icluster;
   wire [9:0] alct0_copad_best_angle;
   wire [9:0] alct0_copad_best_cscxky;
-  tree_encoder_gemclct ualct0_copad_match{
+  tree_encoder_alctclctgem ualct0_copad_match(
       alct0_copad_angle[0],
       alct0_copad_angle[1],
       alct0_copad_angle[2],
@@ -1054,12 +1077,12 @@ module  alct_clct_gem_matching(
       alct0_copad_best_cscxky,
       alct0_copad_best_angle,
       alct0_copad_best_icluster
-      };
+      );
 
   wire [2:0] alct1_copad_best_icluster;
   wire [9:0] alct1_copad_best_angle;
   wire [9:0] alct1_copad_best_cscxky;
-  tree_encoder_gemclct ualct1_copad_match{
+  tree_encoder_alctclctgem ualct1_copad_match(
       alct1_copad_angle[0],
       alct1_copad_angle[1],
       alct1_copad_angle[2],
@@ -1081,7 +1104,7 @@ module  alct_clct_gem_matching(
       alct1_copad_best_cscxky,
       alct1_copad_best_angle,
       alct1_copad_best_icluster
-      };
+      );
 
   wire alct0_copad_match_found  = !clct0_vpf && (alct1_copad_best_angle != MAXGEMCSCBND) || (alct1_copad_best_angle != MAXGEMCSCBND);
   wire alct1_copad_match_found  = !clct1_vpf && (alct0_copad_best_angle != MAXGEMCSCBND) && (alct1_copad_best_angle != MAXGEMCSCBND);
@@ -1107,27 +1130,29 @@ module  alct_clct_gem_matching(
   wire gemcsc_match_dummy = 1'b1;
 
   wire [6:0] alct0wg_fromcopad = wgfromGEMcluster(
-      clct0_copad_best_icluster, 
-      gemA_cluster0_wg_mi,
-      gemA_cluster1_wg_mi,
-      gemA_cluster2_wg_mi,
-      gemA_cluster3_wg_mi,
-      gemA_cluster4_wg_mi,
-      gemA_cluster5_wg_mi,
-      gemA_cluster6_wg_mi,
-      gemA_cluster7_wg_mi
+      clct0_copad_best_icluster
+      //clct0_copad_best_icluster, 
+      //gemA_cluster0_wg_mi,
+      //gemA_cluster1_wg_mi,
+      //gemA_cluster2_wg_mi,
+      //gemA_cluster3_wg_mi,
+      //gemA_cluster4_wg_mi,
+      //gemA_cluster5_wg_mi,
+      //gemA_cluster6_wg_mi,
+      //gemA_cluster7_wg_mi
       );
   
   wire [6:0]  alct1wg_fromcopad = wgfromGEMcluster(
-      clct1_copad_best_icluster, 
-      gemA_cluster0_wg_mi,
-      gemA_cluster1_wg_mi,
-      gemA_cluster2_wg_mi,
-      gemA_cluster3_wg_mi,
-      gemA_cluster4_wg_mi,
-      gemA_cluster5_wg_mi,
-      gemA_cluster6_wg_mi,
-      gemA_cluster6_wg_mi
+      clct1_copad_best_icluster
+      //clct1_copad_best_icluster, 
+      //gemA_cluster0_wg_mi,
+      //gemA_cluster1_wg_mi,
+      //gemA_cluster2_wg_mi,
+      //gemA_cluster3_wg_mi,
+      //gemA_cluster4_wg_mi,
+      //gemA_cluster5_wg_mi,
+      //gemA_cluster6_wg_mi,
+      //gemA_cluster6_wg_mi
   );
 
 
@@ -1135,26 +1160,26 @@ module  alct_clct_gem_matching(
 
 function [6: 0] wgfromGEMcluster;
   input [2: 0] icluster;
-  input [6:0] cluster0_wg_mi;
-  input [6:0] cluster1_wg_mi;
-  input [6:0] cluster2_wg_mi;
-  input [6:0] cluster3_wg_mi;
-  input [6:0] cluster4_wg_mi;
-  input [6:0] cluster5_wg_mi;
-  input [6:0] cluster6_wg_mi;
-  input [6:0] cluster7_wg_mi;
+  //input [6:0] cluster0_wg_mi;
+  //input [6:0] cluster1_wg_mi;
+  //input [6:0] cluster2_wg_mi;
+  //input [6:0] cluster3_wg_mi;
+  //input [6:0] cluster4_wg_mi;
+  //input [6:0] cluster5_wg_mi;
+  //input [6:0] cluster6_wg_mi;
+  //input [6:0] cluster7_wg_mi;
 
   reg   [6: 0] wg;
   begin
-    case (icluster):
-        3'd0 :  wg = cluster0_wg_mi;
-        3'd1 :  wg = cluster1_wg_mi;
-        3'd2 :  wg = cluster2_wg_mi;
-        3'd3 :  wg = cluster3_wg_mi;
-        3'd4 :  wg = cluster4_wg_mi;
-        3'd5 :  wg = cluster5_wg_mi;
-        3'd6 :  wg = cluster6_wg_mi;
-        3'd7 :  wg = cluster7_wg_mi;
+    case (icluster)
+        3'd0 :  wg = gemA_cluster0_wg_mi;
+        3'd1 :  wg = gemA_cluster1_wg_mi;
+        3'd2 :  wg = gemA_cluster2_wg_mi;
+        3'd3 :  wg = gemA_cluster3_wg_mi;
+        3'd4 :  wg = gemA_cluster4_wg_mi;
+        3'd5 :  wg = gemA_cluster5_wg_mi;
+        3'd6 :  wg = gemA_cluster6_wg_mi;
+        3'd7 :  wg = gemA_cluster7_wg_mi;
     endcase
 
     wgfromGEMcluster = wg;
