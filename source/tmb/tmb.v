@@ -2817,7 +2817,7 @@
         .clct_copad_match     (clct0_copad_match_good), 
         .alct_copad_match     (alct0_copad_match_good),  
         .gemcsc_bend_enable   (gemcsc_bend_enable),
-        Q                     (lct0_qlt_run3[2:0])
+        .Q                    (lct0_qlt_run3[2:0])
     );
 
   wire tmb_dupe_alctorclct = (tmb_dupe_alct_run3 || tmb_dupe_clct_run3) && !(tmb_dupe_alct_run3 && tmb_dupe_clct_run3);
@@ -2829,7 +2829,7 @@
         .clct_copad_match     (clct1_copad_match_good), 
         .alct_copad_match     (alct1_copad_match_good),  
         .gemcsc_bend_enable   (gemcsc_bend_enable),
-        Q                     (lct1_qlt_run3[2:0])
+        .Q                    (lct1_qlt_run3[2:0])
     );
 //------------------------------------------------------------------------------------------------------------------
 // Delay alct and clct bx0 strobes
