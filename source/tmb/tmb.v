@@ -628,7 +628,8 @@
   parameter MXQLTB   = 9;                 // Fit quality bits
   parameter MXBNDB   = 5;                 // Bend bits
   parameter MXXKYB   = 10;            // Number of EightStrip key bits on 7 CFEBs, was 8 bits with traditional pattern finding
-  parameter MXCCLUTB = 10+5+9+12;  // New 35bits for CCLUT, new quality, bnd, xky, comparator code 
+  //parameter MXCCLUTB = 10+5+9+12;  // New 35bits for CCLUT, new quality, bnd, xky, comparator code 
+  parameter MXCCLUTB = MXPATC+MXQLTB+MXBNDB+MXXKYB;
 
   //GEM
   parameter CLSTBITS   =  14; // Number bits per GEM cluster
