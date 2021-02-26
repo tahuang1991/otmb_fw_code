@@ -701,8 +701,8 @@
   //gem_me1b_match_promotequal,     //Out promote quality or not for match in ME1b region 
   //gem_me1a_match_promotepat,     //Out promote pattern or not for match in ME1a region, 
   //gem_me1b_match_promotepat,     //Out promote pattern or not for match in ME1b region, 
-  gemA_match_enable,
-  gemB_match_enable,
+  //gemA_match_enable,
+  //gemB_match_enable,
   gemcsc_bend_enable,
 
 // GEM Configuration Ports
@@ -2438,8 +2438,8 @@
   //output       gem_me1b_match_promotequal;
   //output       gem_me1a_match_promotepat;
   //output       gem_me1b_match_promotepat;
-  output       gemA_match_enable;
-  output       gemB_match_enable;
+  //output       gemA_match_enable;
+  //output       gemB_match_enable;
   output       gemcsc_bend_enable;
 
   output [MXVFAT-1:0] gemA_vfat_hcm;
@@ -8796,7 +8796,7 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
   wire [3:0] gemB_rxd_int_delay_wr = gem_cfg_wr[7:4];
 
   wire gem_rxd_int_delay_decouple = gem_cfg_wr[8];
-  assign gem_enable               = gem_cfg_wr[12:9];
+  assign gem_enable               = gem_cfg_wr[12:9]; //read out mask
 
   // FF Buffer gem rxd integer delay
   reg [3:0] gemA_rxd_int_delay = 0;
@@ -8983,11 +8983,27 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
   //assign gem_me1b_match_promotepat    = gem_csc_match_ctrl_wr[11];
   assign tmb_copad_alct_allow         = gem_csc_match_ctrl_wr[10];
   assign tmb_copad_clct_allow         = gem_csc_match_ctrl_wr[11];
-  assign gemA_match_enable            = gem_csc_match_ctrl_wr[12];
-  assign gemB_match_enable            = gem_csc_match_ctrl_wr[13];
+  //assign gemA_match_enable            = gem_csc_match_ctrl_wr[12];
+  //assign gemB_match_enable            = gem_csc_match_ctrl_wr[13];
   assign gemcsc_bend_enable           = gem_csc_match_ctrl_wr[14];
 
   assign gem_csc_match_ctrl_rd        = gem_csc_match_ctrl_wr[15:0];
+
+//------------------------------------------------------------------------------------------------------------------
+// GEM_hot vfat mask from 0x33A to 33E
+//------------------------------------------------------------------------------------------------------------------
+  initial begin
+      gem_vfat_hcm0_wr    =  16'hFFFF;  // gem hot vfat mask 0
+      gem_vfat_hcm1_wr    =  16'hFFFF;  // gem hot vfat mask 0
+      gem_vfat_hcm2_wr    =  16'hFFFF;  // gem hot vfat mask 0
+  end
+
+  assign gemA_vfat_hcm    = {gem_vfat_hcm1_wr[ 7:0], gem_vfat_hcm0_wr[15:0]}; // total 24 Vfats
+  assign gemB_vfat_hcm    = {gem_vfat_hcm2_wr[15:0], gem_vfat_hcm1_wr[15:8]}; // total 24 Vfats
+
+  assign gem_vfat_hcm0_rd                 =  gem_vfat_hcm0_wr[15:0];
+  assign gem_vfat_hcm1_rd                 =  gem_vfat_hcm1_wr[15:0];
+  assign gem_vfat_hcm2_rd                 =  gem_vfat_hcm2_wr[15:0];
 
 //------------------------------------------------------------------------------------------------------------------
 // GEM_CLUSTERs and COPADs from 0x340 to 0x36e
@@ -9035,21 +9051,6 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
 
 
 
-//------------------------------------------------------------------------------------------------------------------
-// GEM_hot vfat mask from 0x33A to 33E
-//------------------------------------------------------------------------------------------------------------------
-  initial begin
-      gem_vfat_hcm0_wr    =  16'hFFFF;  // gem hot vfat mask 0
-      gem_vfat_hcm1_wr    =  16'hFFFF;  // gem hot vfat mask 0
-      gem_vfat_hcm2_wr    =  16'hFFFF;  // gem hot vfat mask 0
-  end
-
-  assign gemA_vfat_hcm    = {gem_vfat_hcm1_wr[ 7:0], gem_vfat_hcm0_wr[15:0]}; // total 24 Vfats
-  assign gemB_vfat_hcm    = {gem_vfat_hcm2_wr[15:0], gem_vfat_hcm1_wr[15:8]}; // total 24 Vfats
-
-  assign gem_vfat_hcm0_rd                 =  gem_vfat_hcm0_wr[15:0];
-  assign gem_vfat_hcm1_rd                 =  gem_vfat_hcm1_wr[15:0];
-  assign gem_vfat_hcm2_rd                 =  gem_vfat_hcm2_wr[15:0];
 
 //------------------------------------------------------------------------------------------------------------------
 // VME Write-Registers latch data when addressed + latch power-up defaults

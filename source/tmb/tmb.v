@@ -254,13 +254,13 @@
   match_gem_alct_window,
   match_gem_clct_window,
 
-  gemA_match_enable,
+  //gemA_match_enable,
   gemA_alct_match, 
   gemA_clct_match,
   gemA_fiber_enable,
 
 //GEMB trigger match control
-  gemB_match_enable,
+  //gemB_match_enable,
   gemB_alct_match,
   gemB_clct_match,
   gemB_fiber_enable,
@@ -770,13 +770,13 @@
   input  [7:0]        match_gem_alct_delay;
   input  [3:0]        match_gem_alct_window;
   input  [3:0]        match_gem_clct_window;
-  input               gemA_match_enable;//enable for gemcsc match
+  //input               gemA_match_enable;//enable for gemcsc match
   output              gemA_alct_match;
   output              gemA_clct_match;
   input  [1:0]        gemA_fiber_enable;
 
   //GEMB trigger match control
-  input               gemB_match_enable;//enable for gemcsc match
+  //input               gemB_match_enable;//enable for gemcsc match
   output              gemB_alct_match;
   output              gemB_clct_match;
   input [1:0]         gemB_fiber_enable;
@@ -1125,7 +1125,7 @@
 //------------------------------------------------------------------------------------------------------------------
 //  GEM input data 
 //------------------------------------------------------------------------------------------------------------------
-  wire gemcsc_match_enable = gemA_match_enable || gemB_match_enable;
+  //wire gemcsc_match_enable = gemA_fiber_enable || gemB_fiber_enable;
   wire [CLSTBITS-1:0] gemA_cluster  [MXCLUSTER_CHAMBER-1:0];
   wire [CLSTBITS-1:0] gemB_cluster  [MXCLUSTER_CHAMBER-1:0];
   wire [WIREBITS-1:0] gemA_cluster_cscwire_lo[MXCLUSTER_CHAMBER-1:0];
@@ -2870,6 +2870,18 @@
         .gemcsc_bend_enable   (gemcsc_bend_enable),
         .Q                    (lct1_qlt_run3[2:0])
     );
+
+  wire   lct0_vpf_run3 = (lct0_qlt_run3[2:0] > 3'b0);
+  wire   lct1_vpf_run3 = (lct1_qlt_run3[2:0] > 3'b0);
+  wire [4:0] lct_pid_run3;
+  patid_5bits upid5bit(
+  .lct0_vpf  (lct0_vpf_run3),
+  .clct0_pid (clct0_pat[2:0]),
+  .lct1_vpf  (lct1_vpf_run3),
+  .clct1_pid (clct1_pat[2:0]),
+  .out_pid   (lct_pid_run3[4:0])
+  );
+
 //------------------------------------------------------------------------------------------------------------------
 // Delay alct and clct bx0 strobes
 //------------------------------------------------------------------------------------------------------------------
@@ -2939,30 +2951,35 @@
   wire [9:0] clct1_xky_run3 =  clct1fromcopad_run3 ? clct1xky_fromcopad[9:0] : clct1_xky[9:0];
   //wire [3:0] bnd0_run3      =  alct0fromcopad_run3 ? 4'b0 : (gemcsc_bend_enable ? gemcsc_bnd[3:0] : clct0_bnd[3:0]);    
   //wire [3:0] bnd1_run3      =  alct0fromcopad_run3 ? 4'b0 : (gemcsc_bend_enable ? gemcsc_bnd[3:0] : clct0_bnd[3:0]);    
+  wire [3:0]  hmt_trigger_run3 = {2'b0, hmt_trigger_real};
 
   assign  mpc0_frame0_run3[6:0]   = alct0_key_run3[6:0];
-  assign  mpc0_frame0_run3[10:7]  = clct0_bnd[3:0]; //new bending from CCLUT
+  assign  mpc0_frame0_run3[10:7]  = lct_pid_run3[3:0];
   assign  mpc0_frame0_run3[13:11] = lct0_qlt_run3[2:0];
-  assign  mpc0_frame0_run3[15:14] = clct0_xky_run3[1:0]; // CLCT0 1/4 strip bit and 1/8 strip bit
+  assign  mpc0_frame0_run3[14]    = clct0_xky_run3[1]; // CLCT0 1/4 strip bit
+  assign  mpc0_frame0_run3[15]    = lct0_vpf_run3;
+
 
   assign  mpc0_frame1_run3[7:0]   = clct0_xky_run3[9:2];
   assign  mpc0_frame1_run3[8]     = clct0_bnd[4]; // left or right from CCLUT
-  assign  mpc0_frame1_run3[9]     = hmt_trigger_real[0];
+  assign  mpc0_frame1_run3[9]     = clct0_xky_run3[0];
   assign  mpc0_frame1_run3[10]    = alct0_bxn[0];
   assign  mpc0_frame1_run3[11]    = clct_bx0;  // bx0 gets replaced after mpc_tx_delay, keep here to mollify xst
-  assign  mpc0_frame1_run3[15:12] = csc_id[3:0];
+  assign  mpc0_frame1_run3[15:12] = clct0_bnd[3:0]; //new bending from CCLUT
 
   assign  mpc1_frame0_run3[6:0]   = alct1_key_run3[6:0];
-  assign  mpc1_frame0_run3[10:7]  = clct1_bnd[3:0]; // new bending from CCLUT
+  assign  mpc1_frame0_run3[7]     = lct_pid_run3[4];
+  assign  mpc1_frame0_run3[10:8]  = hmt_trigger_run3[3:1];
   assign  mpc1_frame0_run3[13:11] = lct1_qlt_run3[2:0];
-  assign  mpc1_frame0_run3[15:14] = clct1_xky_run3[1:0];
+  assign  mpc1_frame0_run3[14]    = clct1_xky_run3[1];
+  assign  mpc1_frame0_run3[15]    = lct1_vpf_run3;
 
   assign  mpc1_frame1_run3[7:0]   = clct1_xky_run3[9:2];
   assign  mpc1_frame1_run3[8]     = clct1_bnd[4];
-  assign  mpc1_frame1_run3[9]     = hmt_trigger_real[1];
-  assign  mpc1_frame1_run3[10]    = alct1_bxn[0];
+  assign  mpc1_frame1_run3[9]     = clct1_xky_run3[0];
+  assign  mpc1_frame1_run3[10]    = hmt_trigger_run3[0];
   assign  mpc1_frame1_run3[11]    = alct_bx0;  // bx0 gets replaced after mpc_tx_delay, keep here to mollify xst
-  assign  mpc1_frame1_run3[15:12] = csc_id[3:0];
+  assign  mpc1_frame1_run3[15:12] = clct1_bnd[3:0]; // new bending from CCLUT
 
   assign  mpc0_frame0[6:0]   = alct0_key[6:0];
   assign  mpc0_frame0[10:7]  = clct0_pat[3:0];

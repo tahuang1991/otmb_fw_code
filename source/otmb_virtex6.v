@@ -1568,6 +1568,9 @@
   wire [23:0]   gemB_active_feb_list;
 
   // join fibers together into the two GEM chambers
+  ///Arrays :  reg [ L : R ]    my_array [ FIRST_INDEX : LAST_INDEX]
+  // eg. reg [7:0]  my_array [3:0];
+  // my_array = {A, B, C, D}; means: my_array[0] = A; my_array[1] = B
   wire [CLSTBITS-1:0] gemA_cluster [MXCLUSTER_CHAMBER-1:0] = {
     gem_cluster3[1],
     gem_cluster2[1],
@@ -1589,6 +1592,7 @@
     gem_cluster1[2],
     gem_cluster0[2]
   };
+
 
   wire [2:0] gemA_cluster_roll [MXCLUSTER_CHAMBER-1:0] = {
     gem_cluster3_roll[1],
@@ -1634,7 +1638,7 @@
     gem_cluster0_pad[2]
     };
 
-  wire [MXCLUSTER_CHAMBER-1:0] gemA_vpf = {
+  wire [MXCLUSTER_CHAMBER-1:0] gemA_vpf = { //gemA_vpf
     gem_vpf3[1],
     gem_vpf2[1],
     gem_vpf1[1],
@@ -1657,6 +1661,39 @@
   };
 
   wire gem_any = (|gemA_vpf) | (|gemB_vpf);
+
+  //GEMA trigger match control
+  //wire  gemA_match_enable;
+  //wire  gemB_match_enable;
+  wire [1:0]  gemA_fiber_enable;
+
+  //GEMB trigger match control
+  //wire [3:0]  match_gemB_alct_window;
+  //wire [3:0]  match_gemB_clct_window;
+  wire [1:0]  gemB_fiber_enable;
+
+  wire [3:0] gem_fiber_enable = {gemB_fiber_enable, gemA_fiber_enable};
+
+  wire [MXCLUSTER_CHAMBER-1:0] gemA_cluster_enable = {
+      gemA_fiber_enable[1],
+      gemA_fiber_enable[1],
+      gemA_fiber_enable[1],
+      gemA_fiber_enable[1],
+      gemA_fiber_enable[0],
+      gemA_fiber_enable[0],
+      gemA_fiber_enable[0],
+      gemA_fiber_enable[0]
+      };
+  wire [MXCLUSTER_CHAMBER-1:0] gemB_cluster_enable = {
+      gemB_fiber_enable[1],
+      gemB_fiber_enable[1],
+      gemB_fiber_enable[1],
+      gemB_fiber_enable[1],
+      gemB_fiber_enable[0],
+      gemB_fiber_enable[0],
+      gemB_fiber_enable[0],
+      gemB_fiber_enable[0]
+      };
    
   wire [9:0]   gem_debug_fifo_adr;    // FIFO RAM read tbin address
   wire [1:0]   gem_debug_fifo_sel;    // FIFO RAM read layer clusters 0-3
@@ -1672,17 +1709,6 @@
   wire         gem_inj_wen;      // GEM Injector Write Enable
   wire         injector_go_gem;  // Start GEM injector
 
-  //GEMA trigger match control
-  wire  gemA_match_enable;
-  wire  gemB_match_enable;
-  wire [1:0]  gemA_fiber_enable;
-
-  //GEMB trigger match control
-  //wire [3:0]  match_gemB_alct_window;
-  //wire [3:0]  match_gemB_clct_window;
-  wire [1:0]  gemB_fiber_enable;
-
-  wire [3:0] gem_fiber_enable = {gemB_fiber_enable, gemA_fiber_enable};
 
   wire [4:0] gem_clct_deltahs;
   wire [2:0] gem_alct_deltawire;
@@ -2222,7 +2248,7 @@ end
 	.clock (clock),    //in clock
 
         .evenchamber (evenchamber),   //in,  even pair or not
-        .gem_match_enable  (gemA_match_enable),//In enable GEMA for GEMCSC match or not, if not, vpf is invalid from here
+        .gem_match_enable  (gemA_cluster_enable[iclst_csc]),//In enable GEMA for GEMCSC match or not, if not, vpf is invalid from here
         .gem_clct_deltahs  (gem_clct_deltahs), // In matching window in halfstrip direction
         .gem_alct_deltawire(gem_alct_deltawire), //In  matching window in wiregroup direction
 
@@ -2255,7 +2281,7 @@ end
 	.clock (clock),
 
         .evenchamber (evenchamber),   // even pair or not
-        .gem_match_enable  (gemB_match_enable),
+        .gem_match_enable  (gemB_cluster_enable[iclst_csc]),
         .gem_clct_deltahs  (gem_clct_deltahs), // matching window in halfstrip direction
         .gem_alct_deltawire(gem_alct_deltawire), // matching window in wiregroup direction
 
@@ -4216,11 +4242,11 @@ wire [15:0] gemB_bxn_counter;
   .match_gem_alct_delay   (match_gem_alct_delay[7:0]),  //In gem delay for gem-ALCT match
   .match_gem_alct_window  (match_gem_alct_window[3:0]), //In gem-alct match window
   .match_gem_clct_window  (match_gem_clct_window[3:0]), //In gem-clct match window
-  .gemA_match_enable      (gemA_match_enable),             //In gemA+ALCT match
+  //.gemA_match_enable      (gemA_match_enable),             //In gemA+ALCT match
   .gemA_alct_match        (gemA_alct_match),             //Out gemA+ALCT match
   .gemA_clct_match        (gemA_clct_match),             //Out gemA+CLCT match
   .gemA_fiber_enable      (gemA_fiber_enable[1:0]),     //In gemA two fibers enabled or not
-  .gemB_match_enable      (gemB_match_enable),             //IN gemB+ALCT match
+  //.gemB_match_enable      (gemB_match_enable),             //IN gemB+ALCT match
   .gemB_alct_match        (gemB_alct_match),       // Out gemB+ALCT match or not
   .gemB_clct_match        (gemB_clct_match),      // Out gemB+CLCT match or not
   .gemB_fiber_enable      (gemB_fiber_enable[1:0]),    //In gemB two fibers enabled or not
@@ -5465,8 +5491,8 @@ wire [15:0] gemB_bxn_counter;
       //.gem_me1b_match_promotequal  (gem_me1b_match_promotequal),     //Out promote quality or not for match in ME1b region 
       //.gem_me1a_match_promotepat   (gem_me1a_match_promotepat),     //Out promote pattern or not for match in ME1a region, 
       //.gem_me1b_match_promotepat   (gem_me1b_match_promotepat),     //Out promote pattern or not for match in ME1b region 
-      .gemA_match_enable           (gemA_match_enable),         // out enable GEMA for match
-      .gemB_match_enable           (gemB_match_enable),         // out enable GEMB for match
+      //.gemA_match_enable           (gemA_match_enable),         // out enable GEMA for match
+      //.gemB_match_enable           (gemB_match_enable),         // out enable GEMB for match
       .gemcsc_bend_enable          (gemcsc_bend_enable),         // out enable GEMCSC bending angle for match
 
       // RPC Ports: RAT Control                                                                                      
