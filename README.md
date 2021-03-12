@@ -57,10 +57,10 @@ In 2019, Tao checked out Andrew' gem_devel branch and created a branched GE11_ME
 
 #### branch GE11_2018ME11_CCLUT_v0
 it is a special version for TAMU test.  It included:
-    - part GEMCSC match features
-    - HMT 
-    - part new format 
-    - fake ALCT generated with valid CLCT vpf
+   - Full GEMCSC match features
+   - HMT 
+   - new format for triggering and DAQ
+   - fake ALCT generated with valid CLCT vpf
 
 ### Simulation
 The folder source/simulation contains a test bench, as well as a
