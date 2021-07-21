@@ -1335,7 +1335,8 @@
       nhits_me1b <= cfeb_nhits[0] + cfeb_nhits[1] + cfeb_nhits[2] + cfeb_nhits[3];
   end
 
-  wire nhits_trig_s0[9:0] = hmt_me1a_enable ? nhits_all[9:0] : nhits_me1b[9:0];
+  wire [9:0] nhits_trig_s0;
+  assign nhits_trig_s0[9:0] = hmt_me1a_enable ? nhits_all[9:0] : nhits_me1b[9:0];
 
   reg [9:0] nhits_trig_s0_srl [7:1];//array 7x10bits
 
