@@ -116,6 +116,8 @@
 //  09/13/2012  Fix RAM collision check syntax
 //  02/14/2013  Virtex-6 only
 //  02/21/2013  Expand to 7 CFEB
+
+//  08/2021  usefakealct is added for TAMU test.  comment this out or disable it for real OTMB firmware 
 //-------------------------------------------------------------------------------------------------------------------
   module tmb
   (
@@ -352,7 +354,8 @@
   clct_vpf_tprt,
   clct_window_tprt,
 
-  alct0_pipe_vpf,
+  lct0_vpf_tprt,
+
 // Sump
   tmb_sump
 
@@ -537,7 +540,6 @@
   input                alct_bx0_rx;  // ALCT bx0 received
   input  [1:0]         alct_ecc_err; // ALCT ecc syndrome code
 
-  output                alct0_pipe_vpf; //Tao, test at TAMU
 
 // GEM
   input  [7:0]        gemA_vpf;
@@ -754,6 +756,7 @@
   output          clct_vpf_tprt;    // Timing test point
   output          clct_window_tprt; // Timing test point
 
+  output          lct0_vpf_tprt;   // Timing test point, unbuffered real time for internal scope
 // Sump
   output          tmb_sump; // Unused signals
 
@@ -986,16 +989,17 @@
 //------------------------------------------------------------------------------------------------------------------
   wire [MXALCT-1:0] alct0_fake, alct1_fake;
   wire [MXALCT-1:0] alct0_fake_srl, alct1_fake_srl;
+
   assign alct0_fake[   0]   = wr_push_xtmb;
   assign alct0_fake[02:1]   = 2'b11;
   assign alct0_fake[   3]   = 1'b0;
-  assign alct0_fake[10:4]   = 7'd20;
+  assign alct0_fake[10:4]   = wr_push_xtmb ? 7'd20 : 0;
   assign alct0_fake[15:11]  = 4'b0;
 
   assign alct1_fake[   0]   = wr_push_xtmb;
   assign alct1_fake[02:1]   = 2'b10;
   assign alct1_fake[   3]   = 1'b0;
-  assign alct1_fake[10:4]   = 7'd30;
+  assign alct1_fake[10:4]   = wr_push_xtmb ?  7'd30 : 0;
   assign alct1_fake[15:11]  = 4'b0;
 
   reg [3:0] fakealct_srl_adr = 0;
@@ -1006,7 +1010,8 @@
   srl16e_bbl #(MXALCT) ualct0fake (.clock(clock),.ce(1'b1),.adr(fakealct_srl_adr),.d(alct0_fake),.q(alct0_fake_srl));
   srl16e_bbl #(MXALCT) ualct1fake (.clock(clock),.ce(1'b1),.adr(fakealct_srl_adr),.d(alct1_fake),.q(alct1_fake_srl));
 
-  wire usefakealct =1'b0; // should be false in normal OTMB Firmware
+  //Attention!!! 
+  wire usefakealct = gem_me1b_match_enable; // should be false in normal OTMB Firmware
 //------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------
   
@@ -2058,6 +2063,8 @@
 // LCT valid pattern flags
   wire lct0_vpf  = alct0_vpf || clct0_vpf;      // First muon exists
   wire lct1_vpf  = alct1_vpf || clct1_vpf;      // Second muon exists
+
+  assign lct0_vpf_tprt = lct0_vpf;
 
 // Decompose ALCT muons
   wire         alct0_valid   = alct0[0];     // Valid pattern flag

@@ -1358,7 +1358,7 @@
   wire [9:0] nhits_trig_s0_bx2345 = (nhits_trig_s0_bx2345_tmp[11:10] > 0 ) ? 10'h3FF : nhits_trig_s0_bx2345_tmp[9:0];//cutoff at [9:0]
   wire [9:0] nhits_trig_s0_bx678  = (nhits_trig_s0_bx678_tmp[11:10] > 0 ) ? 10'h3FF : nhits_trig_s0_bx678_tmp[9:0];
 
-  parameter hmt_dly = 4'd2; //delay HMT trigger to CLCT VPF BX
+  parameter hmt_dly = 4'd0; //delay HMT trigger to CLCT VPF BX
   wire [9:0] nhits_trig_dly_bx2345;
   wire [9:0] nhits_trig_dly_bx678;
   wire [9:0] nhits_trig_dly_bx7;
@@ -1366,9 +1366,9 @@
   srl16e_bbl #(10)    udnhitsbx678 ( .clock(clock), .ce(1'b1), .adr(hmt_dly), .d(nhits_trig_s0_bx678  ), .q(nhits_trig_dly_bx678    ) );
   srl16e_bbl #(10)    udnhitsbx2345( .clock(clock), .ce(1'b1), .adr(hmt_dly), .d(nhits_trig_s0_bx2345 ), .q(nhits_trig_dly_bx2345   ) );
 
-  assign  hmt_nhits_trig  = nhits_trig_dly_bx7[9:0];
-  assign  hmt_nhits_trig_bx678  = nhits_trig_dly_bx678[9:0];
-  assign  hmt_nhits_trig_bx2345 = nhits_trig_dly_bx2345[9:0];
+  assign  hmt_nhits_trig        = (hmt_dly == 4'd0) ? nhits_trig_s0_bx7[9:0] : nhits_trig_dly_bx7[9:0];
+  assign  hmt_nhits_trig_bx678  = (hmt_dly == 4'd0) ? nhits_trig_s0_bx678[9:0] : nhits_trig_dly_bx678[9:0];
+  assign  hmt_nhits_trig_bx2345 = (hmt_dly == 4'd0) ? nhits_trig_s0_bx2345[9:0] : nhits_trig_dly_bx2345[9:0];
 
 // Status Ports
   wire  [MXCFEB-1:0]  demux_tp_1st;
@@ -4197,8 +4197,8 @@ wire [15:0] gemB_bxn_counter;
   //(|gemA_csc_cluster_vpf) || (|gemB_csc_cluster_vpf);// gemA or gemB vpf signal
   // copad_match; // gem copad vpf signal
   //these two are in same BX
+  wire lct0_vpf_tprt;
 
-  wire alct0_pipe_vpf;
   tmb utmb
   (
 // Clock
@@ -4214,8 +4214,6 @@ wire [15:0] gemB_bxn_counter;
   .alct1_tmb    (alct1_tmb[MXALCT-1:0]), // In  ALCT second best muon
   .alct_bx0_rx  (alct_bx0_rx),           // In  ALCT bx0 received
   .alct_ecc_err (alct_ecc_err[1:0]),     // In  ALCT ecc syndrome code
-
-  .alct0_pipe_vpf  (alct0_pipe_vpf),// Out, from fake ALCT for debugging
 
 // GEM
   //.gemA_vpf          (gemA_vpf[7:0]),
@@ -4542,6 +4540,7 @@ wire [15:0] gemB_bxn_counter;
   .clct_vpf_tprt    (clct_vpf_tprt),    // Out  Timing test point
   .clct_window_tprt (clct_window_tprt), // Out  Timing test point
 
+  .lct0_vpf_tprt   (lct0_vpf_tprt),   // Out  Timing test point
   .tmb_sump      (tmb_sump)            // Out  Unused signals
   );
 
@@ -4633,11 +4632,11 @@ wire [15:0] gemB_bxn_counter;
     //assign mez_tp[6] = (!set_sw[7] ? bpi_dsbl        :                          link_good[5]);
     //assign mez_tp[5] =   set_sw[8] ? alct_rxd_posneg : (!set_sw[7] ? bpi_rst  : link_good[4]);
     //assign mez_tp[4] = (!set_sw[7] ? bpi_dev         :                          link_good[3]);
-    assign mez_tp[7]  = alct0_pipe_vpf; // ALCT vpf signal
-    assign mez_tp[6]  = wr_push_xtmb; // CLCT vpf signal
-    assign mez_tp[5]  = (|gemA_csc_cluster_vpf) || (|gemB_csc_cluster_vpf);// gemA or gemB vpf signal
+    assign mez_tp[7]  = alct0_vpf_tprt; // ALCT vpf signal
+    assign mez_tp[6]  = clct0_vpf_tprt; // CLCT vpf signal
+    assign mez_tp[5]  = lct0_vpf_tprt;// gemA or gemB vpf signal
     //assign mez_tp[4]  = |copad_match; // gem copad vpf signal
-    assign mez_tp[4]  = hmt_nhits_trig_bx678 >= hmt_nhits_trig_bx2345+10'h3; // gem copad vpf signal
+    assign mez_tp[4]  = mpc_xmit_lct0; // gem copad vpf signal
 //    assign mez_tp[MXCFEB:4] = link_good[MXCFEB-1:3];
 //    reg  [3:1]  testled_r;
 //    assign mez_tp[3] = link_good[2] || ((set_sw == 2'b01) && clock_alct_txd);
