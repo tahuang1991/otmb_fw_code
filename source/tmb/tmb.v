@@ -1514,7 +1514,7 @@
 // Push ALCT data into a 1bx to 16bx pipeline delay to compensate for CLCT processing time
 //------------------------------------------------------------------------------------------------------------------
   
-//`define FAKE_ALCT 0
+//`define FAKE_ALCT 1
 `ifdef FAKE_ALCT
   initial $display("tmb: fake ALCT generation code is added!!");
 //------------------------------------------------------------------------------------------------------------------
@@ -1617,12 +1617,14 @@
   wire [MXALCT-1:0] alct1_gem_pipe, alct1_gem_srl;
   wire [1:0]        alcte_gem_pipe, alcte_gem_srl, alcte_gem_tmb;
   reg  [3:0]        alct_gem_srl_adr = 0;
+  reg [3:0] gem_alct_window = 0;
 
-  wire [3:0] gem_alct_win_center = {1'b0, match_gem_alct_window[3:1]}; // namely window/2
+  wire [3:0] gem_alct_win_center = {1'b0, gem_alct_window[3:1]}; // namely window/2
   wire [3:0] alct_delay_forgem   = (alct_delay > gem_alct_win_center)? (alct_delay - gem_alct_win_center) : 4'b0;//
 
   always @(posedge clock) begin
     alct_gem_srl_adr <= alct_delay_forgem-1'b1;
+    gem_alct_window     <= match_gem_alct_window;
   end
 
   //maybe here we only need alct vpf???
@@ -1909,16 +1911,18 @@
   //wire [MXCLUSTER_CHAMBER-1:0]  gemB_pipe_foralct, gemB_foralct_srl;
 
   reg  [3:0] gem_srl_adr = 0;
+  reg  [3:0] gem_alct_delay = 0;
 
   always @(posedge clock) begin
-  gem_srl_adr <= match_gem_alct_delay-1'b1;
+  gem_srl_adr <= match_gem_alct_delay[3:0]-1'b1;
+  gem_alct_delay <= match_gem_alct_delay[3:0];
   end
 
   //srl16e_bbl #(MXCLUSTER_CHAMBER) ugemA (.clock(clock),.ce(1'b1),.adr(gem_srl_adr),.d(gemA_vpf[MXCLUSTER_CHAMBER-1:0]),.q(gemA_foralct_srl[MXCLUSTER_CHAMBER-1:0])); 
   //srl16e_bbl #(MXCLUSTER_CHAMBER) ugemB (.clock(clock),.ce(1'b1),.adr(gem_srl_adr),.d(gemB_vpf[MXCLUSTER_CHAMBER-1:0]),.q(gemB_foralct_srl[MXCLUSTER_CHAMBER-1:0]));
   srl16e_bbl #(1) ugemalct (.clock(clock),.ce(1'b1),.adr(gem_srl_adr),.d(gem_vpf), .q(gem_foralct_srl));
 
-  wire gem_ptr_is_0 = (match_gem_alct_delay == 0);               // Use direct input if SRL address is 0, 1st SRL output has 1bx overhead
+  wire gem_ptr_is_0 = (gem_alct_delay == 0);               // Use direct input if SRL address is 0, 1st SRL output has 1bx overhead
 
   //assign gemA_pipe_foralct = (gem_ptr_is_0) ? gemA_vpf : gemA_foralct_srl;  // First  GEM after pipe delay
   //assign gemB_pipe_foralct = (gem_ptr_is_0) ? gemB_vpf : gemB_foralct_srl;  // Second GEM after pipe delay
@@ -1949,8 +1953,8 @@
       else begin
           i = 0;
           while (i<=15) begin
-              if (match_gem_alct_window != 0) 
-                  gem_sr_include[i] <= (i<=match_gem_alct_window-1);//if match_gem_alct_window=3, enable sr in bit0,1,2, sr_include = 15'h7
+              if (gem_alct_window != 0) 
+                  gem_sr_include[i] <= (i<=gem_alct_window-1);//if match_gem_alct_window=3, enable sr in bit0,1,2, sr_include = 15'h7
               else
                   gem_sr_include[i] <= 0;
               i = i+1;
@@ -1965,9 +1969,9 @@
       i=0;
       while (i<=15) begin
         if      (ttc_resync              ) gem_alct_win_priority[i] <= 4'hF;
-        else if (i >= match_gem_alct_window || i==0) gem_alct_win_priority[i] <= 0; // i >  lastwin or i=0
-        else if (i <= gem_alct_win_center )          gem_alct_win_priority[i] <= match_gem_alct_window -4'd1-((gem_alct_win_center-i[3:0]) << 1);
-        else                                         gem_alct_win_priority[i] <= match_gem_alct_window -4'd0-((i[3:0] - gem_alct_win_center)<< 1); // i >  center
+        else if (i >= gem_alct_window || i==0) gem_alct_win_priority[i] <= 0; // i >  lastwin or i=0
+        else if (i <= gem_alct_win_center )          gem_alct_win_priority[i] <= gem_alct_window -4'd1-((gem_alct_win_center-i[3:0]) << 1);
+        else                                         gem_alct_win_priority[i] <= gem_alct_window -4'd0-((i[3:0] - gem_alct_win_center)<< 1); // i >  center
         i=i+1;
       end
   end
@@ -2121,9 +2125,9 @@
   wire [7:0] gemA_forclct, gemA_forclct_srl;
   wire [7:0] gemB_forclct, gemB_forclct_srl;
   wire [7:0] copad_match_srl;
-  wire [3:0] gem_final_delay_withalct = gem_alct_match_win_mux_pipe + match_gem_alct_delay + gem_alct_win_center;
-  wire [3:0] gem_final_delay_noalct = match_gem_alct_delay + gem_alct_winclosing;
-  wire [3:0] gem_final_delay_wincenter = match_gem_alct_delay+gem_alct_win_center;
+  wire [3:0] gem_final_delay_withalct  = gem_alct_match_win_mux_pipe + gem_alct_delay + gem_alct_win_center;
+  wire [3:0] gem_final_delay_noalct    = gem_alct_delay + gem_alct_winclosing;
+  wire [3:0] gem_final_delay_wincenter = gem_alct_delay + gem_alct_win_center;
 
   //wire [3:0] gem_final_delay = alct_pulse ? gem_final_delay_withalct : (gem_usedforalct ? gem_final_delay_wincenter : gem_final_delay_noalct);
   wire [3:0] gem_final_delay = alct_pulse ? gem_final_delay_withalct : gem_final_delay_noalct;
