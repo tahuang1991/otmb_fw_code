@@ -1589,14 +1589,6 @@ module  alct_clct_gem_matching(
 
 function [6: 0] wgfromGEMcluster;
   input [2: 0] icluster;
-  //input [6:0] cluster0_wg_mi;
-  //input [6:0] cluster1_wg_mi;
-  //input [6:0] cluster2_wg_mi;
-  //input [6:0] cluster3_wg_mi;
-  //input [6:0] cluster4_wg_mi;
-  //input [6:0] cluster5_wg_mi;
-  //input [6:0] cluster6_wg_mi;
-  //input [6:0] cluster7_wg_mi;
 
   reg   [6: 0] wg;
   begin
