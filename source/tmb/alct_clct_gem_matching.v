@@ -1469,7 +1469,9 @@ endfunction
 //
 //endfunction
 
-//assign alctclctgem_match_sump = 
+assign alctclctgem_match_sump = 
+(|alct0_copad_best_angle) |
+(|alct1_copad_best_angle);
 
 
 
