@@ -2313,8 +2313,6 @@ end
   wire [MXCLUSTER_CHAMBER-1:0] gemA_gemtocsc_dummy;
   wire [MXCLUSTER_CHAMBER-1:0] gemB_gemtocsc_dummy;
 
-  wire evenchamber = ~csc_id[0];//double check it counts from 0 or 1 in term of even and odd?????
-
   //wire [MXCFEB-1:0] gemA_csc_cluster_active_cfeb_list; //dummy signal!!
   //wire [MXCFEB-1:0] gemB_csc_cluster_active_cfeb_list;
   //wire [MXCFEB-1:0] gemcopad_csc_cluster_active_cfeb_list;
@@ -2514,6 +2512,7 @@ end
   wire       algo2016_drop_used_clcts;            // Drop CLCTs from matching in ALCT-centric algorithm: 0 - algo2016 do NOT drop CLCTs, 1 - drop used CLCTs
   wire       algo2016_cross_bx_algorithm;         // LCT sorting using cross BX algorithm: 0 - "old" no cross BX algorithm used, 1 - algo2016 uses cross BX algorithm,  almost no effect, Tao
   wire       algo2016_clct_use_corrected_bx;      // NOT YET IMPLEMENTED: Use median of hits for CLCT timing: 0 - "old" no CLCT timing corrections, 1 - algo2016 CLCT timing calculated based on median of hits, NOT USED!!
+  wire       evenchamber;//from VME register 0x198, 1 for even chamber and 0 for odd chamber
   
 // CCLUT, Tao
 `ifdef CCLUT
@@ -5794,6 +5793,7 @@ wire [15:0] gemB_bxn_counter;
       .algo2016_drop_used_clcts            (algo2016_drop_used_clcts),            // Out Drop CLCTs from matching in ALCT-centric algorithm: 0 - algo2016 do NOT drop CLCTs, 1 - drop used CLCTs
       .algo2016_cross_bx_algorithm         (algo2016_cross_bx_algorithm),         // Out LCT sorting using cross BX algorithm: 0 - "old" no cross BX algorithm used, 1 - algo2016 uses cross BX algorithm
       .algo2016_clct_use_corrected_bx      (algo2016_clct_use_corrected_bx),      // Out Use median of hits for CLCT timing: 0 - "old" no CLCT timing corrections, 1 - algo2016 CLCT timing calculated based on median of hits NOT YET IMPLEMENTED:
+      .evenchamber                         (evenchamber),   // evenodd parity. 1 for even chamber and 0 for odd chamber
 
       .alct_bx0_delay  (alct_bx0_delay[3:0]), // Out  ALCT bx0 delay to mpc transmitter
       .clct_bx0_delay  (clct_bx0_delay[3:0]), // Out  CLCT bx0 delay to mpc transmitter
