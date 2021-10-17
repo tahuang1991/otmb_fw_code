@@ -1764,6 +1764,8 @@
   wire         gem_inj_wen;      // GEM Injector Write Enable
   wire         injector_go_gem;  // Start GEM injector
 
+  wire       evenchamber;//from VME register 0x198, 1 for even chamber and 0 for odd chamber
+
   wire [4:0]   gem_clct_deltahs_odd;
   wire [4:0]   gem_clct_deltahs_even;
   wire [2:0]   gem_alct_deltawire_odd;
@@ -2512,7 +2514,6 @@ end
   wire       algo2016_drop_used_clcts;            // Drop CLCTs from matching in ALCT-centric algorithm: 0 - algo2016 do NOT drop CLCTs, 1 - drop used CLCTs
   wire       algo2016_cross_bx_algorithm;         // LCT sorting using cross BX algorithm: 0 - "old" no cross BX algorithm used, 1 - algo2016 uses cross BX algorithm,  almost no effect, Tao
   wire       algo2016_clct_use_corrected_bx;      // NOT YET IMPLEMENTED: Use median of hits for CLCT timing: 0 - "old" no CLCT timing corrections, 1 - algo2016 CLCT timing calculated based on median of hits, NOT USED!!
-  wire       evenchamber;//from VME register 0x198, 1 for even chamber and 0 for odd chamber
   
 // CCLUT, Tao
 `ifdef CCLUT
