@@ -628,7 +628,7 @@
   assign wr_push_mux_hmt =  hmt_fired_anode_only ? wr_push_xpre_hmt_pipe : (wr_push_xpre_hmt_pipe && hmt_cathode_fired);
 
   assign hmt_sump = |hmt_pri_best;
- 
+  
 //------------------------------------------------------------------------------------------------------------------------
 // Virtex-6 Specific
 //
