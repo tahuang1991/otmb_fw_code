@@ -833,7 +833,7 @@ module pattern_finder_ccLUT (
   //new pattern finding for k=5, CCLUT v2, Tao
   generate  
     for (ihs = 128; ihs <= 223; ihs = ihs + 1) begin: patgen_me1a  // JG, later use MXHSXB, MXKEYX-1 here.
-      pattern_unit_ccLUT upat_me1a (
+      pattern_unit_ccLUTv2 upat_me1a (
         .ly0 (ly0hs_pad_me1a[ihs + 5 + k: ihs - 5 + k]),
         .ly1 (ly1hs_pad_me1a[ihs + 4 + k: ihs - 4 + k]),
 //      .ly2 (ly2hs_pad_me1a[ihs + 2 + k: ihs - 2 + k]),  //key on ly2
@@ -842,7 +842,7 @@ module pattern_finder_ccLUT (
         .ly4 (ly4hs_pad_me1a[ihs + 4 + k: ihs - 4 + k]),
         .ly5 (ly5hs_pad_me1a[ihs + 5 + k: ihs - 5 + k]),
         .pat_nhits (hs_hit[ihs]),
-        .pat_id (hs_pid[ihs]),
+        .pat_id (hs_pid[ihs]),//pid range 6-10
         .pat_carry (hs_carry[ihs])
     );
     end
@@ -850,7 +850,7 @@ module pattern_finder_ccLUT (
 
   generate
     for (ihs = 0; ihs <= 127; ihs = ihs + 1) begin: patgen_me1b
-      pattern_unit_ccLUT upat_me1b (
+      pattern_unit_ccLUTv2 upat_me1b (
         .ly0 (ly0hs_pad_me1b[ihs + 5 + k: ihs - 5 + k]),
         .ly1 (ly1hs_pad_me1b[ihs + 4 + k: ihs - 4 + k]),
 //      .ly2 (ly2hs_pad_me1b[ihs + 2 + k: ihs - 2 + k]),  //key on ly2, CCLUT v1
@@ -859,7 +859,7 @@ module pattern_finder_ccLUT (
         .ly4 (ly4hs_pad_me1b[ihs + 4 + k: ihs - 4 + k]),
         .ly5 (ly5hs_pad_me1b[ihs + 5 + k: ihs - 5 + k]),
         .pat_nhits (hs_hit[ihs]),
-        .pat_id (hs_pid[ihs]),
+        .pat_id (hs_pid[ihs]),//pid range 6-10
         .pat_carry (hs_carry[ihs])
     );
     end
@@ -877,7 +877,7 @@ module pattern_finder_ccLUT (
         .ly4 (ly4hs_pad_me1a[ihs + 4 + k: ihs - 4 + k]),
         .ly5 (ly5hs_pad_me1a[ihs + 5 + k: ihs - 5 + k]),
         .pat_nhits (hs_hit[ihs]),
-        .pat_id (hs_pid[ihs]),
+        .pat_id (hs_pid[ihs]),//pid range 6-10
         .pat_carry (hs_carry[ihs])
     );
     end
@@ -893,7 +893,7 @@ module pattern_finder_ccLUT (
         .ly4 (ly4hs_pad_me1b[ihs + 4 + k: ihs - 4 + k]),
         .ly5 (ly5hs_pad_me1b[ihs + 5 + k: ihs - 5 + k]),
         .pat_nhits (hs_hit[ihs]),
-        .pat_id (hs_pid[ihs]),
+        .pat_id (hs_pid[ihs]),//pid range 6-10
         .pat_carry (hs_carry[ihs])
     );
     end
@@ -912,25 +912,25 @@ module pattern_finder_ccLUT (
 // JG: add cfeb_en requirement to prevent triggers from killed boards
 `ifdef CSC_TYPE_C
 	if ((ihs/MXHS) > 3) begin // Reverse ME1/1a
-           hs_hit_s0ab[ihs] <= cfeb_en_ff[10-(ihs/MXHS)] ? hs_hit[ihs] : 3'b0;
-           hs_pid_s0ab[ihs] <= cfeb_en_ff[10-(ihs/MXHS)] ? hs_pid[ihs] : 4'b0;
-           hs_carry_s0ab[ihs] <= cfeb_en_ff[10-(ihs/MXHS)] ? hs_carry[ihs] : 12'b0;
+           hs_hit_s0ab[ihs] <= cfeb_en_ff[10-(ihs/MXHS)] ? hs_hit[ihs] : 3'd0;
+           hs_pid_s0ab[ihs] <= cfeb_en_ff[10-(ihs/MXHS)] ? hs_pid[ihs] : 4'd6;//pid range 6-10
+           hs_carry_s0ab[ihs] <= cfeb_en_ff[10-(ihs/MXHS)] ? hs_carry[ihs] : 12'd0;
 	end
 	else begin
-          hs_hit_s0ab[ihs] <= cfeb_en_ff[(ihs/MXHS)] ? hs_hit[ihs] : 3'b0;
-          hs_pid_s0ab[ihs] <= cfeb_en_ff[(ihs/MXHS)] ? hs_pid[ihs] : 4'b0;
-          hs_carry_s0ab[ihs] <= cfeb_en_ff[(ihs/MXHS)] ? hs_carry[ihs] : 12'b0;
+          hs_hit_s0ab[ihs] <= cfeb_en_ff[(ihs/MXHS)] ? hs_hit[ihs] : 3'd0;
+          hs_pid_s0ab[ihs] <= cfeb_en_ff[(ihs/MXHS)] ? hs_pid[ihs] : 4'd6;//pid range 6-10
+          hs_carry_s0ab[ihs] <= cfeb_en_ff[(ihs/MXHS)] ? hs_carry[ihs] : 12'd0;
 	end 
 `elsif CSC_TYPE_D
 	if ((ihs/MXHS) > 3) begin
-           hs_hit_s0ab[ihs] <= cfeb_en_ff[(ihs/MXHS)] ? hs_hit[ihs] : 3'b0;
-           hs_pid_s0ab[ihs] <= cfeb_en_ff[(ihs/MXHS)] ? hs_pid[ihs] : 4'b0;
-           hs_carry_s0ab[ihs] <= cfeb_en_ff[(ihs/MXHS)] ? hs_carry[ihs] : 12'b0;
+           hs_hit_s0ab[ihs] <= cfeb_en_ff[(ihs/MXHS)] ? hs_hit[ihs] : 3'd0;
+           hs_pid_s0ab[ihs] <= cfeb_en_ff[(ihs/MXHS)] ? hs_pid[ihs] : 4'd6;
+           hs_carry_s0ab[ihs] <= cfeb_en_ff[(ihs/MXHS)] ? hs_carry[ihs] : 12'd0;
 	end
 	else begin    // Reverse ME1/1b
-          hs_hit_s0ab[ihs] <= cfeb_en_ff[3-(ihs/MXHS)] ? hs_hit[ihs] : 3'b0;
-          hs_pid_s0ab[ihs] <= cfeb_en_ff[3-(ihs/MXHS)] ? hs_pid[ihs] : 4'b0;
-          hs_carry_s0ab[ihs] <= cfeb_en_ff[3-(ihs/MXHS)] ? hs_carry[ihs] : 12'b0;
+          hs_hit_s0ab[ihs] <= cfeb_en_ff[3-(ihs/MXHS)] ? hs_hit[ihs] : 3'd0;
+          hs_pid_s0ab[ihs] <= cfeb_en_ff[3-(ihs/MXHS)] ? hs_pid[ihs] : 4'd6;//pid range 6-10
+          hs_carry_s0ab[ihs] <= cfeb_en_ff[3-(ihs/MXHS)] ? hs_carry[ihs] : 12'd0;
 	end 
 `endif
       end
@@ -1163,7 +1163,7 @@ module pattern_finder_ccLUT (
   genvar i;
   generate
     for (i = 0; i <= MXCFEB-1; i = i + 1) begin: hs_gen
-      assign hs_pat_s1[i] = hs_pat_s1_tmp[i] -4'd6;
+      assign hs_pat_s1[i] =hs_pat_s1_tmp[i]>=4'd6 ? hs_pat_s1_tmp[i] -4'd6 : 0;
       best_1of32_ccLUT ubest1of32_1st (
         .clock(clock),
         .pat00(hs_pat_s0[i * 32 +  0]),
@@ -1601,7 +1601,7 @@ module pattern_finder_ccLUT (
   //CCLUT, Tao
   generate
     for (i = 0; i <= MXCFEB-1; i = i + 1) begin: hs_2nd_gen
-      assign hs_pat_s4[i] = hs_pat_s4_tmp[i] -4'd6;// revert patid into 0-4, make ISE happy
+      assign hs_pat_s4[i] =hs_pat_s4_tmp[i]>=4'd6 ? hs_pat_s4_tmp[i] -4'd6 : 0;// revert patid into 0-4, make ISE happy
       best_1of32_busy_ccLUT ubest1of32_2nd (
         .clock(clock),
         .pat00(hs_pat_s3[i * 32 + 0]),

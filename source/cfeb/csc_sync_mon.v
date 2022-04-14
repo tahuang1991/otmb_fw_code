@@ -42,8 +42,8 @@ parameter MXCFEB = 7;
   wire [3:0] cfebdly_me1a = cfeb_rxd_int_delay_me1a +1;
   wire cfebs_sync_done_me1a = &cfeb_sync_done[6:4];
 
-  wire lt_trg_err_any      = |cfeb_lt_trg_err[3:0];
-  wire lt_trg_err_any_me1a = |cfeb_lt_trg_err[6:4];
+  wire lt_trg_err_any      = |(cfeb_lt_trg_err[3:0] & cfeb_fiber_enable[3:0]);
+  wire lt_trg_err_any_me1a = |(cfeb_lt_trg_err[6:4] & cfeb_fiber_enable[6:4]);
 
   wire lt_trg_err_any_srl, lt_trg_err_any_me1a_srl;
 

@@ -608,8 +608,12 @@
   assign hmt_trigger_match_ro[3:2] = (hmt_cathode_pipe[3:2] > hmt_anode[3:2] ? hmt_anode[3:2] : hmt_cathode_pipe[3:2]) & {2{hmt_allow_match_ro}};
 
 
-  assign hmt_trigger_tmb     = hmt_trigger_cathode | hmt_trigger_anode | hmt_trigger_match;
-  assign hmt_trigger_tmb_ro  = hmt_trigger_cathode_ro | hmt_trigger_anode_ro | hmt_trigger_match_ro;
+  //assign hmt_trigger_tmb     = hmt_trigger_cathode | hmt_trigger_anode | hmt_trigger_match;
+  //assign hmt_trigger_tmb_ro  = hmt_trigger_cathode_ro | hmt_trigger_anode_ro | hmt_trigger_match_ro;
+  assign hmt_trigger_tmb[1:0]  = hmtor(hmt_trigger_cathode[1:0], hmt_trigger_anode[1:0], hmt_trigger_match[1:0]);
+  assign hmt_trigger_tmb[3:2]  = hmtor(hmt_trigger_cathode[3:2], hmt_trigger_anode[3:2], hmt_trigger_match[3:2]);
+  assign hmt_trigger_tmb_ro[1:0]  = hmtor(hmt_trigger_cathode_ro[1:0], hmt_trigger_anode_ro[1:0], hmt_trigger_match_ro[1:0]);
+  assign hmt_trigger_tmb_ro[3:2]  = hmtor(hmt_trigger_cathode_ro[3:2], hmt_trigger_anode_ro[3:2], hmt_trigger_match_ro[3:2]);
 
 
   wire [3:0] hmt_final_delay = hmt_postdrift_delay+hmt_match_win;
@@ -723,7 +727,14 @@ function [2: 0] countnlayer;
 
 endfunction
 
-
+function [1:0] hmtor;//hmt or logic, select the one passing highest threshold
+    input [1:0] chmt;
+    input [1:0] ahmt;
+    input [1:0] mhmt;
+    begin
+        hmtor = chmt > ahmt ? (chmt > mhmt ? chmt : mhmt) : (ahmt > mhmt ? ahmt : mhmt);
+    end
+endfunction
 //-------------------------------------------------------------------------------------------------------------------
   endmodule
 //-------------------------------------------------------------------------------------------------------------------
