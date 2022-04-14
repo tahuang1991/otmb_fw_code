@@ -2913,6 +2913,7 @@ end
   .fmm_trig_stop (fmm_trig_stop), // In stop HMT when it is not ready
   .bx0_vpf_test  (bx0_vpf_test) ,  // In dynamic zero
 
+  .cfeb_en       (cfeb_en[MXCFEB-1:0]), // In cfeb enable or not for triggering
   .nhit_cfeb0    (cfeb_nhits[0][NHITCFEBB-1: 0]),// In cfeb hit counter
   .nhit_cfeb1    (cfeb_nhits[1][NHITCFEBB-1: 0]),// In cfeb hit counter
   .nhit_cfeb2    (cfeb_nhits[2][NHITCFEBB-1: 0]),// In cfeb hit counter

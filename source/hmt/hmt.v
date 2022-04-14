@@ -11,6 +11,7 @@
   fmm_trig_stop,
   bx0_vpf_test,
   
+  cfeb_en,
   nhit_cfeb0,
   nhit_cfeb1,
   nhit_cfeb2,
@@ -108,6 +109,7 @@
   input  fmm_trig_stop;
   input  bx0_vpf_test;
   
+  input  [MXCFEB-1 : 0] cfeb_en;
   input  [NHITCFEBB-1: 0] nhit_cfeb0;
   input  [NHITCFEBB-1: 0] nhit_cfeb1;
   input  [NHITCFEBB-1: 0] nhit_cfeb2;
@@ -210,8 +212,15 @@
   end
   wire hmt_reset = |hmt_reset_ff;
 
-  wire [MXLY-1:0]   layers_withhits_me1a = layers_withhits_cfeb4 | layers_withhits_cfeb5 | layers_withhits_cfeb6;
-  wire [MXLY-1:0]   layers_withhits_me1b = layers_withhits_cfeb0 | layers_withhits_cfeb1 | layers_withhits_cfeb2 | layers_withhits_cfeb3;
+  wire [MXLY-1:0]   layers_withhits_cfeb0_ff = layers_withhits_cfeb0 & {MXLY{cfeb_en[0]}};
+  wire [MXLY-1:0]   layers_withhits_cfeb1_ff = layers_withhits_cfeb1 & {MXLY{cfeb_en[1]}};
+  wire [MXLY-1:0]   layers_withhits_cfeb2_ff = layers_withhits_cfeb2 & {MXLY{cfeb_en[2]}};
+  wire [MXLY-1:0]   layers_withhits_cfeb3_ff = layers_withhits_cfeb3 & {MXLY{cfeb_en[3]}};
+  wire [MXLY-1:0]   layers_withhits_cfeb4_ff = layers_withhits_cfeb4 & {MXLY{cfeb_en[4]}};
+  wire [MXLY-1:0]   layers_withhits_cfeb5_ff = layers_withhits_cfeb5 & {MXLY{cfeb_en[5]}};
+  wire [MXLY-1:0]   layers_withhits_cfeb6_ff = layers_withhits_cfeb6 & {MXLY{cfeb_en[6]}};
+  wire [MXLY-1:0]   layers_withhits_me1b = layers_withhits_cfeb0_ff | layers_withhits_cfeb1_ff | layers_withhits_cfeb2_ff | layers_withhits_cfeb3_ff;
+  wire [MXLY-1:0]   layers_withhits_me1a = layers_withhits_cfeb4_ff | layers_withhits_cfeb5_ff | layers_withhits_cfeb6_ff;
   wire [MXLY-1:0]   layers_withhits  =  hmt_me1a_enable ? (layers_withhits_me1a | layers_withhits_me1b) : layers_withhits_me1b;
 
   wire [2:0] nlayer_withhits = countnlayer(layers_withhits);
@@ -243,6 +252,14 @@
 //  initial $display ("CSC_TYPE Undefined. Halting from HMT module.");
 //  $finish
 //`endif
+  wire [NHITCFEBB-1: 0] nhit_cfeb0_ff = cfeb_en[0] ? nhit_cfeb0[NHITCFEBB-1: 0] : 0;
+  wire [NHITCFEBB-1: 0] nhit_cfeb1_ff = cfeb_en[1] ? nhit_cfeb1[NHITCFEBB-1: 0] : 0;
+  wire [NHITCFEBB-1: 0] nhit_cfeb2_ff = cfeb_en[2] ? nhit_cfeb2[NHITCFEBB-1: 0] : 0;
+  wire [NHITCFEBB-1: 0] nhit_cfeb3_ff = cfeb_en[3] ? nhit_cfeb3[NHITCFEBB-1: 0] : 0;
+  wire [NHITCFEBB-1: 0] nhit_cfeb4_ff = cfeb_en[4] ? nhit_cfeb4[NHITCFEBB-1: 0] : 0;
+  wire [NHITCFEBB-1: 0] nhit_cfeb5_ff = cfeb_en[5] ? nhit_cfeb5[NHITCFEBB-1: 0] : 0;
+  wire [NHITCFEBB-1: 0] nhit_cfeb6_ff = cfeb_en[6] ? nhit_cfeb6[NHITCFEBB-1: 0] : 0;
+
   reg  [NHITCFEBB-1: 0] nhit_cfeb0_s0 [3:0];
   reg  [NHITCFEBB-1: 0] nhit_cfeb1_s0 [3:0];
   reg  [NHITCFEBB-1: 0] nhit_cfeb2_s0 [3:0];
@@ -251,13 +268,13 @@
   reg  [NHITCFEBB-1: 0] nhit_cfeb5_s0 [3:0];
   reg  [NHITCFEBB-1: 0] nhit_cfeb6_s0 [3:0];
   always @(posedge clock) begin
-      nhit_cfeb0_s0[0] <= nhit_cfeb0;
-      nhit_cfeb1_s0[0] <= nhit_cfeb1;
-      nhit_cfeb2_s0[0] <= nhit_cfeb2;
-      nhit_cfeb3_s0[0] <= nhit_cfeb3;
-      nhit_cfeb4_s0[0] <= nhit_cfeb4;
-      nhit_cfeb5_s0[0] <= nhit_cfeb5;
-      nhit_cfeb6_s0[0] <= nhit_cfeb6;
+      nhit_cfeb0_s0[0] <= nhit_cfeb0_ff;
+      nhit_cfeb1_s0[0] <= nhit_cfeb1_ff;
+      nhit_cfeb2_s0[0] <= nhit_cfeb2_ff;
+      nhit_cfeb3_s0[0] <= nhit_cfeb3_ff;
+      nhit_cfeb4_s0[0] <= nhit_cfeb4_ff;
+      nhit_cfeb5_s0[0] <= nhit_cfeb5_ff;
+      nhit_cfeb6_s0[0] <= nhit_cfeb6_ff;
 
       nhit_cfeb0_s0[1] <= nhit_cfeb0_s0[0];
       nhit_cfeb1_s0[1] <= nhit_cfeb1_s0[0];
@@ -310,7 +327,7 @@
   $finish
 `endif
 
-  wire [NHMTHITB-1:0] nhits_chamber = hmt_me1a_enable ? (nhit_cfeb0 + nhit_cfeb1 + nhit_cfeb2 + nhit_cfeb3 + nhit_cfeb4 + nhit_cfeb5 + nhit_cfeb6) : (nhit_cfeb0 + nhit_cfeb1 + nhit_cfeb2 + nhit_cfeb3);
+  wire [NHMTHITB-1:0] nhits_chamber = hmt_me1a_enable ? (nhit_cfeb0_ff + nhit_cfeb1_ff + nhit_cfeb2_ff + nhit_cfeb3_ff + nhit_cfeb4_ff + nhit_cfeb5_ff + nhit_cfeb6_ff) : (nhit_cfeb0_ff + nhit_cfeb1_ff + nhit_cfeb2_ff + nhit_cfeb3_ff);
   reg  [NHMTHITB-1:0] nhits_trig_s0_srl [7:0];//array 8x10bits
 
   reg  [2:0] nlayer_s0 [7:0];
