@@ -1595,8 +1595,10 @@
       .Q  (lct1_qlt_run3[1:0])
    );
 
-  wire   lct0_vpf_run3 = (lct0_qlt_run3[2:0] > 3'b0);
-  wire   lct1_vpf_run3 = (lct1_qlt_run3[2:0] > 3'b0);
+  //wire   lct0_vpf_run3 = (lct0_qlt_run3[2:0] > 3'b0);
+  //wire   lct1_vpf_run3 = (lct1_qlt_run3[2:0] > 3'b0);
+  wire lct0_vpf_run3 = lct0_vpf;
+  wire lct1_vpf_run3 = lct1_vpf;
 
   wire [4:0] lct_pid_run3;
   patid_5bits upid5bit(

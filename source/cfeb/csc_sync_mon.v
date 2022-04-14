@@ -38,7 +38,7 @@ parameter MXCFEB = 5;
   wire cfebs_sync_done = &cfeb_sync_done;
   wire cfebs_sync_done_srl;
 
-  wire lt_trg_err_any = |cfeb_lt_trg_err[4:0];
+  wire lt_trg_err_any = |(cfeb_lt_trg_err[4:0] & cfeb_fiber_enable[4:0]);
   wire lt_trg_err_any_srl;
 
   SRL16E upup (.CLK(clock),.CE(!power_up & clk_lock),.D(1'b1),.A0(pdly[0]),.A1(pdly[1]),.A2(pdly[2]),.A3(pdly[3]),.Q(power_up));

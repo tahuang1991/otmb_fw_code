@@ -814,13 +814,13 @@ module pattern_finder_ccLUT (
 // JG: add cfeb_en requirement to prevent triggers from killed boards
 // Tao ME1/1->MEX/1, now type_c: normal; type_d: reversed
 `ifdef CSC_TYPE_A
-           hs_hit_s0ab[ihs] <= cfeb_en_ff[ihs/MXHS] ? hs_hit[ihs] : 3'b0;
-           hs_pid_s0ab[ihs] <= cfeb_en_ff[ihs/MXHS] ? hs_pid[ihs] : 4'b0;
-           hs_carry_s0ab[ihs] <= cfeb_en_ff[(ihs/MXHS)] ? hs_carry[ihs] : 12'b0;
+           hs_hit_s0ab[ihs] <= cfeb_en_ff[ihs/MXHS] ? hs_hit[ihs] : 3'd0;
+           hs_pid_s0ab[ihs] <= cfeb_en_ff[ihs/MXHS] ? hs_pid[ihs] : 4'd6; //pid range 6-10
+           hs_carry_s0ab[ihs] <= cfeb_en_ff[(ihs/MXHS)] ? hs_carry[ihs] : 12'd0;
 `elsif CSC_TYPE_B
-           hs_hit_s0ab[ihs] <= cfeb_en_ff[MXCFEB-1-ihs/MXHS] ? hs_hit[ihs] : 3'b0;
-           hs_pid_s0ab[ihs] <= cfeb_en_ff[MXCFEB-1-ihs/MXHS] ? hs_pid[ihs] : 4'b0;
-           hs_carry_s0ab[ihs] <= cfeb_en_ff[MXCFEB-1-(ihs/MXHS)] ? hs_carry[ihs] : 12'b0;
+           hs_hit_s0ab[ihs] <= cfeb_en_ff[MXCFEB-1-ihs/MXHS] ? hs_hit[ihs] : 3'd0;
+           hs_pid_s0ab[ihs] <= cfeb_en_ff[MXCFEB-1-ihs/MXHS] ? hs_pid[ihs] : 4'd6;
+           hs_carry_s0ab[ihs] <= cfeb_en_ff[MXCFEB-1-(ihs/MXHS)] ? hs_carry[ihs] : 12'd0;
 `endif
       end
     end
@@ -1018,7 +1018,7 @@ module pattern_finder_ccLUT (
   genvar i;
   generate
     for (i = 0; i <= MXCFEB-1; i = i + 1) begin: hs_gen
-      assign hs_pat_s1[i] = hs_pat_s1_tmp[i]-4'd6;// subtract pattern id by 4 to revert patid back to 0-4
+      assign hs_pat_s1[i] = hs_pat_s1_tmp[i]>=7'd6 ? hs_pat_s1_tmp[i]-7'd6 : 7'd0;// subtract pattern id by 4 to revert patid back to 0-4
       best_1of32_ccLUT ubest1of32_1st (
         .clock(clock),
         .pat00(hs_pat_s0[i * 32 +  0]),
@@ -1412,7 +1412,8 @@ module pattern_finder_ccLUT (
 
   generate
     for (i = 0; i <= MXCFEB - 1; i = i + 1) begin: hs_2nd_gen
-      assign hs_pat_s4[i] = hs_pat_s4_tmp[i]-4'd6;// subtract pattern id by 4 to revert patid back to 0-4
+      //when CFEB is disabled, hs_pat would be 0
+      assign hs_pat_s4[i] = hs_pat_s4_tmp[i]>=7'd6 ? hs_pat_s4_tmp[i]-7'd6 : 7'd0;// subtract pattern id by 4 to revert patid back to 0-4
       best_1of32_busy_ccLUT ubest1of32_2nd (
         .clock(clock),
         .pat00(hs_pat_s3[i * 32 + 0]),

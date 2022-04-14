@@ -33,8 +33,8 @@ wire [MXDATB-1:0]   rd0_pat4, rd1_pat4,
                     rd0_pat0, rd1_pat0,
                     rd0_blnk, rd1_blnk;
 
-assign rd0_blnk = 0;
-assign rd1_blnk = 0;
+assign rd0_blnk = 9'h100;
+assign rd1_blnk = 9'h100;
 
 //----------------------------------------------------------------------------------------------------------------------
 // ROMS

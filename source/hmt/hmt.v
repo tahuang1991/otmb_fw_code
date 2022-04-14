@@ -11,6 +11,7 @@
   fmm_trig_stop,
   bx0_vpf_test,
   
+  cfeb_en,
   nhit_cfeb0,
   nhit_cfeb1,
   nhit_cfeb2,
@@ -104,6 +105,8 @@
   input  fmm_trig_stop;
   input  bx0_vpf_test;
   
+ 
+  input  [MXCFEB-1:0] cfeb_en;
   input  [NHITCFEBB-1: 0] nhit_cfeb0;
   input  [NHITCFEBB-1: 0] nhit_cfeb1;
   input  [NHITCFEBB-1: 0] nhit_cfeb2;
@@ -201,7 +204,12 @@
   wire hmt_reset = |hmt_reset_ff;
 
 
-  wire [MXLY-1:0]   layers_withhits = layers_withhits_cfeb0 | layers_withhits_cfeb1 | layers_withhits_cfeb2 | layers_withhits_cfeb3 | layers_withhits_cfeb4;
+  wire [MXLY-1:0]   layers_withhits_cfeb0_ff = layers_withhits_cfeb0 & {MXLY{cfeb_en[0]}};
+  wire [MXLY-1:0]   layers_withhits_cfeb1_ff = layers_withhits_cfeb1 & {MXLY{cfeb_en[1]}};
+  wire [MXLY-1:0]   layers_withhits_cfeb2_ff = layers_withhits_cfeb2 & {MXLY{cfeb_en[2]}};
+  wire [MXLY-1:0]   layers_withhits_cfeb3_ff = layers_withhits_cfeb3 & {MXLY{cfeb_en[3]}};
+  wire [MXLY-1:0]   layers_withhits_cfeb4_ff = layers_withhits_cfeb4 & {MXLY{cfeb_en[4]}};
+  wire [MXLY-1:0]   layers_withhits = layers_withhits_cfeb0_ff | layers_withhits_cfeb1_ff | layers_withhits_cfeb2_ff | layers_withhits_cfeb3_ff | layers_withhits_cfeb4_ff;
 
   wire [2:0] nlayer_withhits = countnlayer(layers_withhits);
 
@@ -224,17 +232,23 @@
 //  initial $display ("CSC_TYPE Undefined. Halting. from HMT module");
 //  $finish
 //`endif
+  wire [NHITCFEBB-1: 0] nhit_cfeb0_ff = cfeb_en[0] ? nhit_cfeb0[NHITCFEBB-1: 0] : 0;
+  wire [NHITCFEBB-1: 0] nhit_cfeb1_ff = cfeb_en[1] ? nhit_cfeb1[NHITCFEBB-1: 0] : 0;
+  wire [NHITCFEBB-1: 0] nhit_cfeb2_ff = cfeb_en[2] ? nhit_cfeb2[NHITCFEBB-1: 0] : 0;
+  wire [NHITCFEBB-1: 0] nhit_cfeb3_ff = cfeb_en[3] ? nhit_cfeb3[NHITCFEBB-1: 0] : 0;
+  wire [NHITCFEBB-1: 0] nhit_cfeb4_ff = cfeb_en[4] ? nhit_cfeb4[NHITCFEBB-1: 0] : 0;
+
   reg  [NHITCFEBB-1: 0] nhit_cfeb0_s0 [3:0];
   reg  [NHITCFEBB-1: 0] nhit_cfeb1_s0 [3:0];
   reg  [NHITCFEBB-1: 0] nhit_cfeb2_s0 [3:0];
   reg  [NHITCFEBB-1: 0] nhit_cfeb3_s0 [3:0];
   reg  [NHITCFEBB-1: 0] nhit_cfeb4_s0 [3:0];
   always @(posedge clock) begin
-      nhit_cfeb0_s0[0] <= nhit_cfeb0;
-      nhit_cfeb1_s0[0] <= nhit_cfeb1;
-      nhit_cfeb2_s0[0] <= nhit_cfeb2;
-      nhit_cfeb3_s0[0] <= nhit_cfeb3;
-      nhit_cfeb4_s0[0] <= nhit_cfeb4;
+      nhit_cfeb0_s0[0] <= nhit_cfeb0_ff;
+      nhit_cfeb1_s0[0] <= nhit_cfeb1_ff;
+      nhit_cfeb2_s0[0] <= nhit_cfeb2_ff;
+      nhit_cfeb3_s0[0] <= nhit_cfeb3_ff;
+      nhit_cfeb4_s0[0] <= nhit_cfeb4_ff;
 
       nhit_cfeb0_s0[1] <= nhit_cfeb0_s0[0];
       nhit_cfeb1_s0[1] <= nhit_cfeb1_s0[0];
@@ -274,7 +288,7 @@
 `endif
 
 
-  wire [NHMTHITB-1:0] nhits_chamber = nhit_cfeb0 + nhit_cfeb1 + nhit_cfeb2 + nhit_cfeb3 + nhit_cfeb4;
+  wire [NHMTHITB-1:0] nhits_chamber = nhit_cfeb0_ff + nhit_cfeb1_ff + nhit_cfeb2_ff + nhit_cfeb3_ff + nhit_cfeb4_ff;
   reg  [NHMTHITB-1:0] nhits_trig_s0_srl [7:0];//array 8x10bits
 
   reg  [2:0] nlayer_s0 [7:0];
@@ -569,8 +583,12 @@
   assign hmt_trigger_match_ro[1:0] = (hmt_cathode_pipe[1:0] > hmt_anode[1:0] ? hmt_anode[1:0] : hmt_cathode_pipe[1:0]) & {2{hmt_allow_match_ro}};
   assign hmt_trigger_match_ro[3:2] = (hmt_cathode_pipe[3:2] > hmt_anode[3:2] ? hmt_anode[3:2] : hmt_cathode_pipe[3:2]) & {2{hmt_allow_match_ro}};
 
-  assign hmt_trigger_tmb     = hmt_trigger_cathode | hmt_trigger_anode | hmt_trigger_match;
-  assign hmt_trigger_tmb_ro  = hmt_trigger_cathode_ro | hmt_trigger_anode_ro | hmt_trigger_match_ro;
+  //assign hmt_trigger_tmb     = hmt_trigger_cathode | hmt_trigger_anode | hmt_trigger_match;
+  //assign hmt_trigger_tmb_ro  = hmt_trigger_cathode_ro | hmt_trigger_anode_ro | hmt_trigger_match_ro;
+  assign hmt_trigger_tmb[1:0]  = hmtor(hmt_trigger_cathode[1:0], hmt_trigger_anode[1:0], hmt_trigger_match[1:0]);
+  assign hmt_trigger_tmb[3:2]  = hmtor(hmt_trigger_cathode[3:2], hmt_trigger_anode[3:2], hmt_trigger_match[3:2]);
+  assign hmt_trigger_tmb_ro[1:0]  = hmtor(hmt_trigger_cathode_ro[1:0], hmt_trigger_anode_ro[1:0], hmt_trigger_match_ro[1:0]);
+  assign hmt_trigger_tmb_ro[3:2]  = hmtor(hmt_trigger_cathode_ro[3:2], hmt_trigger_anode_ro[3:2], hmt_trigger_match_ro[3:2]);
 
   wire [3:0] hmt_final_delay = hmt_postdrift_delay+hmt_match_win;
   wire [NHMTHITB-1:0] nhits_trig_dly_bkg;
@@ -684,6 +702,14 @@ function [2: 0] countnlayer;
 
 endfunction
 
+function [1:0] hmtor;
+    input [1:0] chmt;
+    input [1:0] ahmt;
+    input [1:0] mhmt;
+    begin
+        hmtor = chmt > ahmt ? (chmt > mhmt ? chmt : mhmt) : (ahmt > mhmt ? ahmt : mhmt);
+    end
+endfunction
 //-------------------------------------------------------------------------------------------------------------------
   endmodule
 //-------------------------------------------------------------------------------------------------------------------

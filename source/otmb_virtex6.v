@@ -1768,6 +1768,7 @@
   .fmm_trig_stop (fmm_trig_stop), // In stop HMT when it is not ready
   .bx0_vpf_test  (bx0_vpf_test) ,  // In dynamic zero
 
+  .cfeb_en       (cfeb_en),// In cfebs enabled or not
   .nhit_cfeb0    (cfeb_nhits[0][NHITCFEBB-1: 0]),// In cfeb hit counter
   .nhit_cfeb1    (cfeb_nhits[1][NHITCFEBB-1: 0]),// In cfeb hit counter
   .nhit_cfeb2    (cfeb_nhits[2][NHITCFEBB-1: 0]),// In cfeb hit counter
@@ -3357,7 +3358,6 @@
     assign mez_tp[6] = (!set_sw[7] ? bpi_dsbl        :                          link_good[1]);
     assign mez_tp[5] =   set_sw[8] ? alct_rxd_posneg : (!set_sw[7] ? bpi_rst  : link_good[4]);
     assign mez_tp[4] = (!set_sw[7] ? bpi_dev         :                          link_good[3]);
-    ////debugging the FC signal from cfeb gtx 
     //assign mez_tp[9] = clct0_xtmb[0];
     //assign mez_tp[8] = & (gtx_rx_lt_trg[MXCFEB-1:0]);
     //assign mez_tp[7] = & (gtx_rx_lt_trg_expect[MXCFEB-1:0]);
