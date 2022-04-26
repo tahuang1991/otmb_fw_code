@@ -1163,7 +1163,7 @@ module pattern_finder_ccLUT (
   genvar i;
   generate
     for (i = 0; i <= MXCFEB-1; i = i + 1) begin: hs_gen
-      assign hs_pat_s1[i] =hs_pat_s1_tmp[i]>=4'd6 ? hs_pat_s1_tmp[i] -4'd6 : 0;
+      assign hs_pat_s1[i] =hs_pat_s1_tmp[i]>=7'd6 ? hs_pat_s1_tmp[i] -7'd6 : 7'd0;
       best_1of32_ccLUT ubest1of32_1st (
         .clock(clock),
         .pat00(hs_pat_s0[i * 32 +  0]),
@@ -1601,7 +1601,7 @@ module pattern_finder_ccLUT (
   //CCLUT, Tao
   generate
     for (i = 0; i <= MXCFEB-1; i = i + 1) begin: hs_2nd_gen
-      assign hs_pat_s4[i] =hs_pat_s4_tmp[i]>=4'd6 ? hs_pat_s4_tmp[i] -4'd6 : 0;// revert patid into 0-4, make ISE happy
+      assign hs_pat_s4[i] =hs_pat_s4_tmp[i]>=7'd6 ? hs_pat_s4_tmp[i] -7'd6 : 7'd0;// revert patid into 0-4, make ISE happy
       best_1of32_busy_ccLUT ubest1of32_2nd (
         .clock(clock),
         .pat00(hs_pat_s3[i * 32 + 0]),
