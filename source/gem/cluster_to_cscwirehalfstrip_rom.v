@@ -58,6 +58,14 @@ parameter MAXKEYHSME1A = 10'd895;
 
 //counter
 parameter ICLST        = 0;
+parameter GEMPADTOME1AES0_FILE     = "GEMCSCLUT_pad_es_ME1a_even.mem";
+parameter GEMPADTOME1AES1_FILE     = "GEMCSCLUT_pad_es_ME1a_odd.mem";
+parameter GEMPADTOME1BES0_FILE     = "GEMCSCLUT_pad_es_ME1b_even.mem";
+parameter GEMPADTOME1BES1_FILE     = "GEMCSCLUT_pad_es_ME1b_odd.mem";
+parameter GEMROLLTOMINWG0_FILE     = "GEMCSCLUT_roll_l1_min_wg_ME11_even.mem";
+parameter GEMROLLTOMINWG1_FILE     = "GEMCSCLUT_roll_l1_min_wg_ME11_odd.mem";
+parameter GEMROLLTOMAXWG0_FILE     = "GEMCSCLUT_roll_l1_max_wg_ME11_even.mem";
+parameter GEMROLLTOMAXWG1_FILE     = "GEMCSCLUT_roll_l1_max_wg_ME11_odd.mem";
 
 //reg [DATABITS-1:0] rom [ROMLENGTH-1:0];
 //reg [MXXKYB-1:0] me1a_xky_lo, me1a_xky_hi, me1b_xky_lo, me1b_xky_hi; 
@@ -128,7 +136,8 @@ assign cluster0_pad_hi    = cluster0_vpf ? (cluster0_pad + cluster0_size) : 8'b0
 //   .me1b_r_data2 (me1b_xky_hi) 
 //   );
 rom_pad_es #(
-  .ROM_FILE("GEMCSCLUT_pad_es_ME1a_odd.mem")
+  //.ROM_FILE("GEMCSCLUT_pad_es_ME1a_odd.mem")
+  .ROM_FILE(GEMPADTOME1AES1_FILE)
 ) romme1aodd (
   .clock(clock),
   .adr0(cluster0_pad_lo),
@@ -138,7 +147,8 @@ rom_pad_es #(
 );
 
 rom_pad_es #(
-  .ROM_FILE("GEMCSCLUT_pad_es_ME1a_even.mem")
+  //.ROM_FILE("GEMCSCLUT_pad_es_ME1a_even.mem")
+  .ROM_FILE(GEMPADTOME1AES0_FILE)
 ) romme1aeven (
   .clock(clock),
   .adr0(cluster0_pad_lo),
@@ -148,7 +158,8 @@ rom_pad_es #(
 );
 
 rom_pad_es #(
-  .ROM_FILE("GEMCSCLUT_pad_es_ME1b_odd.mem")
+  //.ROM_FILE("GEMCSCLUT_pad_es_ME1b_odd.mem")
+  .ROM_FILE(GEMPADTOME1BES1_FILE)
 ) romme1bodd (
   .clock(clock),
   .adr0(cluster0_pad_lo),
@@ -158,7 +169,8 @@ rom_pad_es #(
 );
 
 rom_pad_es #(
-  .ROM_FILE("GEMCSCLUT_pad_es_ME1b_even.mem")
+  //.ROM_FILE("GEMCSCLUT_pad_es_ME1b_even.mem")
+  .ROM_FILE(GEMPADTOME1BES0_FILE)
 ) romme1beven (
   .clock(clock),
   .adr0(cluster0_pad_lo),
@@ -184,9 +196,9 @@ rom_pad_es #(
 //    .r_data2(wire_hi)
 //  );
 
-//use layer1 LUT
 rom_roll_wg #(
-  .ROM_FILE("GEMCSCLUT_roll_l1_min_wg_ME11_odd.mem")
+  //.ROM_FILE("GEMCSCLUT_roll_l1_min_wg_ME11_odd.mem")
+  .ROM_FILE(GEMROLLTOMINWG1_FILE)
 ) romwgminodd (
   .clock(clock),
   .adr0(cluster0_roll),
@@ -194,7 +206,8 @@ rom_roll_wg #(
 );
 
 rom_roll_wg #(
-  .ROM_FILE("GEMCSCLUT_roll_l1_max_wg_ME11_odd.mem")
+  //.ROM_FILE("GEMCSCLUT_roll_l1_max_wg_ME11_odd.mem")
+  .ROM_FILE(GEMROLLTOMAXWG1_FILE)
 ) romwgmaxodd (
   .clock(clock),
   .adr0(cluster0_roll),
@@ -203,7 +216,8 @@ rom_roll_wg #(
 
 
 rom_roll_wg #(
-  .ROM_FILE("GEMCSCLUT_roll_l1_min_wg_ME11_even.mem")
+  //.ROM_FILE("GEMCSCLUT_roll_l1_min_wg_ME11_even.mem")
+  .ROM_FILE(GEMROLLTOMINWG0_FILE)
 ) romwgmineven (
   .clock(clock),
   .adr0(cluster0_roll),
@@ -211,7 +225,8 @@ rom_roll_wg #(
 );
 
 rom_roll_wg #(
-  .ROM_FILE("GEMCSCLUT_roll_l1_max_wg_ME11_even.mem")
+  //.ROM_FILE("GEMCSCLUT_roll_l1_max_wg_ME11_even.mem")
+  .ROM_FILE(GEMROLLTOMAXWG0_FILE)
 ) romwgmaxeven (
   .clock(clock),
   .adr0(cluster0_roll),

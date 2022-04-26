@@ -309,12 +309,12 @@ module gtx_gem_fiber_in
             // in the case of overflow, it should send fc
             // in the case of BC0 marker, it should send 1c, 20190822
             // in the case of resync marker, it should send 3c, 20190822
-            // 0xbc = 10110111
+            // 0xbc = 10110111, replaced bc by 1c, 2022-04-26
             // 0xf7 = 11110111
             // 0xfb = 11111011
             // 0xfd = 11111101
             // 0xfe = 11111110, replace FC by FE for overflow, 2022-03-17
-            // 0x1c = 00011100, added by Tao,2019-08-22
+            // 0x1c = 00011100, replace 1c by bc, 2022-04-26
             // 0x3c = 00111100, added by Tao, 2019-08-22
 
             // allows 8 possible EOF markers:

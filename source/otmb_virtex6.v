@@ -2385,8 +2385,18 @@ end
   genvar iclst_csc;
   generate
   for (iclst_csc=0; iclst_csc<MXCLUSTER_CHAMBER; iclst_csc=iclst_csc+1) begin: gen_gem_csc_cluster
-      cluster_to_cscwirehalfstrip_rom #(.ICLST(iclst_csc)) ucluster_to_cscwirehalfstripA (
-	.clock (clock),    //in clock
+      cluster_to_cscwirehalfstrip_rom #(
+          .ICLST(iclst_csc),
+          .GEMPADTOME1AES0_FILE("GEMCSCLUT_pad_es_ME1a_even.mem"),
+          .GEMPADTOME1AES1_FILE("GEMCSCLUT_pad_es_ME1a_odd.mem" ),
+          .GEMPADTOME1BES0_FILE("GEMCSCLUT_pad_es_ME1b_even.mem"),
+          .GEMPADTOME1BES1_FILE("GEMCSCLUT_pad_es_ME1b_odd.mem" ),
+          .GEMROLLTOMINWG0_FILE("GEMCSCLUT_roll_l1_min_wg_ME11_even.mem"),
+          .GEMROLLTOMINWG1_FILE("GEMCSCLUT_roll_l1_min_wg_ME11_odd.mem" ),
+          .GEMROLLTOMAXWG0_FILE("GEMCSCLUT_roll_l1_max_wg_ME11_even.mem"),
+          .GEMROLLTOMAXWG1_FILE("GEMCSCLUT_roll_l1_max_wg_ME11_odd.mem" )
+      ) ucluster_to_cscwirehalfstripA (
+	    .clock (clock),    //in clock
 
         .evenchamber       (evenchamber),   //in,  even pair or not
         .gemcsc_match_extrapolate    (gemcsc_match_extrapolate),    //In enable GEMCSC match using extrapolation
@@ -2421,8 +2431,18 @@ end
 
       );
 
-      cluster_to_cscwirehalfstrip_rom #(.ICLST(iclst_csc)) ucluster_to_cscwirehalfstripB (
-	.clock (clock),
+      cluster_to_cscwirehalfstrip_rom #(
+          .ICLST(iclst_csc)
+          .GEMPADTOME1AES0_FILE("GEMCSCLUT_pad_es_ME1a_even.mem"),
+          .GEMPADTOME1AES1_FILE("GEMCSCLUT_pad_es_ME1a_odd.mem" ),
+          .GEMPADTOME1BES0_FILE("GEMCSCLUT_pad_es_ME1b_even.mem"),
+          .GEMPADTOME1BES1_FILE("GEMCSCLUT_pad_es_ME1b_odd.mem" ),
+          .GEMROLLTOMINWG0_FILE("GEMCSCLUT_roll_l2_min_wg_ME11_even.mem"),
+          .GEMROLLTOMINWG1_FILE("GEMCSCLUT_roll_l2_min_wg_ME11_odd.mem" ),
+          .GEMROLLTOMAXWG0_FILE("GEMCSCLUT_roll_l2_max_wg_ME11_even.mem"),
+          .GEMROLLTOMAXWG1_FILE("GEMCSCLUT_roll_l2_max_wg_ME11_odd.mem" )
+      ) ucluster_to_cscwirehalfstripB (
+	    .clock (clock),
 
         .evenchamber       (evenchamber),   // even pair or not
         .gemcsc_match_extrapolate    (gemcsc_match_extrapolate),    //In enable GEMCSC match using extrapolation

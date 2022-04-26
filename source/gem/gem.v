@@ -16,7 +16,8 @@
 //------------------------------------------------------------------------------------------------------------------
 //V2 GEM trigger format {cnt, roll, padnumber},  14bits per cluster, 4 clusters per BX
 // 3.2 Gpbs
-//comma cycles between BC, F7, FB, FD, Full Run3?
+//comma cycles between BC, F7, FB, FD, Full Run3?--before 2022-04-26
+//comma cycles between 1C, F7, FB, FD, Full Run3?--updates on 2022-04-26
 //------------------------------------------------------------------------------------------------------------------
 
 
@@ -158,7 +159,7 @@ module gem (
     output [MXCLST-1:0]    parity_err_gem,
 
     output overflow,
-    output bc0marker, // BC0 marker, 1C
+    output bc0marker, // BC0 marker, BC
     output resyncmarker,// resync marker, 3C
 
     // GEM Outputs

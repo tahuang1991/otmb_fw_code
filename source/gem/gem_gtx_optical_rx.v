@@ -312,7 +312,7 @@
     srl16e_bbl #(8)  ukchardelay (.clock(~clock), .ce(1'b1), .adr(idly), .d(   k_char_mux[7:0]), .q(      k_char[7:0])); // JRG: comp data leaves module on FALLING LHC_CLOCK edge (~clock)
 
     assign overflow     = (k_char==8'hFE); 
-    assign bc0marker    = (k_char==8'h1C); 
+    assign bc0marker    = (k_char==8'hBC); 
     assign resyncmarker = (k_char==8'h3C); 
 
     // Unused muonic signals

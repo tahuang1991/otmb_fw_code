@@ -86,6 +86,13 @@ module gem_sync_mon (
 //2022-03-17, replace FC by FE for overflow marker
 // "1C" K-code for BC0 marker
 // "3C" K-code for resync marker
+//===================================================
+// Updates on 2022-04-26
+// 1C, F7, FB, FD to serve as bunch sequence indicator
+// BC for BC0 marker
+// 3C for resync marker
+// FE for overflow marker
+//===================================================
 
 wire [7:0] frame_sep      [3:0];
 wire [7:0] gem_kchar      [3:0];
@@ -99,10 +106,16 @@ assign gem_kchar[1] = gem1_kchar;
 assign gem_kchar[2] = gem2_kchar;
 assign gem_kchar[3] = gem3_kchar;
 
-assign frame_sep_in_table[0] = gem_kchar[0]==8'hBC || gem_kchar[0]==8'hF7 || gem_kchar[0]==8'hFB || gem_kchar[0]==8'hFD;
-assign frame_sep_in_table[1] = gem_kchar[1]==8'hBC || gem_kchar[1]==8'hF7 || gem_kchar[1]==8'hFB || gem_kchar[1]==8'hFD;
-assign frame_sep_in_table[2] = gem_kchar[2]==8'hBC || gem_kchar[2]==8'hF7 || gem_kchar[2]==8'hFB || gem_kchar[2]==8'hFD;
-assign frame_sep_in_table[3] = gem_kchar[3]==8'hBC || gem_kchar[3]==8'hF7 || gem_kchar[3]==8'hFB || gem_kchar[3]==8'hFD;
+//before 2022-04-26
+//assign frame_sep_in_table[0] = gem_kchar[0]==8'hBC || gem_kchar[0]==8'hF7 || gem_kchar[0]==8'hFB || gem_kchar[0]==8'hFD;
+//assign frame_sep_in_table[1] = gem_kchar[1]==8'hBC || gem_kchar[1]==8'hF7 || gem_kchar[1]==8'hFB || gem_kchar[1]==8'hFD;
+//assign frame_sep_in_table[2] = gem_kchar[2]==8'hBC || gem_kchar[2]==8'hF7 || gem_kchar[2]==8'hFB || gem_kchar[2]==8'hFD;
+//assign frame_sep_in_table[3] = gem_kchar[3]==8'hBC || gem_kchar[3]==8'hF7 || gem_kchar[3]==8'hFB || gem_kchar[3]==8'hFD;
+//Updates on 2022-04-26
+assign frame_sep_in_table[0] = gem_kchar[0]==8'h1C || gem_kchar[0]==8'hF7 || gem_kchar[0]==8'hFB || gem_kchar[0]==8'hFD;
+assign frame_sep_in_table[1] = gem_kchar[1]==8'h1C || gem_kchar[1]==8'hF7 || gem_kchar[1]==8'hFB || gem_kchar[1]==8'hFD;
+assign frame_sep_in_table[2] = gem_kchar[2]==8'h1C || gem_kchar[2]==8'hF7 || gem_kchar[2]==8'hFB || gem_kchar[2]==8'hFD;
+assign frame_sep_in_table[3] = gem_kchar[3]==8'h1C || gem_kchar[3]==8'hF7 || gem_kchar[3]==8'hFB || gem_kchar[3]==8'hFD;
 
 // on overflow/BC0/Resync, just assume it was correct and increment to the next marker (bypass the actual value, and just use the expected)
 // if the marker is not in the table, use the expected value but flag an error
@@ -125,8 +138,10 @@ for (ifiber=0; ifiber<4; ifiber=ifiber+1) begin: linkloop
 
   always @(posedge clock) begin
     case (frame_sep[ifiber])
-      8'hFD:   frame_sep_next[ifiber] <= 8'hBC;
-      8'hBC:   frame_sep_next[ifiber] <= 8'hF7;
+      //8'hFD:   frame_sep_next[ifiber] <= 8'hBC;
+      //8'hBC:   frame_sep_next[ifiber] <= 8'hF7;
+      8'hFD:   frame_sep_next[ifiber] <= 8'h1C;
+      8'h1C:   frame_sep_next[ifiber] <= 8'hF7;
       8'hF7:   frame_sep_next[ifiber] <= 8'hFB;
       8'hFB:   frame_sep_next[ifiber] <= 8'hFD;
       default: frame_sep_next[ifiber] <= frame_sep_next[ifiber];
