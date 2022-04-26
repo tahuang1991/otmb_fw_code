@@ -2432,7 +2432,7 @@ end
       );
 
       cluster_to_cscwirehalfstrip_rom #(
-          .ICLST(iclst_csc)
+          .ICLST(iclst_csc),
           .GEMPADTOME1AES0_FILE("GEMCSCLUT_pad_es_ME1a_even.mem"),
           .GEMPADTOME1AES1_FILE("GEMCSCLUT_pad_es_ME1a_odd.mem" ),
           .GEMPADTOME1BES0_FILE("GEMCSCLUT_pad_es_ME1b_even.mem"),
