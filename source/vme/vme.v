@@ -1032,6 +1032,7 @@
   clctaff_enable,         // move AFF logic to CLCT level or not, 1=CLCT level, 0= pretrigger level (legacy)
   clctaff_alct_match,       //AFF at CLCT level and require AFF+ALCT match for low quality AFF
   pretrig_clct_match_enable,    //require CLCT near the preCLCT
+  pretrig_clct_match_zone,  // zone size of CLCT and preCLCT match
   trig_match_bxonly_enable, //1=enabel BXonly sorting for CLCT, 0=enabel new ALCT-CLCT match with local shower
   local_shower_zone,     //define local zone for shower
   local_shower_thresh,   //define local shower threshold 

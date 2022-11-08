@@ -244,8 +244,8 @@ module pattern_finder_ccLUT (
   input       pretrig_clct_match_enable;    //require CLCT near the preCLCT
   input [2:0] pretrig_clct_match_zone;
   //input       trig_match_bxonly_enable, //1=enabel BXonly sorting for CLCT, 0=enabel new ALCT-CLCT match with local shower
-  input [5:0] local_shower_zone;     //define local zone for shower
-  input [5:0] local_shower_thresh;   //define local shower threshold 
+//  input [5:0] local_shower_zone;     //define local zone for shower
+//  input [5:0] local_shower_thresh;   //define local shower threshold 
 
   // CLCT Pattern-finder results
   output [MXHITB - 1: 0]  hs_hit_1st; // 1st CLCT pattern hits
@@ -940,9 +940,10 @@ module pattern_finder_ccLUT (
 //  wire [3:0] dead_span = (algo2016_dead_time_zone_size == 0) ? DEADSPAN : algo2016_dead_time_zone_size[4:1];// the span is just half of the dead time zone size  -- not allowed by ISE!  needs to be constant...
   reg  [MXKEYX - 1: 0] hs_key_busyAB = 0; // set if this key HS was hit
   wire [MXKEYX - 1: 0] hs_dead_drift;     // drift-delayed copy of hs_key_dead
+ 
 
-  wire [64+MXKEYX - 1:0] hs_key_dead_extend; // only [32+MXKEYX - 1:32] is the real dead zone for the chamber
-  wire [MXKEYX - 1: 0] hs_key_dead = hs_key_dead_extend[32+MXKEYX - 1:32];       // set if this key HS was near a hit HS
+  wire [64+MXKEYX - 1:0] hs_key_busyAB_extend = {32'b0, hs_key_busyAB, 32'b0}; // only [32+MXKEYX - 1:32] is the real for the chamber
+  wire [MXKEYX - 1: 0] hs_key_dead; // set if this key HS was near a hit HS
 
   //Tao, ME1/1->MEX/1, MXHSXB-> MXKEYX here
   generate  // for ME1b
@@ -957,7 +958,7 @@ module pattern_finder_ccLUT (
       //else  assign hs_key_dead[ihs] = |hs_key_busyAB[(MXKEYX-1):(ihs-dead_span)]; // 159:154
 
       //Tao's udpates on 2022
-      assign hs_key_dead_extend[ihs+64:ihs]  =| (hs_key_busyAB[ihs] ? deadzone_mask[64:0]  : 65'b0);
+      assign hs_key_dead[ihs]  = |(hs_key_busyAB_extend[ihs+64:ihs] & deadzone_mask[64:0]);
     end
   endgenerate
 
@@ -1009,14 +1010,15 @@ module pattern_finder_ccLUT (
   wire [MXHSX - 1: 0] hs_key_hitpid_drift; 
   srl16e_bbl #(MXKEYX) pretrig_drift (.clock(clock),.ce(1'b1),.adr(drift_adr),.d(hs_key_hitpid_chamber),.q(hs_key_hitpid_drift));
 
-  wire [64+MXHSX - 1: 0] hs_pretrighit_drift_extend;
+  wire [64+MXHSX - 1: 0] hs_key_hitpid_drift_extend = {32'b0, hs_key_hitpid_drift, 32'b0};
+  wire [MXHSX - 1: 0] hs_pretrighit_drift_final;
+  //assign  hs_pretrighit_drift_final = hs_pretrighit_drift_extend[32+MXHSX - 1:32]; 
   generate
     for (ihs = 0; ihs <= MXHSX - 1; ihs = ihs + 1) begin: pretrigmaksafterdrift 
-      hs_pretrighit_drift_extend[ihs+64:ihs] =|(hs_key_hitpid_drift[ihs] ?  pretrig_pos_mask[64:0] : 65'b0); 
+      assign hs_pretrighit_drift_final[ihs] =|(hs_key_hitpid_drift_extend[ihs+64:ihs]  &  pretrig_pos_mask[64:0]); 
     end
   endgenerate
   
-  wire [MXHSX - 1: 0] hs_pretrighit_drift_final = hs_pretrighit_drift_extend[32+MXHSX - 1:32]; 
 
   wire [MXHS - 1: 0] hs_pretrighit_drift0; 
   wire [MXHS - 1: 0] hs_pretrighit_drift1; 

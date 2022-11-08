@@ -1588,12 +1588,12 @@
   .algo2016_use_dead_time_zone         (algo2016_use_dead_time_zone), // In Dead time zone switch: 0 - "old" whole chamber is dead when pre-CLCT is registered, 1 - algo2016 only half-strips around pre-CLCT are marked dead
   .algo2016_dead_time_zone_size        (algo2016_dead_time_zone_size[4:0]),   // In Constant size of the dead time zone
 
-  //2022 winter upgrade, 1B8
+  //2022 winter upgrade, 0x1B8
   .clctaff_enable               (clctaff_enable),
   .pretrig_clct_match_enable    (pretrig_clct_match_enable),
   .pretrig_clct_match_zone      (pretrig_clct_match_zone),// half window for pretrig (preCLCT) and trigger(CLCT) match
-  .local_shower_zone            (local_shower_zone),
-  .local_shower_thresh          (local_shower_thresh),
+  //.local_shower_zone            (local_shower_zone),
+  //.local_shower_thresh          (local_shower_thresh),
 
 // 2nd CLCT separation RAM Ports
   .clct_sep_src       (clct_sep_src),             // In  CLCT separation source 1=vme, 0=ram
@@ -4169,7 +4169,7 @@
       .evenchamber                         (evenchamber),   // evenodd parity. 1 for even chamber and 0 for odd chamber
       .pretrig_clct_match_zone             (pretrig_clct_match_zone),// half window for pretrig (preCLCT) and trigger(CLCT) match
 
-      //2022 winter upgrade, 1B8
+      //2022 winter upgrade, 0x1B8
       .clctaff_enable               (clctaff_enable),
       .clctaff_alct_match           (clctaff_alct_match),
       .pretrig_clct_match_enable    (pretrig_clct_match_enable),
