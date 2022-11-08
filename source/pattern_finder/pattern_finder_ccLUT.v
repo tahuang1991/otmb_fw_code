@@ -893,11 +893,11 @@ module pattern_finder_ccLUT (
         hs_key_hit4[ihs] = (hs_hit_s0ab[ihs + MXHS*4]   >= hit_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*4]);
 
         //if clctaff_enable is on, since later would check aff position and pretrigger position after drift deley, we can ignore the dead zone here
-        hs_key_pid0[ihs] = (hs_pid_s0ab[ihs + MXHS*0]   >= pid_thresh_pretrig_ff) && (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*0])); // Normal 
-        hs_key_pid1[ihs] = (hs_pid_s0ab[ihs + MXHS*1]   >= pid_thresh_pretrig_ff) && (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*1]));
-        hs_key_pid2[ihs] = (hs_pid_s0ab[ihs + MXHS*2]   >= pid_thresh_pretrig_ff) && (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*2]));
-        hs_key_pid3[ihs] = (hs_pid_s0ab[ihs + MXHS*3]   >= pid_thresh_pretrig_ff) && (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*3]));
-        hs_key_pid4[ihs] = (hs_pid_s0ab[ihs + MXHS*4]   >= pid_thresh_pretrig_ff) && (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*4]));
+        hs_key_pid0[ihs] = (hs_pid_s0ab[ihs + MXHS*0]   >= pid_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*0]); // Normal 
+        hs_key_pid1[ihs] = (hs_pid_s0ab[ihs + MXHS*1]   >= pid_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*1]);
+        hs_key_pid2[ihs] = (hs_pid_s0ab[ihs + MXHS*2]   >= pid_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*2]);
+        hs_key_pid3[ihs] = (hs_pid_s0ab[ihs + MXHS*3]   >= pid_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*3]);
+        hs_key_pid4[ihs] = (hs_pid_s0ab[ihs + MXHS*4]   >= pid_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*4]);
 
         hs_key_dmb0[ihs] = (hs_hit_s0ab[ihs + MXHS*0]   >= dmb_thresh_pretrig_ff) && (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*0])); // Normal 
         hs_key_dmb1[ihs] = (hs_hit_s0ab[ihs + MXHS*1]   >= dmb_thresh_pretrig_ff) && (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*1]));
@@ -914,11 +914,11 @@ module pattern_finder_ccLUT (
         hs_key_hit4[ihs] = (hs_hit_s0ab[MXHS*1 -1 -ihs] >= hit_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*1 -1 -ihs]);
 
         //if clctaff_enable is on, since later would check aff position and pretrigger position after drift deley, we can ignore the dead zone here
-        hs_key_pid0[ihs] = (hs_pid_s0ab[MXHS*5 -1 -ihs] >= pid_thresh_pretrig_ff) && (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*5 -1 -ihs])); // Reversed
-        hs_key_pid1[ihs] = (hs_pid_s0ab[MXHS*4 -1 -ihs] >= pid_thresh_pretrig_ff) && (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*4 -1 -ihs]));
-        hs_key_pid2[ihs] = (hs_pid_s0ab[MXHS*3 -1 -ihs] >= pid_thresh_pretrig_ff) && (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*3 -1 -ihs]));
-        hs_key_pid3[ihs] = (hs_pid_s0ab[MXHS*2 -1 -ihs] >= pid_thresh_pretrig_ff) && (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*2 -1 -ihs]));
-        hs_key_pid4[ihs] = (hs_pid_s0ab[MXHS*1 -1 -ihs] >= pid_thresh_pretrig_ff) && (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*1 -1 -ihs]));
+        hs_key_pid0[ihs] = (hs_pid_s0ab[MXHS*5 -1 -ihs] >= pid_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*5 -1 -ihs]); // Reversed
+        hs_key_pid1[ihs] = (hs_pid_s0ab[MXHS*4 -1 -ihs] >= pid_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*4 -1 -ihs]);
+        hs_key_pid2[ihs] = (hs_pid_s0ab[MXHS*3 -1 -ihs] >= pid_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*3 -1 -ihs]);
+        hs_key_pid3[ihs] = (hs_pid_s0ab[MXHS*2 -1 -ihs] >= pid_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*2 -1 -ihs]);
+        hs_key_pid4[ihs] = (hs_pid_s0ab[MXHS*1 -1 -ihs] >= pid_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*1 -1 -ihs]);
 
         hs_key_dmb0[ihs] = (hs_hit_s0ab[MXHS*5 -1 -ihs] >= dmb_thresh_pretrig_ff) && (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*5 -1 -ihs])); // Reversed
         hs_key_dmb1[ihs] = (hs_hit_s0ab[MXHS*4 -1 -ihs] >= dmb_thresh_pretrig_ff) && (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*4 -1 -ihs]));
@@ -972,6 +972,8 @@ module pattern_finder_ccLUT (
   wire [MXHS - 1: 0] hs_key_hitpid2 = hs_key_hit2 & hs_key_pid2;
   wire [MXHS - 1: 0] hs_key_hitpid3 = hs_key_hit3 & hs_key_pid3;
   wire [MXHS - 1: 0] hs_key_hitpid4 = hs_key_hit4 & hs_key_pid4;
+
+  wire cfeb_layer_trigger = cfeb_layer_trig && layer_trig_en_ff;
 
 // JG: TMB algo uses these bits to set clct_pretrig_rqst...
   assign cfeb_hit[0] = ( ( | hs_key_hitpid0) || cfeb_layer_trigger ) && cfeb_en_ff[0];
@@ -1054,32 +1056,29 @@ module pattern_finder_ccLUT (
   wire [5: 0] cfebnp1_dmb;  // Adjacent CFEB+1 has a pattern over threshold, there is no CFEB6+1
   wire [MXCFEB - 1: 0] cfeb_dmb; // This CFEB has a pattern over DMB-trigger threshold
 
-  wire [MXHS - 1: 0] hs_key_dmbpid0 = clctaff_enable ? hs_key_dmb0 & hs_key_pid0 & hs_pretrighit_drift0 : hs_key_dmb0 & hs_key_pid0; // hits on key satisfy both dmb and pid thresholds, but not used.
-  wire [MXHS - 1: 0] hs_key_dmbpid1 = clctaff_enable ? hs_key_dmb1 & hs_key_pid1 & hs_pretrighit_drift1 : hs_key_dmb1 & hs_key_pid1;
-  wire [MXHS - 1: 0] hs_key_dmbpid2 = clctaff_enable ? hs_key_dmb2 & hs_key_pid2 & hs_pretrighit_drift2 : hs_key_dmb2 & hs_key_pid2;
-  wire [MXHS - 1: 0] hs_key_dmbpid3 = clctaff_enable ? hs_key_dmb3 & hs_key_pid3 & hs_pretrighit_drift3 : hs_key_dmb3 & hs_key_pid3;
-  wire [MXHS - 1: 0] hs_key_dmbpid4 = clctaff_enable ? hs_key_dmb4 & hs_key_pid4 & hs_pretrighit_drift4 : hs_key_dmb4 & hs_key_pid4;
-
-  wire cfeb_layer_trigger = cfeb_layer_trig && layer_trig_en_ff;
+  wire [MXHS - 1: 0] hs_key_drift_dmb0 = clctaff_enable ? hs_key_dmb0 & hs_pretrighit_drift0 : hs_key_dmb0; // hits on key satisfy both dmb and pid thresholds, but not used.
+  wire [MXHS - 1: 0] hs_key_drift_dmb1 = clctaff_enable ? hs_key_dmb1 & hs_pretrighit_drift1 : hs_key_dmb1;
+  wire [MXHS - 1: 0] hs_key_drift_dmb2 = clctaff_enable ? hs_key_dmb2 & hs_pretrighit_drift2 : hs_key_dmb2;
+  wire [MXHS - 1: 0] hs_key_drift_dmb3 = clctaff_enable ? hs_key_dmb3 & hs_pretrighit_drift3 : hs_key_dmb3;
+  wire [MXHS - 1: 0] hs_key_drift_dmb4 = clctaff_enable ? hs_key_dmb4 & hs_pretrighit_drift4 : hs_key_dmb4;
 
 // JGhere: OLD Bug Fix! add logic to cleanly separate the pretrig levels from the dmb/cfeb_active levels...
-  assign cfeb_dmb[0] = ( ( | hs_key_dmb0) || cfeb_layer_trigger ) && cfeb_en_ff[0];
-  assign cfeb_dmb[1] = ( ( | hs_key_dmb1) || cfeb_layer_trigger ) && cfeb_en_ff[1];
-  assign cfeb_dmb[2] = ( ( | hs_key_dmb2) || cfeb_layer_trigger ) && cfeb_en_ff[2];
-  assign cfeb_dmb[3] = ( ( | hs_key_dmb3) || cfeb_layer_trigger ) && cfeb_en_ff[3];
-  assign cfeb_dmb[4] = ( ( | hs_key_dmb4) || cfeb_layer_trigger ) && cfeb_en_ff[4];
+  assign cfeb_dmb[0] = ( ( | hs_key_drift_dmb0) || cfeb_layer_trigger ) && cfeb_en_ff[0];
+  assign cfeb_dmb[1] = ( ( | hs_key_drift_dmb1) || cfeb_layer_trigger ) && cfeb_en_ff[1];
+  assign cfeb_dmb[2] = ( ( | hs_key_drift_dmb2) || cfeb_layer_trigger ) && cfeb_en_ff[2];
+  assign cfeb_dmb[3] = ( ( | hs_key_drift_dmb3) || cfeb_layer_trigger ) && cfeb_en_ff[3];
+  assign cfeb_dmb[4] = ( ( | hs_key_drift_dmb4) || cfeb_layer_trigger ) && cfeb_en_ff[4];
 
   //Tao, ME1/1->MEX/1
 // JGhere: OLD Bug Fix! add cfeb_en requirement to trigger a neighbor cfeb...
-  assign cfebnm1_dmb[1] = | (hs_key_dmb1 & adjcfeb_mask_nm1) && cfeb_en_ff[1]; // cfeb1 has hits near cfeb0
-  assign cfebnm1_dmb[2] = | (hs_key_dmb2 & adjcfeb_mask_nm1) && cfeb_en_ff[2]; // cfeb2 has hits near cfeb1
-  assign cfebnm1_dmb[3] = | (hs_key_dmb3 & adjcfeb_mask_nm1) && cfeb_en_ff[3]; // cfeb3 has hits near cfeb2
-  assign cfebnm1_dmb[4] = | (hs_key_dmb4 & adjcfeb_mask_nm1) && cfeb_en_ff[4]; // cfeb3 has hits near cfeb3
-// JGhere: OLD Bug Fix! add cfeb_en requirement to trigger a neighbor cfeb...
-  assign cfebnp1_dmb[0] = | (hs_key_dmb0 & adjcfeb_mask_np1) && cfeb_en_ff[0]; // cfeb0 has hits near cfeb1
-  assign cfebnp1_dmb[1] = | (hs_key_dmb1 & adjcfeb_mask_np1) && cfeb_en_ff[1]; // cfeb1 has hits near cfeb2
-  assign cfebnp1_dmb[2] = | (hs_key_dmb2 & adjcfeb_mask_np1) && cfeb_en_ff[2]; // cfeb2 has hits near cfeb3
-  assign cfebnp1_dmb[3] = | (hs_key_dmb3 & adjcfeb_mask_np1) && cfeb_en_ff[3]; // cfeb2 has hits near cfeb3
+  assign cfebnm1_dmb[1] = | (hs_key_drift_dmb1 & adjcfeb_mask_nm1) && cfeb_en_ff[1]; // cfeb1 has hits near cfeb0
+  assign cfebnm1_dmb[2] = | (hs_key_drift_dmb2 & adjcfeb_mask_nm1) && cfeb_en_ff[2]; // cfeb2 has hits near cfeb1
+  assign cfebnm1_dmb[3] = | (hs_key_drift_dmb3 & adjcfeb_mask_nm1) && cfeb_en_ff[3]; // cfeb3 has hits near cfeb2
+  assign cfebnm1_dmb[4] = | (hs_key_drift_dmb4 & adjcfeb_mask_nm1) && cfeb_en_ff[4]; // cfeb3 has hits near cfeb3
+  assign cfebnp1_dmb[0] = | (hs_key_drift_dmb0 & adjcfeb_mask_np1) && cfeb_en_ff[0]; // cfeb0 has hits near cfeb1
+  assign cfebnp1_dmb[1] = | (hs_key_drift_dmb1 & adjcfeb_mask_np1) && cfeb_en_ff[1]; // cfeb1 has hits near cfeb2
+  assign cfebnp1_dmb[2] = | (hs_key_drift_dmb2 & adjcfeb_mask_np1) && cfeb_en_ff[2]; // cfeb2 has hits near cfeb3
+  assign cfebnp1_dmb[3] = | (hs_key_drift_dmb3 & adjcfeb_mask_np1) && cfeb_en_ff[3]; // cfeb2 has hits near cfeb3
 
   // Output active FEB signal, and adjacent FEBs if hit is near board boundary
 // JGhere: OLD Bug Fix! fix logic to cleanly separate the pretrig levels from the dmb/cfeb_active levels...
@@ -1113,6 +1112,7 @@ module pattern_finder_ccLUT (
       assign hs_pat_s0[ihs] = pretrig_clct_match_enable ? {hs_hit_s0[ihs], hs_pid_s0[ihs]} & {MXPATB{hs_trig_valid[ihs]}} : {hs_hit_s0[ihs], hs_pid_s0[ihs]};
     end
   endgenerate
+
 //-------------------------------------------------------------------------------------------------------------------
 // Stage 5B: 1/2-Strip Priority Encoder
 //     Select the 1st best pattern from 224 Key 1/2-Strips
