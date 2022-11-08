@@ -3381,7 +3381,7 @@
 
   assign postdrift_adr = PATTERN_FINDER_LATENCY + drift_delay;
 
-  srl16e_bbl #(MXCFEB) usrldrift (.clock(clock),.ce(1'b1),.adr(PATTERN_FINDER_LATENCY),.d(active_feb_list_pre),.q(active_feb_list_xtmb));
+  srl16e_bbl #(MXCFEB) affdrift (.clock(clock),.ce(1'b1),.adr(PATTERN_FINDER_LATENCY),.d(active_feb_list_pre),.q(active_feb_list_xtmb));
 
   srl16e_bbl #(MXPTRID) usrldrift (.clock(clock),.ce(1'b1),.adr(postdrift_adr),.d(pretrig_data),.q(postdrift_data));
 
