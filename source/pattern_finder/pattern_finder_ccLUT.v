@@ -1051,11 +1051,11 @@ module pattern_finder_ccLUT (
   endgenerate
 
 // JGhere: begin algo2016_use_dead_time_zone definition section; mark hit key HS busy and include nearby strips in deadzone
-  parameter  dead_span = 4;  // Defines how far the deadzone extends from the key HS
+//  parameter  dead_span = 4;  // Defines how far the deadzone extends from the key HS
 //  parameter  DEADSPAN = 4'd6;  // Default size for the deadzone, in HS
 //  wire [3:0] dead_span = (algo2016_dead_time_zone_size == 0) ? DEADSPAN : algo2016_dead_time_zone_size[4:1];// the span is just half of the dead time zone size  -- not allowed by ISE!  needs to be constant...
   reg  [MXKEYX - 1: 0] hs_key_busyAB = 0; // set if this key HS was hit
-  wire [64+MXHSXB - 1:     0] hs_key_busyB_extend = {32'b0, hs_key_busyAB[MXHSXB-1:0], 32'b0}; // only [32+MXHSXB - 1:32] is the real for the chamber
+  wire [64+MXHSXB - 1:     0] hs_key_busyA_extend = {32'b0, hs_key_busyAB[MXHSXB-1:0], 32'b0}; // only [32+MXHSXB - 1:32] is the real for the chamber
   wire [64+MXKEYX - 1:MXHSXB] hs_key_busyB_extend = {32'b0, hs_key_busyAB[MXKEYX-1:MXHSXB], 32'b0}; // only [32+MXKEYX - 1:MXHSXB+32] is the real for the chamber
   wire [MXKEYX - 1: 0] hs_key_dead;       // set if this key HS was near a hit HS
   wire [MXKEYX - 1: 0] hs_dead_drift;     // drift-delayed copy of hs_key_dead

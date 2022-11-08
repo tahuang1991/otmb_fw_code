@@ -614,6 +614,9 @@
   algo2016_dead_time_zone_size,
   algo2016_use_dynamic_dead_time_zone,
 
+  //winter 2022 upgrade, aff at CLCT level or not
+  clctaff_enable,
+
   tmb_allow_alct,
   tmb_allow_clct,
   tmb_allow_match,
@@ -1715,6 +1718,8 @@
 // JG: this functionality is being removed, 10/25/2017...
   input [4:0] algo2016_dead_time_zone_size;        // Constant size of the dead time zone
   input       algo2016_use_dynamic_dead_time_zone; // Dynamic dead time zone switch: 0 - dead time zone is set by algo2016_use_dynamic_dead_time_zone, 1 - dead time zone depends on pre-CLCT pattern ID
+
+  input clctaff_enable;
 
   input tmb_allow_alct;  // Allow ALCT only
   input tmb_allow_clct;  // Allow CLCT only
@@ -3328,8 +3333,11 @@
   wire              active_feb_flag_tmb; // Active FEB flag to DMB at tmb match time
   wire              active_feb_flag;     // Active FEB flag selection
 
-  assign active_feb_flag_pre = clct_push_pretrig || (hmt_fired_pretrig && cfeb_allow_hmt_ro);
-  assign active_feb_list_pre = (active_feb_s0[MXCFEB-1:0] & {MXCFEB{clct_push_pretrig}}) | hmt_active_feb;//from pretrigger
+  //if clctaff is on, active_feb_flag_pre is after drift delay 
+  assign active_feb_flag_pre = clctaff_enable ? |active_feb_s0 : (clct_push_pretrig || (hmt_fired_pretrig && cfeb_allow_hmt_ro));
+  assign active_feb_list_pre = clctaff_enable ?  active_feb_s0 : ((active_feb_s0[MXCFEB-1:0] & {MXCFEB{clct_push_pretrig}}) | hmt_active_feb);
+  //assign active_feb_flag_pre = clct_push_pretrig || (hmt_fired_pretrig && cfeb_allow_hmt_ro);
+  //assign active_feb_list_pre = (active_feb_s0[MXCFEB-1:0] & {MXCFEB{clct_push_pretrig}}) | hmt_active_feb;//from pretrigger
 
   assign active_feb_flag_tmb = tmb_trig_write;
   assign active_feb_list_tmb = tmb_aff_list & {MXCFEB{active_feb_flag_tmb}};
@@ -3349,12 +3357,20 @@
 // Pushes CLCT pretrigger data into pipeline to wait for pattern finder and drift delay
 //------------------------------------------------------------------------------------------------------------------
 // On pretrigger push buffer address and bxn into the pre-trigger pipeline
+// hs_pat_s0 is synchronized with cfeb_hit/any_cfeb_hit
+// from hs_pat_s0 to hs_hit_1st: latency is 4BX, clct_push_pretrig is 1BX after hs_pat_s0
+// so hs_hit_1st is 3BX after clct_push_pretrig. 
+// pattern_finder_latency+drift_delay should be 5, the ADR for delay is 4
   parameter PATTERN_FINDER_LATENCY = 2;  // Tuned 4/22/08
   parameter MXPTRID = 23;
 
   wire [3:0]         postdrift_adr;
   wire [MXPTRID-1:0] pretrig_data;
   wire [MXPTRID-1:0] postdrift_data;
+
+  //for active_feb_list if clctaff_enable is on
+  //in this case, active_cfeb_list is 2BX after clct_push_pretrig
+  wire [MXCFEB-1:0]  active_feb_list_xtmb; 
 
   assign pretrig_data[0]     = clct_push_pretrig;        // Pre-trigger flag alias active_feb_flag
   assign pretrig_data[11:1]  = wr_buf_adr[MXBADR-1:0];   // Buffer address at pre-trigger
@@ -3365,6 +3381,8 @@
 
   assign postdrift_adr = PATTERN_FINDER_LATENCY + drift_delay;
 
+  srl16e_bbl #(MXCFEB) usrldrift (.clock(clock),.ce(1'b1),.adr(PATTERN_FINDER_LATENCY),.d(active_feb_list_pre),.q(active_feb_list_xtmb));
+
   srl16e_bbl #(MXPTRID) usrldrift (.clock(clock),.ce(1'b1),.adr(postdrift_adr),.d(pretrig_data),.q(postdrift_data));
 
 // Extract pre-trigger data after drift delay, compensated for pattern-finder latency + programmable drift delay
@@ -3373,7 +3391,7 @@
   wire              clct_wr_avail_xtmb   = postdrift_data[12];    // Buffer address was valid at pre-trigger
   wire [1:0]        bxn_counter_xtmb     = postdrift_data[14:13]; // BXN at pre-trigger, only lsbs are needed for clct
   wire              trig_source_ext_xtmb = postdrift_data[15];    // Trigger source was not CLCT pattern
-  wire [MXCFEB-1:0] aff_list_xtmb        = postdrift_data[22:16]; // Active feb list
+  wire [MXCFEB-1:0] aff_list_xtmb        = clctaff_enable ? active_feb_list_xtmb : postdrift_data[22:16]; // Active feb list
 
 // After drift, send CLCT words to TMB, persist 1 cycle only, blank invalid CLCTs unless override
   wire clct0_hit_valid = (hs_hit_1st <= 3'd6 && hs_hit_1st >= hit_thresh_postdrift);    // CLCT is over hit thresh
@@ -4171,7 +4189,7 @@
   assign xpre1_wdata[59:30] = alct_counter[29:0];    // ALCT counter at pre-trigger
 
 // Post-drift: store CLCT data sent to TMB in RAM mapping array
-  parameter MXXTMB = 44;                    // Post drift CLCT data
+  parameter MXXTMB = 44+MXCFEB;                    // Post drift CLCT data
   wire [MXXTMB-1:0]  xtmb_wdata;                // Mapping array
   wire [MXXTMB-1:0]  xtmb_rdata;                // Mapping array
 
@@ -4181,6 +4199,7 @@
   assign xtmb_wdata[41:35] =  clcta_xtmb[6:0];  // CLCT0/1 common after drift
   assign xtmb_wdata[42]    =  clct_invp[0];     // CLCT had invalid pattern after drift delay
   assign xtmb_wdata[43]    =  clct_invp[1];     // CLCT had invalid pattern after drift delay
+  assign xtmb_wdata[44+MXCFEB-1:44] = aff_list_xtmb[MXCFEB-1:0]; //aff list after drift delay
 
   parameter MXCCLUTB = MXPATC+MXPATC+MXBNDB+MXBNDB+MXXKYB+MXXKYB;
   wire [MXCCLUTB-1:0]  xtmb_cclut_wdata;                // Mapping array
@@ -4869,7 +4888,7 @@
 // Unpack multi-buffer storage for event header
 //------------------------------------------------------------------------------------------------------------------
 // Unpack Pre-trigger data from RAM mapping array
-  wire [6:0]  r_active_feb       = xpre_rdata[6:0];   // Active FEB list sent to DAQMB
+  wire [MXCFEB-1:0] r_active_feb = clctaff_enable ?  r_aff_list_xtmb[MXCFEB-1:0] : xpre_rdata[MXCFEB-1:0];   // Active FEB list sent to DAQMB
   wire [10:0] r_trig_source_vec  = xpre_rdata[17:7];  // Trigger source vector
   wire [11:0] r_bxn_counter      = xpre_rdata[29:18]; // Full Bunch Crossing number at pretrig
   wire [29:0] r_orbit_counter    = xpre_rdata[59:30]; // Orbit count at pre-trigger
@@ -4893,6 +4912,7 @@
   wire [6:0]  r_clcta_xtmb = xtmb_rdata[41:35]; // CLCT aux after drift
   wire        r_clct0_invp = xtmb_rdata[42];    // CLCT0 had invalid pattern after drift delay
   wire        r_clct1_invp = xtmb_rdata[43];    // CLCT1 had invalid pattern after drift delay
+  wire [MXCFEB-1:0] r_aff_list_xtmb = xtmb_rdata[44+MXCFEB-1:44];
 
   wire [MXBNDB - 1   : 0] r_clct0_bnd_xtmb; // new bending 
   wire [MXXKYB-1     : 0] r_clct0_xky_xtmb; // new position with 1/8 precision
