@@ -64,6 +64,14 @@ Update on March 21, 2019:
 Update on March 24, 2019
   - create otmb_virtex6_pinout_MEX1.ucf file to move input fiber positions to 1,2,3,4,5
 
+Updates during LS2
+  - seen in branch description
+
+Update on 2022 winter break upgrade
+  - change AFF threshold logic from pretrigger to trigger
+  - make dead time zone configurable
+  - add position check between trigger and pretrigger
+
 
 
 
@@ -78,3 +86,4 @@ The branch is used for ME2,3,4/1 chamber operation in 2022, the beginning of Run
    - CCLUT algorithm, DN-19-059
    - HMT, with anode and cathode hmt bits match, DN-20-033
    - New trigger data format and DAQ data format, DN-20-016
+   - v1 version includes the udpates in 2022 winter break upgrade

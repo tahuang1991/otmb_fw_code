@@ -4,8 +4,8 @@
 // Firmware version global definitions
   `define FIRMWARE_TYPE 04'hC    // C=Normal CLCT/TMB, D=Debug PCB loopback version
   `define VERSION       04'hE   // Version revision number, A=TMB2004 and earlier, E=TMB2005E production
-  `define MONTHDAY      16'h0329 // Version date
-  `define YEAR          16'h2021 // Version year
+  `define MONTHDAY      16'h1107 // Version date
+  `define YEAR          16'h2022 // Version year
 
   `define AUTO_VME         01'h1 // Automatically initialize VME registers from PROM data,   0=do not
   `define AUTO_JTAG        01'h1 // Automatically initialize JTAG chain from PROM data,      0=do not
@@ -23,7 +23,7 @@
    // version_format is control by gem_enable, ccLUT_enable
   `define VERSION_FORMAT       04'h2   // [12:09]; 0=TMB standard, 1=OTMB Standard, 2=CCLUT, 3=GEM+CCLUT
   `define VERSION_MAJOR        04'h0   // [08:05];4 bits = Major Version (major features which breaks compatibility, requires c    hanges to other board firmware)
-  `define VERSION_MINOR        05'h2   // [04:00];5 bits = Minor version  (minor features, internal fixes, bug fixes, etc).
+  `define VERSION_MINOR        05'h3   // [04:00];5 bits = Minor version  (minor features, internal fixes, bug fixes, etc).
   //minor version code: 
   //5'h1 11bits comparator code version
   //5'h2 roll back to 12bits comparator code

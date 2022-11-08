@@ -1502,6 +1502,18 @@
   wire       algo2016_cross_bx_algorithm;         // LCT sorting using cross BX algorithm: 0 - "old" no cross BX algorithm used, 1 - algo2016 uses cross BX algorithm, almost no effect, Tao
   wire       algo2016_clct_use_corrected_bx;      // NOT YET IMPLEMENTED: Use median of hits for CLCT timing: 0 - "old" no CLCT timing corrections, 1 - algo2016 CLCT timing calculated based on median of hits,  NOT USED, Tao
   wire       evenchamber;  // from VME register 0x198, 1 for even chamber and 0 for odd chamber
+  wire [2:0] pretrig_clct_match_zone;//half window for preCLCT and cLCT position match
+
+
+// ALGO 2022 winter break upgrade, 0x1B8
+  wire       clctaff_enable;         // move AFF logic to CLCT level or not, 1=CLCT level, 0= pretrigger level (legacy)
+  //this feature is not implemented in 2022, but reserved one bit in config for future
+  wire       clctaff_alct_match;       //AFF at CLCT level and require AFF+ALCT match for low quality AFF, inside sequence.v 
+  wire       pretrig_clct_match_enable;    //require CLCT near the preCLCT
+  //this feature is not implemented in 2022, but reserved bits for future development, inside pattern.v and tmb.v
+  wire       trig_match_bxonly_enable; //1=enabel BXonly sorting for CLCT, 0=enabel new ALCT-CLCT match with local shower
+  wire [5:0] local_shower_zone;     //define local zone for shower
+  wire [5:0] local_shower_thresh;   //define local shower threshold 
   
   `ifdef CCLUT
   pattern_finder_ccLUT upattern_finder
@@ -1575,6 +1587,13 @@
   .drift_delay        (drift_delay[MXDRIFT-1:0]),      // In  CSC Drift delay clocks
   .algo2016_use_dead_time_zone         (algo2016_use_dead_time_zone), // In Dead time zone switch: 0 - "old" whole chamber is dead when pre-CLCT is registered, 1 - algo2016 only half-strips around pre-CLCT are marked dead
   .algo2016_dead_time_zone_size        (algo2016_dead_time_zone_size[4:0]),   // In Constant size of the dead time zone
+
+  //2022 winter upgrade, 0x1B8
+  .clctaff_enable               (clctaff_enable),
+  .pretrig_clct_match_enable    (pretrig_clct_match_enable),
+  .pretrig_clct_match_zone      (pretrig_clct_match_zone),// half window for pretrig (preCLCT) and trigger(CLCT) match
+  //.local_shower_zone            (local_shower_zone),
+  //.local_shower_thresh          (local_shower_thresh),
 
 // 2nd CLCT separation RAM Ports
   .clct_sep_src       (clct_sep_src),             // In  CLCT separation source 1=vme, 0=ram
@@ -2238,6 +2257,8 @@
   .algo2016_dead_time_zone_size        (algo2016_dead_time_zone_size[4:0]),   // In Constant size of the dead time zone
   .algo2016_use_dynamic_dead_time_zone (algo2016_use_dynamic_dead_time_zone), // In Dynamic dead time zone switch: 0 - dead time zone is set by algo2016_use_dynamic_dead_time_zone, 1 - dead time zone depends on pre-CLCT pattern ID
   .evenchamber                         (evenchamber),   // evenodd parity. 1 for even chamber and 0 for odd chamber
+
+  .clctaff_enable  (clctaff_enable), //clctaff_enable 
   
   .tmb_allow_alct  (tmb_allow_alct),  // In  Allow ALCT only 
   .tmb_allow_clct  (tmb_allow_clct),  // In  Allow CLCT only
@@ -4148,6 +4169,15 @@
       .algo2016_cross_bx_algorithm         (algo2016_cross_bx_algorithm),         // Out LCT sorting using cross BX algorithm: 0 - "old" no cross BX algorithm used, 1 - algo2016 uses cross BX algorithm
       .algo2016_clct_use_corrected_bx      (algo2016_clct_use_corrected_bx),      // Out Use median of hits for CLCT timing: 0 - "old" no CLCT timing corrections, 1 - algo2016 CLCT timing calculated based on median of hits NOT YET IMPLEMENTED:
       .evenchamber                         (evenchamber),   // evenodd parity. 1 for even chamber and 0 for odd chamber
+      .pretrig_clct_match_zone             (pretrig_clct_match_zone),// half window for pretrig (preCLCT) and trigger(CLCT) match
+
+      //2022 winter upgrade, 0x1B8
+      .clctaff_enable               (clctaff_enable),
+      .clctaff_alct_match           (clctaff_alct_match),
+      .pretrig_clct_match_enable    (pretrig_clct_match_enable),
+      .trig_match_bxonly_enable     (trig_match_bxonly_enable),
+      .local_shower_zone            (local_shower_zone),
+      .local_shower_thresh          (local_shower_thresh),
 
       .tmb_allow_alct_ro  (tmb_allow_alct_ro),  // Out  Allow ALCT only  readout, non-triggering
       .tmb_allow_clct_ro  (tmb_allow_clct_ro),  // Out  Allow CLCT only  readout, non-triggering
