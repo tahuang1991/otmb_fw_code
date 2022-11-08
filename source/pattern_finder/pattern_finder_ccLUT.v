@@ -76,6 +76,15 @@ module pattern_finder_ccLUT (
   algo2016_use_dead_time_zone,
   algo2016_dead_time_zone_size,
 
+  //Algo2022, winter ugprade
+  clctaff_enable,         // move AFF logic to CLCT level or not, 1=CLCT level, 0= pretrigger level (legacy)
+  //clctaff_alct_match,       //AFF at CLCT level and require AFF+ALCT match for low quality AFF
+  pretrig_clct_match_enable,    //require CLCT near the preCLCT
+  pretrig_clct_match_zone,// half window for pretrig (preCLCT) and trigger(CLCT) match
+  //trig_match_bxonly_enable, //1=enabel BXonly sorting for CLCT, 0=enabel new ALCT-CLCT match with local shower
+  //local_shower_zone,     //define local zone for shower
+  //local_shower_thresh,   //define local shower threshold 
+
   // 2nd CLCT separation RAM Ports
   clct_sep_src,
   clct_sep_vme,
@@ -235,6 +244,16 @@ module pattern_finder_ccLUT (
 // Algo2016: configuration
   input               algo2016_use_dead_time_zone; // Dead time zone switch: 0 - "old" whole chamber is dead when pre-CLCT is registered, 1 - algo2016 only half-strips around pre-CLCT are marked dead
   input [4:0]         algo2016_dead_time_zone_size;// Constant size of the dead time zone
+
+
+// ALGO 2022 winter break upgrade, 0x1B8
+  input       clctaff_enable;         // move AFF logic to CLCT level or not, 1=CLCT level, 0= pretrigger level (legacy)
+  //input       clctaff_alct_match,       //AFF at CLCT level and require AFF+ALCT match for low quality AFF
+  input       pretrig_clct_match_enable;    //require CLCT near the preCLCT
+  input [2:0] pretrig_clct_match_zone;
+  //input       trig_match_bxonly_enable, //1=enabel BXonly sorting for CLCT, 0=enabel new ALCT-CLCT match with local shower
+//  input [5:0] local_shower_zone;     //define local zone for shower
+//  input [5:0] local_shower_thresh;   //define local shower threshold 
 
   // CLCT Pattern-finder results
   output [MXHITB - 1: 0]  hs_hit_1st; // 1st CLCT pattern hits
@@ -436,6 +455,13 @@ module pattern_finder_ccLUT (
   // Generate mask for marking adjacent cfeb as hit if nearby keys are over thresh
   reg [MXHS - 1: 0] adjcfeb_mask_nm1; // Adjacent CFEB active feb flag mask
   reg [MXHS - 1: 0] adjcfeb_mask_np1;
+  reg [MXHS*2  : 0] deadzone_mask; //max, zone_size=31, [65 : 0], 0-63 halfstrip wide
+  reg [MXHS*2  : 0] pretrig_pos_mask; //max, zone_size=31, [65 : 0], 0-63 halfstrip wide
+  
+  always @(posedge clock) begin
+   deadzone_mask[32]  <= 1'b1;
+   pretrig_pos_mask[32]   <= 1'b1;
+  end
 
   genvar ihs;
   generate
@@ -443,6 +469,10 @@ module pattern_finder_ccLUT (
       always @(posedge clock) begin
         adjcfeb_mask_nm1[     ihs] <= (ihs < adjcfeb_dist);
         adjcfeb_mask_np1[31 - ihs] <= (ihs < adjcfeb_dist);
+        deadzone_mask[33 + ihs] <= (ihs <= algo2016_dead_time_zone_size); // use <=, so zone_size=4 => dead zone = [-4, +4]
+        deadzone_mask[31 - ihs] <= (ihs <= algo2016_dead_time_zone_size);
+        pretrig_pos_mask[33 + ihs] <= (ihs <= pretrig_clct_match_zone); // use <=, so zone_size=4 => dead zone = [-4, +4]
+        pretrig_pos_mask[31 - ihs] <= (ihs <= pretrig_clct_match_zone);
       end
     end
   endgenerate
@@ -937,28 +967,6 @@ module pattern_finder_ccLUT (
     end
   endgenerate
 
-  // S0 latch: realign with main clock, legacy to maintain sequencer timing
-  reg [MXHITB - 1: 0] hs_hit_s0 [MXHSX - 1: 0];
-  reg [MXPIDB - 1: 0] hs_pid_s0 [MXHSX - 1: 0];
-  reg [MXPATC - 1: 0] hs_carry_s0 [MXHSX - 1: 0];//CCLUT, Tao
-  generate
-    for (ihs = 0; ihs <= MXHSX - 1; ihs = ihs + 1) begin: store_s0
-      always @(posedge clock) begin
-        hs_hit_s0[ihs]   <= (algo2016_use_dead_time_zone & hs_dead_drift[ihs]) ? 3'b0  : hs_hit_s0ab[ihs];
-        hs_pid_s0[ihs]   <= (algo2016_use_dead_time_zone & hs_dead_drift[ihs]) ? 4'b0  : hs_pid_s0ab[ihs];
-        hs_carry_s0[ihs] <= (algo2016_use_dead_time_zone & hs_dead_drift[ihs]) ? 12'b0 : hs_carry_s0ab[ihs];
-      end
-    end
-  endgenerate
-
-  // Convert s0 pattern IDs and hits into sort-able pattern numbers, [6:4]=nhits, [3:0]=pattern id
-  wire [MXPATB - 1: 0] hs_pat_s0 [MXHSX - 1: 0];
-  generate
-    for (ihs = 0; ihs <= MXHSX - 1; ihs = ihs + 1) begin: patcat
-      assign hs_pat_s0[ihs] = {hs_hit_s0[ihs], hs_pid_s0[ihs]};
-    end
-  endgenerate
-
 //-------------------------------------------------------------------------------------------------------------------
 // Stage 5A: Pre-Trigger Look-ahead
 //    Set active FEB bit ASAP if any pattern is over threshold.
@@ -1000,13 +1008,13 @@ module pattern_finder_ccLUT (
         hs_key_pid5[ihs] = (hs_pid_s0ab[MXHS*6 -1 -ihs] >= pid_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*6 -1 -ihs]);
         hs_key_pid6[ihs] = (hs_pid_s0ab[MXHS*5 -1 -ihs] >= pid_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*5 -1 -ihs]);
 
-        hs_key_dmb0[ihs] = (hs_hit_s0ab[ihs + MXHS*0]   >= dmb_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*0]); // Normal ME1B
-        hs_key_dmb1[ihs] = (hs_hit_s0ab[ihs + MXHS*1]   >= dmb_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*1]);
-        hs_key_dmb2[ihs] = (hs_hit_s0ab[ihs + MXHS*2]   >= dmb_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*2]);
-        hs_key_dmb3[ihs] = (hs_hit_s0ab[ihs + MXHS*3]   >= dmb_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*3]);
-        hs_key_dmb4[ihs] = (hs_hit_s0ab[MXHS*7 -1 -ihs] >= dmb_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*7 -1 -ihs]);// Reversed ME1A
-        hs_key_dmb5[ihs] = (hs_hit_s0ab[MXHS*6 -1 -ihs] >= dmb_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*6 -1 -ihs]);
-        hs_key_dmb6[ihs] = (hs_hit_s0ab[MXHS*5 -1 -ihs] >= dmb_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*5 -1 -ihs]);
+        hs_key_dmb0[ihs] = (hs_hit_s0ab[ihs + MXHS*0]   >= dmb_thresh_pretrig_ff) &&  (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*0])  ); // Normal ME1B
+        hs_key_dmb1[ihs] = (hs_hit_s0ab[ihs + MXHS*1]   >= dmb_thresh_pretrig_ff) &&  (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*1])  );
+        hs_key_dmb2[ihs] = (hs_hit_s0ab[ihs + MXHS*2]   >= dmb_thresh_pretrig_ff) &&  (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*2])  );
+        hs_key_dmb3[ihs] = (hs_hit_s0ab[ihs + MXHS*3]   >= dmb_thresh_pretrig_ff) &&  (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*3])  );
+        hs_key_dmb4[ihs] = (hs_hit_s0ab[MXHS*7 -1 -ihs] >= dmb_thresh_pretrig_ff) &&  (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*7 -1 -ihs]));// Reversed ME1A
+        hs_key_dmb5[ihs] = (hs_hit_s0ab[MXHS*6 -1 -ihs] >= dmb_thresh_pretrig_ff) &&  (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*6 -1 -ihs]));
+        hs_key_dmb6[ihs] = (hs_hit_s0ab[MXHS*5 -1 -ihs] >= dmb_thresh_pretrig_ff) &&  (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*5 -1 -ihs]));
 
        `elsif CSC_TYPE_D
          // Normal ME1A, Reversed ME1B
@@ -1026,13 +1034,13 @@ module pattern_finder_ccLUT (
         hs_key_pid5[ihs] = (hs_pid_s0ab[ihs + MXHS*5]   >= pid_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*5]);
         hs_key_pid6[ihs] = (hs_pid_s0ab[ihs + MXHS*6]   >= pid_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*6]);
 
-        hs_key_dmb0[ihs] = (hs_hit_s0ab[MXHS*4 -1 -ihs] >= dmb_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*4 -1 -ihs]); // Reversed ME1B
-        hs_key_dmb1[ihs] = (hs_hit_s0ab[MXHS*3 -1 -ihs] >= dmb_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*3 -1 -ihs]);
-        hs_key_dmb2[ihs] = (hs_hit_s0ab[MXHS*2 -1 -ihs] >= dmb_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*2 -1 -ihs]);
-        hs_key_dmb3[ihs] = (hs_hit_s0ab[MXHS*1 -1 -ihs] >= dmb_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*1 -1 -ihs]);
-        hs_key_dmb4[ihs] = (hs_hit_s0ab[ihs + MXHS*4]   >= dmb_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*4]); // Normal ME1A
-        hs_key_dmb5[ihs] = (hs_hit_s0ab[ihs + MXHS*5]   >= dmb_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*5]);
-        hs_key_dmb6[ihs] = (hs_hit_s0ab[ihs + MXHS*6]   >= dmb_thresh_pretrig_ff) && !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*6]);
+        hs_key_dmb0[ihs] = (hs_hit_s0ab[MXHS*4 -1 -ihs] >= dmb_thresh_pretrig_ff) &&  (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*4 -1 -ihs])); // Reversed ME1B
+        hs_key_dmb1[ihs] = (hs_hit_s0ab[MXHS*3 -1 -ihs] >= dmb_thresh_pretrig_ff) &&  (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*3 -1 -ihs]));
+        hs_key_dmb2[ihs] = (hs_hit_s0ab[MXHS*2 -1 -ihs] >= dmb_thresh_pretrig_ff) &&  (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*2 -1 -ihs]));
+        hs_key_dmb3[ihs] = (hs_hit_s0ab[MXHS*1 -1 -ihs] >= dmb_thresh_pretrig_ff) &&  (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[MXHS*1 -1 -ihs]));
+        hs_key_dmb4[ihs] = (hs_hit_s0ab[ihs + MXHS*4]   >= dmb_thresh_pretrig_ff) &&  (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*4])  ); // Normal ME1A
+        hs_key_dmb5[ihs] = (hs_hit_s0ab[ihs + MXHS*5]   >= dmb_thresh_pretrig_ff) &&  (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*5])  );
+        hs_key_dmb6[ihs] = (hs_hit_s0ab[ihs + MXHS*6]   >= dmb_thresh_pretrig_ff) &&  (clctaff_enable || !(algo2016_use_dead_time_zone & hs_key_dead[ihs + MXHS*6])  );
       
        `else
           initial $display ("CSC_TYPE Undefined. Halting.");
@@ -1047,6 +1055,8 @@ module pattern_finder_ccLUT (
 //  parameter  DEADSPAN = 4'd6;  // Default size for the deadzone, in HS
 //  wire [3:0] dead_span = (algo2016_dead_time_zone_size == 0) ? DEADSPAN : algo2016_dead_time_zone_size[4:1];// the span is just half of the dead time zone size  -- not allowed by ISE!  needs to be constant...
   reg  [MXKEYX - 1: 0] hs_key_busyAB = 0; // set if this key HS was hit
+  wire [64+MXHSXB - 1:     0] hs_key_busyB_extend = {32'b0, hs_key_busyAB[MXHSXB-1:0], 32'b0}; // only [32+MXHSXB - 1:32] is the real for the chamber
+  wire [64+MXKEYX - 1:MXHSXB] hs_key_busyB_extend = {32'b0, hs_key_busyAB[MXKEYX-1:MXHSXB], 32'b0}; // only [32+MXKEYX - 1:MXHSXB+32] is the real for the chamber
   wire [MXKEYX - 1: 0] hs_key_dead;       // set if this key HS was near a hit HS
   wire [MXKEYX - 1: 0] hs_dead_drift;     // drift-delayed copy of hs_key_dead
   generate  // for ME1a
@@ -1056,9 +1066,12 @@ module pattern_finder_ccLUT (
 			      (hs_pid_s0ab[ihs] >= pid_thresh_pretrig_ff)) || (layer_trig_en_ff & layer_trig_s0); // JG: Is this OK? Here?
       end
 // JG: for every HS, apply the dead signal if it's near the key HS; simple OR, but watch for chamber edge limits (me11a)
-      if (ihs >= (MXHSXB+dead_span) && ihs <= (MXKEYX-1-dead_span)) assign hs_key_dead[ihs] = |hs_key_busyAB[(ihs+dead_span):(ihs-dead_span)]; // 215:136
-      else if (ihs < (MXHSXB+dead_span)) assign hs_key_dead[ihs] = |hs_key_busyAB[(ihs+dead_span):MXHSXB]; // 135:128
-      else  assign hs_key_dead[ihs] = |hs_key_busyAB[(MXKEYX-1):(ihs-dead_span)]; // 223:216
+      //if (ihs >= (MXHSXB+dead_span) && ihs <= (MXKEYX-1-dead_span)) assign hs_key_dead[ihs] = |hs_key_busyAB[(ihs+dead_span):(ihs-dead_span)]; // 215:136
+      //else if (ihs < (MXHSXB+dead_span)) assign hs_key_dead[ihs] = |hs_key_busyAB[(ihs+dead_span):MXHSXB]; // 135:128
+      //else  assign hs_key_dead[ihs] = |hs_key_busyAB[(MXKEYX-1):(ihs-dead_span)]; // 223:216
+
+      //Tao's udpates on 2022
+      assign hs_key_dead[ihs]  = |(hs_key_busyA_extend[ihs+64:ihs] & deadzone_mask[64:0]);
     end
   endgenerate
 
@@ -1069,9 +1082,12 @@ module pattern_finder_ccLUT (
 			      (hs_pid_s0ab[ihs] >= pid_thresh_pretrig_ff)) || (layer_trig_en_ff & layer_trig_s0); // JG: Is this OK? Here?
       end
 // JG: for every HS, apply the dead signal if it's near the key HS; simple OR, but watch for chamber edge limits (me11b)
-      if (ihs >= dead_span && ihs <= (MXHSXB-1-dead_span)) assign hs_key_dead[ihs] = |hs_key_busyAB[(ihs+dead_span):(ihs-dead_span)]; // 119:8
-      else if (ihs < dead_span) assign hs_key_dead[ihs] = |hs_key_busyAB[(ihs+dead_span):0]; // 7:0
-      else  assign hs_key_dead[ihs] = |hs_key_busyAB[(MXHSXB-1):(ihs-dead_span)]; // 127:120
+      //if (ihs >= dead_span && ihs <= (MXHSXB-1-dead_span)) assign hs_key_dead[ihs] = |hs_key_busyAB[(ihs+dead_span):(ihs-dead_span)]; // 119:8
+      //else if (ihs < dead_span) assign hs_key_dead[ihs] = |hs_key_busyAB[(ihs+dead_span):0]; // 7:0
+      //else  assign hs_key_dead[ihs] = |hs_key_busyAB[(MXHSXB-1):(ihs-dead_span)]; // 127:120
+
+      //Tao's udpates on 2022
+      assign hs_key_dead[ihs]  = |(hs_key_busyB_extend[ihs+64:ihs] & deadzone_mask[64:0]);
     end
   endgenerate
 
@@ -1080,12 +1096,6 @@ module pattern_finder_ccLUT (
   assign drift_adr = drift_delay - 4'b1;
   srl16e_bbl #(MXKEYX) deadzone_drift (.clock(clock),.ce(1'b1),.adr(drift_adr),.d(hs_key_dead),.q(hs_dead_drift));
 
-
-  // Output active FEB signal, and adjacent FEBs if hit is near board boundary
-  wire [6: 1] cfebnm1_dmb;  // Adjacent CFEB-1 has a pattern over threshold, there is no CFEB0-1
-  wire [5: 0] cfebnp1_dmb;  // Adjacent CFEB+1 has a pattern over threshold, there is no CFEB6+1
-  wire [MXCFEB - 1: 0] cfeb_dmb; // This CFEB has a pattern over DMB-trigger threshold
-
   wire [MXHS - 1: 0] hs_key_hitpid0 = hs_key_hit0 & hs_key_pid0; // hits on key satisfy both hit and pid thresholds
   wire [MXHS - 1: 0] hs_key_hitpid1 = hs_key_hit1 & hs_key_pid1;
   wire [MXHS - 1: 0] hs_key_hitpid2 = hs_key_hit2 & hs_key_pid2;
@@ -1093,14 +1103,6 @@ module pattern_finder_ccLUT (
   wire [MXHS - 1: 0] hs_key_hitpid4 = hs_key_hit4 & hs_key_pid4;
   wire [MXHS - 1: 0] hs_key_hitpid5 = hs_key_hit5 & hs_key_pid5;
   wire [MXHS - 1: 0] hs_key_hitpid6 = hs_key_hit6 & hs_key_pid6;
-
-  wire [MXHS - 1: 0] hs_key_dmbpid0 = hs_key_dmb0 & hs_key_pid0; // hits on key satisfy both dmb and pid thresholds, but not used.
-  wire [MXHS - 1: 0] hs_key_dmbpid1 = hs_key_dmb1 & hs_key_pid1;
-  wire [MXHS - 1: 0] hs_key_dmbpid2 = hs_key_dmb2 & hs_key_pid2;
-  wire [MXHS - 1: 0] hs_key_dmbpid3 = hs_key_dmb3 & hs_key_pid3;
-  wire [MXHS - 1: 0] hs_key_dmbpid4 = hs_key_dmb4 & hs_key_pid4;
-  wire [MXHS - 1: 0] hs_key_dmbpid5 = hs_key_dmb5 & hs_key_pid5;
-  wire [MXHS - 1: 0] hs_key_dmbpid6 = hs_key_dmb6 & hs_key_pid6;
 
   wire cfeb_layer_trigger = cfeb_layer_trig && layer_trig_en_ff;
 
@@ -1113,29 +1115,127 @@ module pattern_finder_ccLUT (
   assign cfeb_hit[5] = ( ( | hs_key_hitpid5) || cfeb_layer_trigger ) && cfeb_en_ff[5];
   assign cfeb_hit[6] = ( ( | hs_key_hitpid6) || cfeb_layer_trigger ) && cfeb_en_ff[6];
 
+//-------------------------------------------------------------------------------------------------------------------
+//   find out the key halfstrip of pretrigger after drift delay and open a window for AFF/CLCT 
+//-------------------------------------------------------------------------------------------------------------------
+  wire [MXHSX - 1: 0] hs_key_hitpid_chamber; 
+  generate
+    for (ihs = 0; ihs <= MXHS - 1; ihs = ihs + 1) begin: pretrigbeforedrift 
+      `ifdef CSC_TYPE_C
+        // Reversed ME1A, Normal ME1B
+        assign hs_key_hitpid_chamber[ihs + MXHS*0]   = hs_key_hitpid0[ihs]; 
+        assign hs_key_hitpid_chamber[ihs + MXHS*1]   = hs_key_hitpid1[ihs]; 
+        assign hs_key_hitpid_chamber[ihs + MXHS*2]   = hs_key_hitpid2[ihs]; 
+        assign hs_key_hitpid_chamber[ihs + MXHS*3]   = hs_key_hitpid3[ihs]; 
+        assign hs_key_hitpid_chamber[MXHS*7 -1 -ihs] = hs_key_hitpid4[ihs]; 
+        assign hs_key_hitpid_chamber[MXHS*6 -1 -ihs] = hs_key_hitpid5[ihs]; 
+        assign hs_key_hitpid_chamber[MXHS*5 -1 -ihs] = hs_key_hitpid6[ihs]; 
+      `elsif CSC_TYPE_D
+        // Normal ME1A, Reversed ME1B
+        assign hs_key_hitpid_chamber[MXHS*4 -1 -ihs]  = hs_key_hitpid0[ihs];  
+        assign hs_key_hitpid_chamber[MXHS*3 -1 -ihs]  = hs_key_hitpid1[ihs];  
+        assign hs_key_hitpid_chamber[MXHS*2 -1 -ihs]  = hs_key_hitpid2[ihs];  
+        assign hs_key_hitpid_chamber[MXHS*1 -1 -ihs]  = hs_key_hitpid3[ihs];  
+        assign hs_key_hitpid_chamber[ihs + MXHS*4]    = hs_key_hitpid4[ihs];  
+        assign hs_key_hitpid_chamber[ihs + MXHS*5]    = hs_key_hitpid5[ihs];  
+        assign hs_key_hitpid_chamber[ihs + MXHS*6]    = hs_key_hitpid6[ihs];  
+      `else
+        initial $display ("CSC_TYPE Undefined. Halting.");
+        $finish
+      `endif
+      end
+  endgenerate
+
+  wire [MXHSX - 1: 0] hs_key_hitpid_drift; 
+  srl16e_bbl #(MXKEYX) pretrig_drift (.clock(clock),.ce(1'b1),.adr(drift_adr),.d(hs_key_hitpid_chamber),.q(hs_key_hitpid_drift));
+
+  //wire [64+MXHSX - 1: 0] hs_key_hitpid_drift_extend = {32'b0, hs_key_hitpid_drift, 32'b0};
+  wire [64+MXHSXB - 1:     0] hs_key_B_drift_extend = {32'b0, hs_key_hitpid_drift[MXHSXB-1:0], 32'b0}; // only [32+MXHSXB - 1:32] is the real for the chamber
+  wire [64+MXKEYX - 1:MXHSXB] hs_key_A_drift_extend = {32'b0, hs_key_hitpid_drift[MXKEYX-1:MXHSXB], 32'b0}; // only [32+MXKEYX - 1:MXHSXB+32] is the real for the chamber
+  wire [MXHSX - 1: 0] hs_pretrighit_drift_final;
+  generate
+    for (ihs = MXHSXB; ihs <= MXKEYX-1; ihs = ihs + 1) begin: pretrigafterdrift_me1a  // JG: gives 128, 223 here.
+      assign hs_pretrighit_drift_final[ihs] =|(hs_key_A_drift_extend[ihs+64:ihs]  &  pretrig_pos_mask[64:0]); 
+    end
+    for (ihs = 0;      ihs <= MXHSXB-1; ihs = ihs + 1) begin: pretrigafterdrift_me1b  // JG: gives 128, 223 here.
+      assign hs_pretrighit_drift_final[ihs] =|(hs_key_B_drift_extend[ihs+64:ihs]  &  pretrig_pos_mask[64:0]); 
+    end
+  endgenerate
+  
+
+  wire [MXHS - 1: 0] hs_pretrighit_drift0; 
+  wire [MXHS - 1: 0] hs_pretrighit_drift1; 
+  wire [MXHS - 1: 0] hs_pretrighit_drift2; 
+  wire [MXHS - 1: 0] hs_pretrighit_drift3; 
+  wire [MXHS - 1: 0] hs_pretrighit_drift4; 
+  wire [MXHS - 1: 0] hs_pretrighit_drift5; 
+  wire [MXHS - 1: 0] hs_pretrighit_drift6; 
+
+  generate
+    for (ihs = 0; ihs <= MXHS - 1; ihs = ihs + 1) begin: pretrigafterdrift 
+      `ifdef CSC_TYPE_C
+        // Reversed ME1A, Normal ME1B
+        assign hs_pretrighit_drift0[ihs] = hs_pretrighit_drift_final[ihs + MXHS*0]; 
+        assign hs_pretrighit_drift1[ihs] = hs_pretrighit_drift_final[ihs + MXHS*1]; 
+        assign hs_pretrighit_drift2[ihs] = hs_pretrighit_drift_final[ihs + MXHS*2]; 
+        assign hs_pretrighit_drift3[ihs] = hs_pretrighit_drift_final[ihs + MXHS*3]; 
+        assign hs_pretrighit_drift4[ihs] = hs_pretrighit_drift_final[MXHS*7 -1 -ihs]; 
+        assign hs_pretrighit_drift5[ihs] = hs_pretrighit_drift_final[MXHS*6 -1 -ihs]; 
+        assign hs_pretrighit_drift6[ihs] = hs_pretrighit_drift_final[MXHS*5 -1 -ihs]; 
+      `elsif CSC_TYPE_D
+        // Normal ME1A, Reversed ME1B
+        assign hs_pretrighit_drift0[ihs] = hs_pretrighit_drift_final[MXHS*4 -1 -ihs];  
+        assign hs_pretrighit_drift1[ihs] = hs_pretrighit_drift_final[MXHS*3 -1 -ihs];  
+        assign hs_pretrighit_drift2[ihs] = hs_pretrighit_drift_final[MXHS*2 -1 -ihs];  
+        assign hs_pretrighit_drift3[ihs] = hs_pretrighit_drift_final[MXHS*1 -1 -ihs];  
+        assign hs_pretrighit_drift4[ihs] = hs_pretrighit_drift_final[ihs + MXHS*4];  
+        assign hs_pretrighit_drift5[ihs] = hs_pretrighit_drift_final[ihs + MXHS*5];  
+        assign hs_pretrighit_drift6[ihs] = hs_pretrighit_drift_final[ihs + MXHS*6];  
+      `else
+        initial $display ("CSC_TYPE Undefined. Halting.");
+        $finish
+      `endif
+      end
+  endgenerate
+
+
+  // Output active FEB signal, and adjacent FEBs if hit is near board boundary
+  wire [6: 1] cfebnm1_dmb;  // Adjacent CFEB-1 has a pattern over threshold, there is no CFEB0-1
+  wire [5: 0] cfebnp1_dmb;  // Adjacent CFEB+1 has a pattern over threshold, there is no CFEB6+1
+  wire [MXCFEB - 1: 0] cfeb_dmb; // This CFEB has a pattern over DMB-trigger threshold
+
+
+  // use AFF at pretrigger or at trigger level. trigger level require position match
+  wire [MXHS - 1: 0] hs_key_drift_dmb0 = clctaff_enable ? hs_key_dmb0 & hs_pretrighit_drift0 : hs_key_dmb0; 
+  wire [MXHS - 1: 0] hs_key_drift_dmb1 = clctaff_enable ? hs_key_dmb1 & hs_pretrighit_drift1 : hs_key_dmb1;
+  wire [MXHS - 1: 0] hs_key_drift_dmb2 = clctaff_enable ? hs_key_dmb2 & hs_pretrighit_drift2 : hs_key_dmb2;
+  wire [MXHS - 1: 0] hs_key_drift_dmb3 = clctaff_enable ? hs_key_dmb3 & hs_pretrighit_drift3 : hs_key_dmb3;
+  wire [MXHS - 1: 0] hs_key_drift_dmb4 = clctaff_enable ? hs_key_dmb4 & hs_pretrighit_drift4 : hs_key_dmb4;
+  wire [MXHS - 1: 0] hs_key_drift_dmb5 = clctaff_enable ? hs_key_dmb5 & hs_pretrighit_drift5 : hs_key_dmb5;
+  wire [MXHS - 1: 0] hs_key_drift_dmb6 = clctaff_enable ? hs_key_dmb6 & hs_pretrighit_drift6 : hs_key_dmb6;
+
 // JGhere: OLD Bug Fix! add logic to cleanly separate the pretrig levels from the dmb/cfeb_active levels...
-  assign cfeb_dmb[0] = ( ( | hs_key_dmb0) || cfeb_layer_trigger ) && cfeb_en_ff[0];
-  assign cfeb_dmb[1] = ( ( | hs_key_dmb1) || cfeb_layer_trigger ) && cfeb_en_ff[1];
-  assign cfeb_dmb[2] = ( ( | hs_key_dmb2) || cfeb_layer_trigger ) && cfeb_en_ff[2];
-  assign cfeb_dmb[3] = ( ( | hs_key_dmb3) || cfeb_layer_trigger ) && cfeb_en_ff[3];
-  assign cfeb_dmb[4] = ( ( | hs_key_dmb4) || cfeb_layer_trigger ) && cfeb_en_ff[4];
-  assign cfeb_dmb[5] = ( ( | hs_key_dmb5) || cfeb_layer_trigger ) && cfeb_en_ff[5];
-  assign cfeb_dmb[6] = ( ( | hs_key_dmb6) || cfeb_layer_trigger ) && cfeb_en_ff[6];
+  assign cfeb_dmb[0] = ( ( | hs_key_drift_dmb0) || cfeb_layer_trigger ) && cfeb_en_ff[0];
+  assign cfeb_dmb[1] = ( ( | hs_key_drift_dmb1) || cfeb_layer_trigger ) && cfeb_en_ff[1];
+  assign cfeb_dmb[2] = ( ( | hs_key_drift_dmb2) || cfeb_layer_trigger ) && cfeb_en_ff[2];
+  assign cfeb_dmb[3] = ( ( | hs_key_drift_dmb3) || cfeb_layer_trigger ) && cfeb_en_ff[3];
+  assign cfeb_dmb[4] = ( ( | hs_key_drift_dmb4) || cfeb_layer_trigger ) && cfeb_en_ff[4];
+  assign cfeb_dmb[5] = ( ( | hs_key_drift_dmb5) || cfeb_layer_trigger ) && cfeb_en_ff[5];
+  assign cfeb_dmb[6] = ( ( | hs_key_drift_dmb6) || cfeb_layer_trigger ) && cfeb_en_ff[6];
 
 // JGhere: OLD Bug Fix! add cfeb_en requirement to trigger a neighbor cfeb...
-  assign cfebnm1_dmb[1] = | (hs_key_dmb1 & adjcfeb_mask_nm1) && cfeb_en_ff[1]; // cfeb1 has hits near cfeb0
-  assign cfebnm1_dmb[2] = | (hs_key_dmb2 & adjcfeb_mask_nm1) && cfeb_en_ff[2]; // cfeb2 has hits near cfeb1
-  assign cfebnm1_dmb[3] = | (hs_key_dmb3 & adjcfeb_mask_nm1) && cfeb_en_ff[3]; // cfeb3 has hits near cfeb2
-  assign cfebnm1_dmb[4] = 0; // cfeb4 does not see cfeb3
-  assign cfebnm1_dmb[5] = | (hs_key_dmb5 & adjcfeb_mask_nm1) && cfeb_en_ff[5]; // cfeb5 has hits near cfeb4
-  assign cfebnm1_dmb[6] = | (hs_key_dmb6 & adjcfeb_mask_nm1) && cfeb_en_ff[6]; // cfeb6 has hits near cfeb5
-// JGhere: OLD Bug Fix! add cfeb_en requirement to trigger a neighbor cfeb...
-  assign cfebnp1_dmb[0] = | (hs_key_dmb0 & adjcfeb_mask_np1) && cfeb_en_ff[0]; // cfeb0 has hits near cfeb1
-  assign cfebnp1_dmb[1] = | (hs_key_dmb1 & adjcfeb_mask_np1) && cfeb_en_ff[1]; // cfeb1 has hits near cfeb2
-  assign cfebnp1_dmb[2] = | (hs_key_dmb2 & adjcfeb_mask_np1) && cfeb_en_ff[2]; // cfeb2 has hits near cfeb3
-  assign cfebnp1_dmb[3] = 0; // cfeb3 does not see cfeb4
-  assign cfebnp1_dmb[4] = | (hs_key_dmb4 & adjcfeb_mask_np1) && cfeb_en_ff[4]; // cfeb4 has hits near cfeb5
-  assign cfebnp1_dmb[5] = | (hs_key_dmb5 & adjcfeb_mask_np1) && cfeb_en_ff[5]; // cfeb5 has hits near cfeb6
+  assign cfebnm1_dmb[1] = | (hs_key_drift_dmb1 & adjcfeb_mask_nm1) && cfeb_en_ff[1]; // cfeb1 has hits near cfeb0
+  assign cfebnm1_dmb[2] = | (hs_key_drift_dmb2 & adjcfeb_mask_nm1) && cfeb_en_ff[2]; // cfeb2 has hits near cfeb1
+  assign cfebnm1_dmb[3] = | (hs_key_drift_dmb3 & adjcfeb_mask_nm1) && cfeb_en_ff[3]; // cfeb3 has hits near cfeb2
+  assign cfebnm1_dmb[4] = 0; 
+  assign cfebnm1_dmb[5] = | (hs_key_drift_dmb5 & adjcfeb_mask_nm1) && cfeb_en_ff[5]; // cfeb5 has hits near cfeb4
+  assign cfebnm1_dmb[6] = | (hs_key_drift_dmb6 & adjcfeb_mask_nm1) && cfeb_en_ff[6]; // cfeb6 has hits near cfeb5
+  assign cfebnp1_dmb[0] = | (hs_key_drift_dmb0 & adjcfeb_mask_np1) && cfeb_en_ff[0]; // cfeb0 has hits near cfeb1
+  assign cfebnp1_dmb[1] = | (hs_key_drift_dmb1 & adjcfeb_mask_np1) && cfeb_en_ff[1]; // cfeb1 has hits near cfeb2
+  assign cfebnp1_dmb[2] = | (hs_key_drift_dmb2 & adjcfeb_mask_np1) && cfeb_en_ff[2]; // cfeb2 has hits near cfeb3
+  assign cfebnp1_dmb[3] = 0; 
+  assign cfebnp1_dmb[4] = | (hs_key_drift_dmb4 & adjcfeb_mask_np1) && cfeb_en_ff[4]; // cfeb4 has hits near cfeb5
+  assign cfebnp1_dmb[5] = | (hs_key_drift_dmb5 & adjcfeb_mask_np1) && cfeb_en_ff[5]; // cfeb5 has hits near cfeb6
 
   // Output active FEB signal, and adjacent FEBs if hit is near board boundary
 // JGhere: OLD Bug Fix! fix logic to cleanly separate the pretrig levels from the dmb/cfeb_active levels...
@@ -1146,6 +1246,31 @@ module pattern_finder_ccLUT (
   assign cfeb_active[4] = (cfebnm1_dmb[5] || cfeb_dmb[4]                   );
   assign cfeb_active[5] = (cfebnm1_dmb[6] || cfeb_dmb[5] || cfebnp1_dmb[4] );
   assign cfeb_active[6] = (                  cfeb_dmb[6] || cfebnp1_dmb[5] );
+
+  // S0 latch: realign with main clock, legacy to maintain sequencer timing
+  reg [MXHITB - 1: 0] hs_hit_s0 [MXHSX - 1: 0];
+  reg [MXPIDB - 1: 0] hs_pid_s0 [MXHSX - 1: 0];
+  reg [MXPATC - 1: 0] hs_carry_s0 [MXHSX - 1: 0];//CCLUT, Tao
+  generate
+    for (ihs = 0; ihs <= MXHSX - 1; ihs = ihs + 1) begin: store_s0
+      always @(posedge clock) begin
+        hs_hit_s0[ihs]   <= (algo2016_use_dead_time_zone & hs_dead_drift[ihs]) ? 3'b0  : hs_hit_s0ab[ihs];
+        hs_pid_s0[ihs]   <= (algo2016_use_dead_time_zone & hs_dead_drift[ihs]) ? 4'b0  : hs_pid_s0ab[ihs];
+        hs_carry_s0[ihs] <= (algo2016_use_dead_time_zone & hs_dead_drift[ihs]) ? 12'b0 : hs_carry_s0ab[ihs];
+      end
+    end
+  endgenerate
+
+  // Convert s0 pattern IDs and hits into sort-able pattern numbers, [6:4]=nhits, [3:0]=pattern id
+  wire [MXPATB - 1: 0] hs_pat_s0 [MXHSX - 1: 0];
+  wire [MXHSX - 1: 0] hs_trig_valid; //whether this hs is valid for trigger or not
+  generate
+    for (ihs = 0; ihs <= MXHSX - 1; ihs = ihs + 1) begin: patcat
+      assign hs_trig_valid[ihs] =  hs_pretrighit_drift_final[ihs];
+      assign hs_pat_s0[ihs] = pretrig_clct_match_enable ? {hs_hit_s0[ihs], hs_pid_s0[ihs]} & {MXPATB{hs_trig_valid[ihs]}} : {hs_hit_s0[ihs], hs_pid_s0[ihs]};
+      //assign hs_pat_s0[ihs] = {hs_hit_s0[ihs], hs_pid_s0[ihs]};
+    end
+  endgenerate
 
 //-------------------------------------------------------------------------------------------------------------------
 // Stage 5B: 1/2-Strip Priority Encoder

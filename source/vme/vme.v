@@ -1319,6 +1319,15 @@
   algo2016_clct_use_corrected_bx,
   evenchamber, 
 
+// ALGO 2022 winter break upgrade, 0x1B8
+  clctaff_enable,         // move AFF logic to CLCT level or not, 1=CLCT level, 0= pretrigger level (legacy)
+  clctaff_alct_match,       //AFF at CLCT level and require AFF+ALCT match for low quality AFF
+  pretrig_clct_match_enable,    //require CLCT near the preCLCT
+  pretrig_clct_match_zone,  // zone size of CLCT and preCLCT match
+  trig_match_bxonly_enable, //1=enabel BXonly sorting for CLCT, 0=enabel new ALCT-CLCT match with local shower
+  local_shower_zone,     //define local zone for shower
+  local_shower_thresh,   //define local shower threshold 
+
 // Sump
   vme_sump
   );
@@ -1726,6 +1735,7 @@
   parameter ADR_HMT_THRESH3           = 10'h1B2; // threshold3 for HMT
   parameter ADR_HMT_NHITS_SIG         = 10'h1B4;
   parameter ADR_HMT_NHITS_BKG         = 10'h1B6;
+  parameter ADR_ALGO2022_CTRL         = 10'h1B8;  //2022 Winter upgrade
   parameter ADR_V6_GTX0_NOTINTABLE    = 10'h1BA;  // Virtex-6 GTX0 control and status
   parameter ADR_V6_GTX1_NOTINTABLE    = 10'h1BC;  // Virtex-6 GTX0 control and status
   parameter ADR_V6_GTX2_NOTINTABLE    = 10'h1BE;  // Virtex-6 GTX0 control and status
@@ -3138,6 +3148,15 @@
   output       algo2016_cross_bx_algorithm;         // LCT sorting using cross BX algorithm: 0 - "old" no cross BX algorithm used, 1 - algo2016 uses cross BX algorithm
   output       algo2016_clct_use_corrected_bx;      // Use median of hits for CLCT timing: 0 - "old" no CLCT timing corrections, 1 - algo2016 CLCT timing calculated based on median of hits
   output       evenchamber;
+  output [2:0] pretrig_clct_match_zone;
+
+// ALGO 2022 winter break upgrade, 0x1B8
+  output       clctaff_enable;         // move AFF logic to CLCT level or not, 1=CLCT level, 0= pretrigger level (legacy)
+  output       clctaff_alct_match;       //AFF at CLCT level and require AFF+ALCT match for low quality AFF
+  output       pretrig_clct_match_enable;    //require CLCT near the preCLCT
+  output       trig_match_bxonly_enable; //1=enabel BXonly sorting for CLCT, 0=enabel new ALCT-CLCT match with local shower
+  output [5:0] local_shower_zone;     //define local zone for shower
+  output [5:0] local_shower_thresh;   //define local shower threshold 
 
 
 // Sump
@@ -3358,6 +3377,9 @@
   
   reg  [15:0] algo2016_ctrl_wr;
   wire [15:0] algo2016_ctrl_rd;
+
+  reg  [15:0] algo2022_ctrl_wr;
+  wire [15:0] algo2022_ctrl_rd;
 
   // counters to monitor startup timing...
   //   Read bits 20:5 or 19:4 or 17:2 to VME... 800 or 400 or 100 ns resolution, counts to 52.4 or 26.2 or 6.5 ms
@@ -3980,6 +4002,7 @@
   wire wr_mpc_frames_fifo_ctrl;
 
   wire wr_algo2016_ctrl;
+  wire wr_algo2022_ctrl;
 
 //---------------------------------------------------------------------------------------------------------------------
 //  Power-up Section
@@ -4381,6 +4404,7 @@
 
   ADR_TMB_LATENCY_SR:        data_out <= tmb_latency_sr_rd; // Adr 196
   ADR_ALGO2016_CTRL:         data_out <= algo2016_ctrl_rd; // Adr 198
+  ADR_ALGO2022_CTRL:         data_out <= algo2022_ctrl_rd; // Adr 1B8
 
   ADR_MPC_INJ:               data_out <= mpc_inj_rd;
   ADR_MPC_RAM_ADR:           data_out <= mpc_ram_adr_rd;
@@ -4861,6 +4885,7 @@
   assign wr_mpc_frames_fifo_ctrl  =  (reg_adr==  ADR_MPC_FRAMES_FIFO_CTRL && clk_en);
 
   assign wr_algo2016_ctrl         =  (reg_adr==ADR_ALGO2016_CTRL && clk_en);
+  assign wr_algo2022_ctrl         =  (reg_adr==ADR_ALGO2022_CTRL && clk_en);
 
 
 //------------------------------------------------------------------------------------------------------------------
@@ -9058,6 +9083,27 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
   assign hmt_nhits_bkg_rd[15:10] = 6'b0;
 
 //------------------------------------------------------------------------------------------------------------------
+// ADR_ALGO2022_CTRL=1B8   Controls parameters of 2022 winter upgrade
+//------------------------------------------------------------------------------------------------------------------
+// Power-up defaults
+  initial begin
+    algo2022_ctrl_wr[0]     = 1'b0; // move AFF logic to CLCT level or not, 1=CLCT level, 0= pretrigger level (legacy)
+    algo2022_ctrl_wr[1]     = 1'b0; // AFF at CLCT level and require AFF+ALCT match for low quality AFF
+    algo2022_ctrl_wr[2]     = 1'b0; // require CLCT near the preCLCT, 0=disable (legacy), 1 is enabled
+    algo2022_ctrl_wr[3]     = 1'b1; // 1=enabel BXonly sorting for CLCT, 0=enabel new ALCT-CLCT match with local shower
+    algo2022_ctrl_wr[9:4]   = 6'd25;// define the local zone for shower, [-zone, +zone]
+    algo2022_ctrl_wr[15:10] = 6'd63;// define the local shower thresh for shower  
+  end
+  assign clctaff_enable           = algo2022_ctrl_wr[0];
+  assign clctaff_alct_match       = algo2022_ctrl_wr[1];
+  assign pretrig_clct_match_enable    = algo2022_ctrl_wr[2];
+  assign trig_match_bxonly_enable = algo2022_ctrl_wr[3];
+  assign local_shower_zone[5:0]   = algo2022_ctrl_wr[9:4];
+  assign local_shower_thresh[5:0] = algo2022_ctrl_wr[15:10];
+
+  assign algo2022_ctrl_rd[15:0] = algo2022_ctrl_wr[15:0];
+
+//------------------------------------------------------------------------------------------------------------------
 // GEM_DEBUG_FIFO_CTRL = 0x30C  GEM Raw Hits Readout RAM Simple Controller
 //------------------------------------------------------------------------------------------------------------------
 // Power up
@@ -9549,6 +9595,7 @@ always @(posedge clock_vme) begin
 
   if    (wr_mpc_frames_fifo_ctrl)  mpc_frames_fifo_ctrl_wr <= d[15:0];
   if    (wr_algo2016_ctrl)         algo2016_ctrl_wr        <= d[15:0];
+  if    (wr_algo2022_ctrl)         algo2022_ctrl_wr        <= d[15:0];
   //if    (wr_gemA_cluster0)         gemA_cluster0_wr        <= d[15:0];
   //if    (wr_gemB_cluster0)         gemB_cluster0_wr        <= d[15:0];
   //if    (wr_gem_copad0)            gem_copad0_wr           <= d[15:0];

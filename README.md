@@ -53,3 +53,4 @@ The branch is used for ME11 chamber operation in 2022, the beginning of Run3.  T
    - HMT, with anode and cathode hmt bits match, DN-20-033
    - New trigger data format and DAQ data format, DN-20-016
    - frontend LED invp is changed to GEM-ALCT-CLCT match
+   - v1 version contains the 2022 winter upgrade
