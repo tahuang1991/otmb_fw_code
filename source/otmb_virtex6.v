@@ -2257,6 +2257,8 @@
   .algo2016_dead_time_zone_size        (algo2016_dead_time_zone_size[4:0]),   // In Constant size of the dead time zone
   .algo2016_use_dynamic_dead_time_zone (algo2016_use_dynamic_dead_time_zone), // In Dynamic dead time zone switch: 0 - dead time zone is set by algo2016_use_dynamic_dead_time_zone, 1 - dead time zone depends on pre-CLCT pattern ID
   .evenchamber                         (evenchamber),   // evenodd parity. 1 for even chamber and 0 for odd chamber
+
+  .clctaff_enable  (clctaff_enable), //clctaff_enable 
   
   .tmb_allow_alct  (tmb_allow_alct),  // In  Allow ALCT only 
   .tmb_allow_clct  (tmb_allow_clct),  // In  Allow CLCT only

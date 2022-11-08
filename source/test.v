@@ -67,7 +67,6 @@ module pattern_finder_ccLUT (
 
   cfeb_hit,
   cfeb_active,
-  //cfeb_postdrift_active,
 
   cfeb_layer_trig,
   cfeb_layer_or,
@@ -219,7 +218,6 @@ module pattern_finder_ccLUT (
 
   output [MXCFEB - 1: 0] cfeb_hit;         // This CFEB has a pattern over pre-trigger threshold
   output [MXCFEB - 1: 0] cfeb_active;      // CFEBs marked active for DMB readout
-  //output [MXCFEB - 1: 0] cfeb_postdrift_active;      // CFEBs marked active for DMB readout
   output                 cfeb_layer_trig;  // Layer pretrigger
   output [MXLY - 1: 0]   cfeb_layer_or;    // OR of hstrips on each layer
   output [MXHITB - 1: 0] cfeb_nlayers_hit; // Number of CSC layers hit
@@ -1015,6 +1013,7 @@ module pattern_finder_ccLUT (
 
   wire [64+MXHSX - 1: 0] hs_key_hitpid_drift_extend = {32'b0, hs_key_hitpid_drift, 32'b0};
   wire [MXHSX - 1: 0] hs_pretrighit_drift_final;
+  //assign  hs_pretrighit_drift_final = hs_pretrighit_drift_extend[32+MXHSX - 1:32]; 
   generate
     for (ihs = 0; ihs <= MXHSX - 1; ihs = ihs + 1) begin: pretrigmaksafterdrift 
       assign hs_pretrighit_drift_final[ihs] =|(hs_key_hitpid_drift_extend[ihs+64:ihs]  &  pretrig_pos_mask[64:0]); 
@@ -1056,7 +1055,6 @@ module pattern_finder_ccLUT (
   wire [5: 0] cfebnp1_dmb;  // Adjacent CFEB+1 has a pattern over threshold, there is no CFEB6+1
   wire [MXCFEB - 1: 0] cfeb_dmb; // This CFEB has a pattern over DMB-trigger threshold
   
-
   //use AFF at pretrigger or at trigger level. trigger level require position match
   wire [MXHS - 1: 0] hs_key_drift_dmb0 = clctaff_enable ? hs_key_dmb0 & hs_pretrighit_drift0 : hs_key_dmb0; 
   wire [MXHS - 1: 0] hs_key_drift_dmb1 = clctaff_enable ? hs_key_dmb1 & hs_pretrighit_drift1 : hs_key_dmb1;
