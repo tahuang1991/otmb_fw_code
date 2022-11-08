@@ -8938,6 +8938,7 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
     algo2016_ctrl_wr[10]  = 1'b1;  // Use median of hits for CLCT timing: 0 - "old" no CLCT timing corrections, 1 - algo2016 CLCT timing calculated based on median of hits
     algo2016_ctrl_wr[11]  = 1'b0;  
     algo2016_ctrl_wr[12]  = 1'b0;  
+    algo2016_ctrl_wr[15:13]  = 3'b011;// half window of preCLCT and CLCT position match 
   end
   
   assign algo2016_use_dead_time_zone         = algo2016_ctrl_wr[0];   // Dead time zone switch: 0 - "old" whole chamber is dead when pre-CLCT is registered, 1 - algo2016 only half-strips around pre-CLCT are marked dead
@@ -8948,7 +8949,7 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
   assign algo2016_cross_bx_algorithm         = algo2016_ctrl_wr[9];   // LCT sorting using cross BX algorithm: 0 - "old" no cross BX algorithm used, 1 - algo2016 uses cross BX algorithm
   assign algo2016_clct_use_corrected_bx      = algo2016_ctrl_wr[10];  // Use median of hits for CLCT timing: 0 - "old" no CLCT timing corrections, 1 - algo2016 CLCT timing calculated based on median of hits
   assign seq_trigger_nodeadtime              = algo2016_ctrl_wr[11];  //allow seq trigger two in a row, new CMS trigger rule
-
+  assign pretrig_clct_match_zone             = algo2016_ctrl_wr[15:13]; // half window of preCLCT and CLCT position match  
   assign evenchamber                         =~algo2016_ctrl_wr[12]; // even odd parity. software use 1 for odd chamber.  here we use 1 for evenchamber 
 
   assign algo2016_ctrl_rd[15:0] = algo2016_ctrl_wr[15:0];

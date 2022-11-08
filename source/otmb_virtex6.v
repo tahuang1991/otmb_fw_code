@@ -2625,6 +2625,7 @@ end
   wire       algo2016_drop_used_clcts;            // Drop CLCTs from matching in ALCT-centric algorithm: 0 - algo2016 do NOT drop CLCTs, 1 - drop used CLCTs
   wire       algo2016_cross_bx_algorithm;         // LCT sorting using cross BX algorithm: 0 - "old" no cross BX algorithm used, 1 - algo2016 uses cross BX algorithm,  almost no effect, Tao
   wire       algo2016_clct_use_corrected_bx;      // NOT YET IMPLEMENTED: Use median of hits for CLCT timing: 0 - "old" no CLCT timing corrections, 1 - algo2016 CLCT timing calculated based on median of hits, NOT USED!!
+  wire [2:0] pretrig_clct_match_zone;//half window for preCLCT and cLCT position match
   
  // ALGO 2022 winter break upgrade, 0x1B8
   wire       clctaff_enable;         // move AFF logic to CLCT level or not, 1=CLCT level, 0= pretrigger level (legacy)
@@ -6034,6 +6035,7 @@ wire [15:0] gemB_bxn_counter;
       .algo2016_cross_bx_algorithm         (algo2016_cross_bx_algorithm),         // Out LCT sorting using cross BX algorithm: 0 - "old" no cross BX algorithm used, 1 - algo2016 uses cross BX algorithm
       .algo2016_clct_use_corrected_bx      (algo2016_clct_use_corrected_bx),      // Out Use median of hits for CLCT timing: 0 - "old" no CLCT timing corrections, 1 - algo2016 CLCT timing calculated based on median of hits NOT YET IMPLEMENTED:
       .evenchamber                         (evenchamber),   // evenodd parity. 1 for even chamber and 0 for odd chamber
+      .pretrig_clct_match_zone             (pretrig_clct_match_zone),// half window for pretrig (preCLCT) and trigger(CLCT) match
 
       //2022 winter upgrade, 0x1B8
       .clctaff_enable               (clctaff_enable),
