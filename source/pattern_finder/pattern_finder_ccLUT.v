@@ -857,19 +857,6 @@ module pattern_finder_ccLUT (
     end
   endgenerate
 
-  // S0 latch: realign with main clock, legacy to maintain sequencer timing
-  reg [MXHITB - 1: 0] hs_hit_s0 [MXHSX - 1: 0];
-  reg [MXPIDB - 1: 0] hs_pid_s0 [MXHSX - 1: 0];
-  reg [MXPATC - 1: 0] hs_carry_s0 [MXHSX - 1: 0];//CCLUT, Tao
-  generate
-    for (ihs = 0; ihs <= MXHSX - 1; ihs = ihs + 1) begin: store_s0
-      always @(posedge clock) begin
-        hs_hit_s0[ihs] <= (algo2016_use_dead_time_zone & hs_dead_drift[ihs]) ?    3'b0 : hs_hit_s0ab[ihs];
-        hs_pid_s0[ihs] <= (algo2016_use_dead_time_zone & hs_dead_drift[ihs]) ?    4'b0 : hs_pid_s0ab[ihs];
-        hs_carry_s0[ihs] <= (algo2016_use_dead_time_zone & hs_dead_drift[ihs]) ? 12'b0 : hs_carry_s0ab[ihs];
-      end
-    end
-  endgenerate
 
 //-------------------------------------------------------------------------------------------------------------------
 // Stage 5A: Pre-Trigger Look-ahead
@@ -1100,12 +1087,28 @@ module pattern_finder_ccLUT (
   assign cfeb_active[3] = (cfebnm1_dmb[4] || cfeb_dmb[3] || cfebnp1_dmb[2] );
   assign cfeb_active[4] = (                  cfeb_dmb[4] || cfebnp1_dmb[3] );
 
+  // S0 latch: realign with main clock, legacy to maintain sequencer timing
+  reg [MXHITB - 1: 0] hs_hit_s0 [MXHSX - 1: 0];
+  reg [MXPIDB - 1: 0] hs_pid_s0 [MXHSX - 1: 0];
+  reg [MXPATC - 1: 0] hs_carry_s0 [MXHSX - 1: 0];//CCLUT, Tao
+  generate
+    for (ihs = 0; ihs <= MXHSX - 1; ihs = ihs + 1) begin: store_s0
+      always @(posedge clock) begin
+        //apply the dead zone to clct in next bx after drift delay
+        hs_hit_s0[ihs] <= (algo2016_use_dead_time_zone & hs_dead_drift[ihs]) ?    3'b0 : hs_hit_s0ab[ihs];
+        hs_pid_s0[ihs] <= (algo2016_use_dead_time_zone & hs_dead_drift[ihs]) ?    4'b0 : hs_pid_s0ab[ihs];
+        hs_carry_s0[ihs] <= (algo2016_use_dead_time_zone & hs_dead_drift[ihs]) ? 12'b0 : hs_carry_s0ab[ihs];
+      end
+    end
+  endgenerate
 
   // Convert s0 pattern IDs and hits into sort-able pattern numbers, [6:4]=nhits, [3:0]=pattern id
   wire [MXPATB - 1: 0] hs_pat_s0 [MXHSX - 1: 0];
+  wire [MXHSX - 1: 0] hs_trig_valid; //whether this hs is valid for trigger or not
   generate
     for (ihs = 0; ihs <= MXHSX - 1; ihs = ihs + 1) begin: patcat
-      assign hs_pat_s0[ihs] = pretrig_clct_match_enable ? {hs_hit_s0[ihs], hs_pid_s0[ihs]} & {MXPATB{hs_pretrighit_drift_final[ihs]}} : {hs_hit_s0[ihs], hs_pid_s0[ihs]};
+      assign hs_trig_valid[ihs] =  hs_pretrighit_drift_final[ihs];
+      assign hs_pat_s0[ihs] = pretrig_clct_match_enable ? {hs_hit_s0[ihs], hs_pid_s0[ihs]} & {MXPATB{hs_trig_valid[ihs]}} : {hs_hit_s0[ihs], hs_pid_s0[ihs]};
     end
   endgenerate
 //-------------------------------------------------------------------------------------------------------------------
