@@ -435,7 +435,6 @@ module pattern_finder_ccLUT (
   reg [MXHS - 1: 0] adjcfeb_mask_nm1; // Adjacent CFEB active feb flag mask
   reg [MXHS - 1: 0] adjcfeb_mask_np1;
   reg [MXHS*2  : 0] deadzone_mask; //max, zone_size=31, [65 : 0], 0-63 halfstrip wide
-  //parameter PositionWin = 4;// position window for pretrigger+AFF and pretrigger+CLCT match, [-4, +4]
   reg [MXHS*2  : 0] pretrig_pos_mask; //max, zone_size=31, [65 : 0], 0-63 halfstrip wide
   
   always @(posedge clock) begin
@@ -1040,10 +1039,10 @@ module pattern_finder_ccLUT (
       `elsif CSC_TYPE_B
          // Reversed ME234/1
         assign hs_pretrighit_drift0[ihs] = hs_pretrighit_drift_final[MXHS*5 -1 -ihs];  
-        assign hs_pretrighit_drift0[ihs] = hs_pretrighit_drift_final[MXHS*4 -1 -ihs];  
-        assign hs_pretrighit_drift0[ihs] = hs_pretrighit_drift_final[MXHS*3 -1 -ihs];  
-        assign hs_pretrighit_drift0[ihs] = hs_pretrighit_drift_final[MXHS*2 -1 -ihs];  
-        assign hs_pretrighit_drift0[ihs] = hs_pretrighit_drift_final[MXHS*1 -1 -ihs];  
+        assign hs_pretrighit_drift1[ihs] = hs_pretrighit_drift_final[MXHS*4 -1 -ihs];  
+        assign hs_pretrighit_drift2[ihs] = hs_pretrighit_drift_final[MXHS*3 -1 -ihs];  
+        assign hs_pretrighit_drift3[ihs] = hs_pretrighit_drift_final[MXHS*2 -1 -ihs];  
+        assign hs_pretrighit_drift4[ihs] = hs_pretrighit_drift_final[MXHS*1 -1 -ihs];  
       `else
         initial $display ("CSC_TYPE Undefined. Halting.");
         $finish
@@ -1055,8 +1054,9 @@ module pattern_finder_ccLUT (
   wire [6: 1] cfebnm1_dmb;  // Adjacent CFEB-1 has a pattern over threshold, there is no CFEB0-1
   wire [5: 0] cfebnp1_dmb;  // Adjacent CFEB+1 has a pattern over threshold, there is no CFEB6+1
   wire [MXCFEB - 1: 0] cfeb_dmb; // This CFEB has a pattern over DMB-trigger threshold
-
-  wire [MXHS - 1: 0] hs_key_drift_dmb0 = clctaff_enable ? hs_key_dmb0 & hs_pretrighit_drift0 : hs_key_dmb0; // hits on key satisfy both dmb and pid thresholds, but not used.
+  
+  //use AFF at pretrigger or at trigger level. trigger level require position match
+  wire [MXHS - 1: 0] hs_key_drift_dmb0 = clctaff_enable ? hs_key_dmb0 & hs_pretrighit_drift0 : hs_key_dmb0; 
   wire [MXHS - 1: 0] hs_key_drift_dmb1 = clctaff_enable ? hs_key_dmb1 & hs_pretrighit_drift1 : hs_key_dmb1;
   wire [MXHS - 1: 0] hs_key_drift_dmb2 = clctaff_enable ? hs_key_dmb2 & hs_pretrighit_drift2 : hs_key_dmb2;
   wire [MXHS - 1: 0] hs_key_drift_dmb3 = clctaff_enable ? hs_key_dmb3 & hs_pretrighit_drift3 : hs_key_dmb3;
