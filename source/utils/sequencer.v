@@ -3361,7 +3361,7 @@
 // from hs_pat_s0 to hs_hit_1st: latency is 4BX, clct_push_pretrig is 1BX after hs_pat_s0
 // so hs_hit_1st is 3BX after clct_push_pretrig. 
 // pattern_finder_latency+drift_delay should be 5, the ADR for delay is 4
-  parameter PATTERN_FINDER_LATENCY = 2;  // Tuned 4/22/08
+  parameter PATTERN_FINDER_LATENCY = 4'd2;  // Tuned 4/22/08
   parameter MXPTRID = 23;
 
   wire [3:0]         postdrift_adr;
