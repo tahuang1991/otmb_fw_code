@@ -586,6 +586,24 @@
   gem_match_neighborPad, 
   gem_match_deltaPad,
 
+// GEM alignment correction
+  gem_xshift_sign_eta0,
+  gem_xshift_sign_eta1,
+  gem_xshift_sign_eta2,
+  gem_xshift_sign_eta3,
+  gem_xshift_sign_eta4,
+  gem_xshift_sign_eta5,
+  gem_xshift_sign_eta6,
+  gem_xshift_sign_eta7,
+  gem_xshift_value_eta0,
+  gem_xshift_value_eta1,
+  gem_xshift_value_eta2,
+  gem_xshift_value_eta3,
+  gem_xshift_value_eta4,
+  gem_xshift_value_eta5,
+  gem_xshift_value_eta6,
+  gem_xshift_value_eta7,
+
 // Sequencer Ports: Buffer Status
   wr_buf_ready,
   wr_buf_adr,
@@ -1822,6 +1840,10 @@
   parameter ADR_GEM_GTX2_DISPERR      = 10'h37C;
   parameter ADR_GEM_GTX3_DISPERR      = 10'h37E;
 
+  parameter ADR_GEM_ALIGNMENT0   = 10'h380;  //rdk  GEM alignment correction	
+  parameter ADR_GEM_ALIGNMENT1   = 10'h382;
+  parameter ADR_GEM_ALIGNMENT2   = 10'h384;
+  parameter ADR_GEM_ALIGNMENT3   = 10'h386;
 
 
 
@@ -2573,6 +2595,23 @@
   output [MXVFAT-1:0] gemA_vfat_hcm;
   output [MXVFAT-1:0] gemB_vfat_hcm;
 
+// GEM alignment correction
+  output       gem_xshift_sign_eta0;
+  output       gem_xshift_sign_eta1;
+  output       gem_xshift_sign_eta2;
+  output       gem_xshift_sign_eta3;
+  output       gem_xshift_sign_eta4;
+  output       gem_xshift_sign_eta5;
+  output       gem_xshift_sign_eta6;
+  output       gem_xshift_sign_eta7;
+  output [6:0] gem_xshift_value_eta0;
+  output [6:0] gem_xshift_value_eta1;
+  output [6:0] gem_xshift_value_eta2;
+  output [6:0] gem_xshift_value_eta3;
+  output [6:0] gem_xshift_value_eta4;
+  output [6:0] gem_xshift_value_eta5;
+  output [6:0] gem_xshift_value_eta6;
+  output [6:0] gem_xshift_value_eta7;
 
   input [15:0] gemA_bxn_counter;
   input [15:0] gemB_bxn_counter;
@@ -3752,7 +3791,9 @@
   reg  [15:0] gem_vfat_hcm2_wr;
   wire [15:0] gem_vfat_hcm2_rd;
 
-
+  reg  [15:0] gem_align_wr[3:0];
+  wire [15:0] gem_align_rd[3:0];
+  
 
 //------------------------------------------------------------------------------------------------------------------
 // Address Write Decodes
@@ -3948,6 +3989,11 @@
   wire wr_gem_vfat_hcm0;
   wire wr_gem_vfat_hcm1;
   wire wr_gem_vfat_hcm2;
+
+  wire wr_gem_align0;
+  wire wr_gem_align1;
+  wire wr_gem_align2;
+  wire wr_gem_align3;
 
   wire      wr_adr_cap;
 
@@ -4663,6 +4709,11 @@
   ADR_GEM_COPAD6:            data_out <= gem_copad_rd[6];
   ADR_GEM_COPAD7:            data_out <= gem_copad_rd[7];
 
+  ADR_GEM_ALIGNMENT0:        data_out <= gem_align_rd[0];
+  ADR_GEM_ALIGNMENT1:        data_out <= gem_align_rd[1];
+  ADR_GEM_ALIGNMENT2:        data_out <= gem_align_rd[2];
+  ADR_GEM_ALIGNMENT3:        data_out <= gem_align_rd[3];
+
 
   ADR_ODMB:                  data_out <= odmb_data;
 
@@ -4854,6 +4905,10 @@
   assign wr_gem_vfat_hcm0         =  (reg_adr==ADR_GEM_VFAT_HCM0          && clk_en);
   assign wr_gem_vfat_hcm1         =  (reg_adr==ADR_GEM_VFAT_HCM1          && clk_en);
   assign wr_gem_vfat_hcm2         =  (reg_adr==ADR_GEM_VFAT_HCM2          && clk_en);
+  assign wr_gem_align0            =  (reg_adr==ADR_GEM_ALIGNMENT0         && clk_en);
+  assign wr_gem_align1            =  (reg_adr==ADR_GEM_ALIGNMENT1         && clk_en);
+  assign wr_gem_align2            =  (reg_adr==ADR_GEM_ALIGNMENT2         && clk_en);
+  assign wr_gem_align3            =  (reg_adr==ADR_GEM_ALIGNMENT3         && clk_en);
 
   //assign wr_gemA_cluster0         =  (reg_adr==ADR_GEMA_CLUSTER0          && clk_en);
   //assign wr_gemA_cluster1         =  (reg_adr==ADR_GEMA_CLUSTER1          && clk_en);
@@ -9439,6 +9494,39 @@ wire latency_sr_sump = (|tmb_latency_sr[31:21]);
   assign gem_vfat_hcm1_rd                 =  gem_vfat_hcm1_wr[15:0];
   assign gem_vfat_hcm2_rd                 =  gem_vfat_hcm2_wr[15:0];
 
+
+//------------------------------------------------------------------------------------------------------------------
+// GEM Alignment correction from 0x380 to 0x388
+//------------------------------------------------------------------------------------------------------------------
+  initial begin
+      gem_align_wr[0]    =  16'h0;  // 0 is no alignment correction.  
+      gem_align_wr[1]    =  16'h0;  // 0 is no alignment correction.  
+      gem_align_wr[2]    =  16'h0;  // 0 is no alignment correction.  
+      gem_align_wr[3]    =  16'h0;  // 0 is no alignment correction.  
+  end
+   
+  assign gem_xshift_value_eta0[6:0] = gem_align_wr[0][6:0];
+  assign  gem_xshift_sign_eta0      = gem_align_wr[0][7];
+  assign gem_xshift_value_eta1[6:0] = gem_align_wr[0][14:8];
+  assign  gem_xshift_sign_eta1      = gem_align_wr[0][15];
+  assign gem_xshift_value_eta2[6:0] = gem_align_wr[1][6:0];
+  assign  gem_xshift_sign_eta2      = gem_align_wr[1][7];
+  assign gem_xshift_value_eta3[6:0] = gem_align_wr[1][14:8];
+  assign  gem_xshift_sign_eta3      = gem_align_wr[1][15];
+  assign gem_xshift_value_eta4[6:0] = gem_align_wr[2][6:0];
+  assign  gem_xshift_sign_eta4      = gem_align_wr[2][7];
+  assign gem_xshift_value_eta5[6:0] = gem_align_wr[2][14:8];
+  assign  gem_xshift_sign_eta5      = gem_align_wr[2][15];
+  assign gem_xshift_value_eta6[6:0] = gem_align_wr[3][6:0];
+  assign  gem_xshift_sign_eta6      = gem_align_wr[3][7];
+  assign gem_xshift_value_eta7[6:0] = gem_align_wr[3][14:8];
+  assign  gem_xshift_sign_eta7      = gem_align_wr[3][15];
+
+  assign gem_align_rd[0]  =  gem_align_wr[0];
+  assign gem_align_rd[1]  =  gem_align_wr[1];
+  assign gem_align_rd[2]  =  gem_align_wr[2];
+  assign gem_align_rd[3]  =  gem_align_wr[3];
+
 //------------------------------------------------------------------------------------------------------------------
 // VME Write-Registers latch data when addressed + latch power-up defaults
 //------------------------------------------------------------------------------------------------------------------
@@ -9593,6 +9681,11 @@ always @(posedge clock_vme) begin
   if    (wr_gem_vfat_hcm0 )        gem_vfat_hcm0_wr        <= d[15:0];
   if    (wr_gem_vfat_hcm1 )        gem_vfat_hcm1_wr        <= d[15:0];
   if    (wr_gem_vfat_hcm2 )        gem_vfat_hcm2_wr        <= d[15:0];
+
+  if    (wr_gem_align0)            gem_align_wr[0]         <= d[15:0];
+  if    (wr_gem_align1)            gem_align_wr[1]         <= d[15:0];
+  if    (wr_gem_align2)            gem_align_wr[2]         <= d[15:0];
+  if    (wr_gem_align3)            gem_align_wr[3]         <= d[15:0];
 
   if    (wr_mpc_frames_fifo_ctrl)  mpc_frames_fifo_ctrl_wr <= d[15:0];
   if    (wr_algo2016_ctrl)         algo2016_ctrl_wr        <= d[15:0];

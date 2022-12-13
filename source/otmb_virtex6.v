@@ -2376,6 +2376,24 @@ end
   wire [MXCLUSTER_CHAMBER-1:0] gemA_gemtocsc_dummy;
   wire [MXCLUSTER_CHAMBER-1:0] gemB_gemtocsc_dummy;
 
+// GEM alignment correction
+  wire       gem_xshift_sign_eta0;
+  wire       gem_xshift_sign_eta1;
+  wire       gem_xshift_sign_eta2;
+  wire       gem_xshift_sign_eta3;
+  wire       gem_xshift_sign_eta4;
+  wire       gem_xshift_sign_eta5;
+  wire       gem_xshift_sign_eta6;
+  wire       gem_xshift_sign_eta7;
+  wire [6:0] gem_xshift_value_eta0;
+  wire [6:0] gem_xshift_value_eta1;
+  wire [6:0] gem_xshift_value_eta2;
+  wire [6:0] gem_xshift_value_eta3;
+  wire [6:0] gem_xshift_value_eta4;
+  wire [6:0] gem_xshift_value_eta5;
+  wire [6:0] gem_xshift_value_eta6;
+  wire [6:0] gem_xshift_value_eta7;
+
 
   //wire [MXCFEB-1:0] gemA_csc_cluster_active_cfeb_list; //dummy signal!!
   //wire [MXCFEB-1:0] gemB_csc_cluster_active_cfeb_list;
@@ -2406,6 +2424,24 @@ end
 
         .gem_me1a_match_enable     (gem_me1a_match_enable),       //in gem-csc match in me1a
         .gem_me1b_match_enable     (gem_me1b_match_enable),       //in gem-csc match in me1b
+       
+       // GEM alignment correction
+        .gem_xshift_sign_eta0    (gem_xshift_sign_eta0),
+        .gem_xshift_sign_eta1    (gem_xshift_sign_eta1),
+        .gem_xshift_sign_eta2    (gem_xshift_sign_eta2),
+        .gem_xshift_sign_eta3    (gem_xshift_sign_eta3),
+        .gem_xshift_sign_eta4    (gem_xshift_sign_eta4),
+        .gem_xshift_sign_eta5    (gem_xshift_sign_eta5),
+        .gem_xshift_sign_eta6    (gem_xshift_sign_eta6),
+        .gem_xshift_sign_eta7    (gem_xshift_sign_eta7),
+        .gem_xshift_value_eta0   (gem_xshift_value_eta0[6:0]),
+        .gem_xshift_value_eta1   (gem_xshift_value_eta1[6:0]),
+        .gem_xshift_value_eta2   (gem_xshift_value_eta2[6:0]),
+        .gem_xshift_value_eta3   (gem_xshift_value_eta3[6:0]),
+        .gem_xshift_value_eta4   (gem_xshift_value_eta4[6:0]),
+        .gem_xshift_value_eta5   (gem_xshift_value_eta5[6:0]),
+        .gem_xshift_value_eta6   (gem_xshift_value_eta6[6:0]),
+        .gem_xshift_value_eta7   (gem_xshift_value_eta7[6:0]),
 
         .cluster0      (gemA_cluster[iclst_csc]),//In gem cluster
         .cluster0_vpf  (gemA_vpf[iclst_csc]),// In, cluster valid or not
@@ -2452,6 +2488,24 @@ end
 
         .gem_me1a_match_enable     (gem_me1a_match_enable),       //in gem-csc match in me1a
         .gem_me1b_match_enable     (gem_me1b_match_enable),       //in gem-csc match in me1b
+
+       // GEM alignment correction
+        .gem_xshift_sign_eta0    (gem_xshift_sign_eta0),
+        .gem_xshift_sign_eta1    (gem_xshift_sign_eta1),
+        .gem_xshift_sign_eta2    (gem_xshift_sign_eta2),
+        .gem_xshift_sign_eta3    (gem_xshift_sign_eta3),
+        .gem_xshift_sign_eta4    (gem_xshift_sign_eta4),
+        .gem_xshift_sign_eta5    (gem_xshift_sign_eta5),
+        .gem_xshift_sign_eta6    (gem_xshift_sign_eta6),
+        .gem_xshift_sign_eta7    (gem_xshift_sign_eta7),
+        .gem_xshift_value_eta0   (gem_xshift_value_eta0[6:0]),
+        .gem_xshift_value_eta1   (gem_xshift_value_eta1[6:0]),
+        .gem_xshift_value_eta2   (gem_xshift_value_eta2[6:0]),
+        .gem_xshift_value_eta3   (gem_xshift_value_eta3[6:0]),
+        .gem_xshift_value_eta4   (gem_xshift_value_eta4[6:0]),
+        .gem_xshift_value_eta5   (gem_xshift_value_eta5[6:0]),
+        .gem_xshift_value_eta6   (gem_xshift_value_eta6[6:0]),
+        .gem_xshift_value_eta7   (gem_xshift_value_eta7[6:0]),
 
         .cluster0      (gemB_cluster[iclst_csc]),
         .cluster0_vpf  (gemB_vpf[iclst_csc]),// valid or not
@@ -5971,6 +6025,25 @@ wire [15:0] gemB_bxn_counter;
       .gem_match_neighborRoll  (gem_match_neighborRoll),  // Out copad matching with neighboring roll enable
       .gem_match_neighborPad   (gem_match_neighborPad),   // out copad matching with neighboring pad enable
       .gem_match_deltaPad      (gem_match_deltaPad[3:0]),      // Out max pad difference between two GEM chamber in copad matching
+
+
+     // GEM alignment correction
+      .gem_xshift_sign_eta0    (gem_xshift_sign_eta0),
+      .gem_xshift_sign_eta1    (gem_xshift_sign_eta1),
+      .gem_xshift_sign_eta2    (gem_xshift_sign_eta2),
+      .gem_xshift_sign_eta3    (gem_xshift_sign_eta3),
+      .gem_xshift_sign_eta4    (gem_xshift_sign_eta4),
+      .gem_xshift_sign_eta5    (gem_xshift_sign_eta5),
+      .gem_xshift_sign_eta6    (gem_xshift_sign_eta6),
+      .gem_xshift_sign_eta7    (gem_xshift_sign_eta7),
+      .gem_xshift_value_eta0   (gem_xshift_value_eta0[6:0]),
+      .gem_xshift_value_eta1   (gem_xshift_value_eta1[6:0]),
+      .gem_xshift_value_eta2   (gem_xshift_value_eta2[6:0]),
+      .gem_xshift_value_eta3   (gem_xshift_value_eta3[6:0]),
+      .gem_xshift_value_eta4   (gem_xshift_value_eta4[6:0]),
+      .gem_xshift_value_eta5   (gem_xshift_value_eta5[6:0]),
+      .gem_xshift_value_eta6   (gem_xshift_value_eta6[6:0]),
+      .gem_xshift_value_eta7   (gem_xshift_value_eta7[6:0]),
 
       // Sequencer Ports: Buffer Status
       .wr_buf_ready     (wr_buf_ready),                      // In  Write buffer is ready
