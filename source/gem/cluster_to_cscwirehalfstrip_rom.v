@@ -14,7 +14,7 @@ module cluster_to_cscwirehalfstrip_rom (
 	input                     clock,
 
         input                     evenchamber,   // even pair or not
-        input                     gemcsc_match_extrapolate,
+        //input                     gemcsc_match_extrapolate,
         //input                     gem_match_enable,
         input      [4:0]          gem_clct_deltahs, // matching window in halfstrip direction
         input      [2:0]          gem_alct_deltawire, // matching window in wiregroup direction
