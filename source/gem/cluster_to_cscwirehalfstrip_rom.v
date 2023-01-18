@@ -333,11 +333,17 @@ assign cluster0_cscwire_mi = wire_real_lo[WIREBITS-1:1] + wire_real_hi[WIREBITS-
 //
 //wire [MXXKYB-1:0]  cluster0_me1axky_hi  = ((me1a_xky_real_hi+gem_clct_deltaxky) > MAXKEYHSME1A) ? MAXKEYHSME1A : (me1a_xky_real_hi+gem_clct_deltaxky);
 //wire [MXXKYB-1:0]  cluster0_me1bxky_hi  = ((me1b_xky_real_hi+gem_clct_deltaxky) > MAXKEYHSME1B) ? MAXKEYHSME1B : (me1b_xky_real_hi+gem_clct_deltaxky);
-wire [MXXKYB-1:0]  cluster0_me1axky_lo  = gem_xshift_sign ? me1a_xky_real_lo-gem_clct_deltaxky+gem_xshift_value : me1a_xky_real_lo-gem_clct_deltaxky-gem_xshift_value; 
-wire [MXXKYB-1:0]  cluster0_me1bxky_lo  = gem_xshift_sign ? me1b_xky_real_lo-gem_clct_deltaxky+gem_xshift_value : me1b_xky_real_lo-gem_clct_deltaxky-gem_xshift_value;
+//wire [MXXKYB-1:0]  cluster0_me1axky_lo  = gem_xshift_sign ? me1a_xky_real_lo-gem_clct_deltaxky+gem_xshift_value : me1a_xky_real_lo-gem_clct_deltaxky-gem_xshift_value; 
+//wire [MXXKYB-1:0]  cluster0_me1bxky_lo  = gem_xshift_sign ? me1b_xky_real_lo-gem_clct_deltaxky+gem_xshift_value : me1b_xky_real_lo-gem_clct_deltaxky-gem_xshift_value;
+//
+//wire [MXXKYB-1:0]  cluster0_me1axky_hi  = gem_xshift_sign ? me1a_xky_real_hi+gem_clct_deltaxky+gem_xshift_value : me1a_xky_real_hi+gem_clct_deltaxky-gem_xshift_value;
+//wire [MXXKYB-1:0]  cluster0_me1bxky_hi  = gem_xshift_sign ? me1b_xky_real_hi+gem_clct_deltaxky+gem_xshift_value : me1a_xky_real_hi+gem_clct_deltaxky-gem_xshift_value;
+//
+wire [MXXKYB-1:0]  cluster0_me1axky_lo  = me1a_xky_real_lo-gem_clct_deltaxky; 
+wire [MXXKYB-1:0]  cluster0_me1bxky_lo  = me1b_xky_real_lo-gem_clct_deltaxky;
 
-wire [MXXKYB-1:0]  cluster0_me1axky_hi  = gem_xshift_sign ? me1a_xky_real_hi+gem_clct_deltaxky+gem_xshift_value : me1a_xky_real_hi+gem_clct_deltaxky-gem_xshift_value;
-wire [MXXKYB-1:0]  cluster0_me1bxky_hi  = gem_xshift_sign ? me1b_xky_real_hi+gem_clct_deltaxky+gem_xshift_value : me1a_xky_real_hi+gem_clct_deltaxky-gem_xshift_value;
+wire [MXXKYB-1:0]  cluster0_me1axky_hi  = me1a_xky_real_hi+gem_clct_deltaxky;
+wire [MXXKYB-1:0]  cluster0_me1bxky_hi  = me1b_xky_real_hi+gem_clct_deltaxky;
 
 wire [MXXKYB-1:0]  cluster0_me1axky_mi  = me1a_xky_real_lo[MXXKYB-1:1]+me1a_xky_real_hi[MXXKYB-1:1]+(me1a_xky_real_lo[0] | me1a_xky_real_hi[0]);
 wire [MXXKYB-1:0]  cluster0_me1bxky_mi  = me1b_xky_real_lo[MXXKYB-1:1]+me1b_xky_real_hi[MXXKYB-1:1]+(me1b_xky_real_lo[0] | me1b_xky_real_hi[0]);
@@ -345,9 +351,15 @@ wire [MXXKYB-1:0]  cluster0_me1bxky_mi  = me1b_xky_real_lo[MXXKYB-1:1]+me1b_xky_
 wire [MXXKYB-1:0]  cluster0_me1axky_win = me1a_xky_real_hi[MXXKYB-1:1]-me1a_xky_real_lo[MXXKYB-1:1]+gem_clct_deltaxky;
 wire [MXXKYB-1:0]  cluster0_me1bxky_win = me1b_xky_real_hi[MXXKYB-1:1]-me1b_xky_real_lo[MXXKYB-1:1]+gem_clct_deltaxky;
 
-assign cluster0_cscxky_lo = (csc_cluster0_me1a) ? cluster0_me1axky_lo : cluster0_me1bxky_lo;
-assign cluster0_cscxky_hi = (csc_cluster0_me1a) ? cluster0_me1axky_hi : cluster0_me1bxky_hi;
-assign cluster0_cscxky_mi = (csc_cluster0_me1a) ? cluster0_me1axky_mi : cluster0_me1bxky_mi;
+//assign cluster0_cscxky_lo = (csc_cluster0_me1a) ? cluster0_me1axky_lo : cluster0_me1bxky_lo;
+//assign cluster0_cscxky_hi = (csc_cluster0_me1a) ? cluster0_me1axky_hi : cluster0_me1bxky_hi;
+//assign cluster0_cscxky_mi = (csc_cluster0_me1a) ? cluster0_me1axky_mi : cluster0_me1bxky_mi;
+wire[MXXKYB-1:0] cluster0_cscxky_tmp_lo = (csc_cluster0_me1a) ? cluster0_me1axky_lo : cluster0_me1bxky_lo;
+wire[MXXKYB-1:0] cluster0_cscxky_tmp_hi = (csc_cluster0_me1a) ? cluster0_me1axky_hi : cluster0_me1bxky_hi;
+wire[MXXKYB-1:0] cluster0_cscxky_tmp_mi = (csc_cluster0_me1a) ? cluster0_me1axky_mi : cluster0_me1bxky_mi;
+assign cluster0_cscxky_lo = gem_xshift_sign ? cluster0_cscxky_tmp_lo+gem_xshift_value : cluster0_cscxky_tmp_lo-gem_xshift_value; 
+assign cluster0_cscxky_hi = gem_xshift_sign ? cluster0_cscxky_tmp_hi+gem_xshift_value : cluster0_cscxky_tmp_hi-gem_xshift_value; 
+assign cluster0_cscxky_mi = gem_xshift_sign ? cluster0_cscxky_tmp_mi+gem_xshift_value : cluster0_cscxky_tmp_mi-gem_xshift_value; 
 assign cluster0_cscxky_win = (csc_cluster0_me1a) ? cluster0_me1axky_win : cluster0_me1bxky_win;
 
 
