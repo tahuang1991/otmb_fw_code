@@ -66,20 +66,20 @@ always @(posedge logic_clock) begin
   //adr0: low end pad, adr1: high end pad
   //ME1A LUT: even is increasing and odd is decreasing 
   //ME1B LUT: even is increasing and odd is decreasing
-  rd_me1a_data0 <= (adr0 < ROMLENGTH) ? (evenchamber ?  rom_me1a_even[adr0[MXADRB-1:0]] : rom_me1a_odd[adr0[MXADRB-1:0]]) : 10'h0;
-  rd_me1a_data1 <= (adr1 < ROMLENGTH) ? (evenchamber ?  rom_me1a_even[adr1[MXADRB-1:0]] : rom_me1a_odd[adr1[MXADRB-1:0]]) : 10'h0;
-  rd_me1b_data0 <= (adr0 < ROMLENGTH) ? (evenchamber ?  rom_me1b_even[adr0[MXADRB-1:0]] : rom_me1b_odd[adr0[MXADRB-1:0]]) : 10'h0;
-  rd_me1b_data1 <= (adr1 < ROMLENGTH) ? (evenchamber ?  rom_me1b_even[adr1[MXADRB-1:0]] : rom_me1b_odd[adr1[MXADRB-1:0]]) : 10'h0;
+  rd_me1a_data0 <= evenchamber ?  rom_me1a_even[adr0[MXADRB-1:0]] : rom_me1a_odd[adr1[MXADRB-1:0]];
+  rd_me1a_data1 <= evenchamber ?  rom_me1a_even[adr1[MXADRB-1:0]] : rom_me1a_odd[adr0[MXADRB-1:0]];
+  rd_me1b_data0 <= evenchamber ?  rom_me1b_even[adr0[MXADRB-1:0]] : rom_me1b_odd[adr1[MXADRB-1:0]];
+  rd_me1b_data1 <= evenchamber ?  rom_me1b_even[adr1[MXADRB-1:0]] : rom_me1b_odd[adr0[MXADRB-1:0]];
 end
 
-assign me1ard0 = (evenchamber) ? rd_me1a_data0[MXDATB-1:0] : rd_me1a_data1[MXDATB-1:0]; //low end
-assign me1ard1 = (evenchamber) ? rd_me1a_data1[MXDATB-1:0] : rd_me1a_data0[MXDATB-1:0]; //high end
-assign me1brd0 = (evenchamber) ? rd_me1b_data0[MXDATB-1:0] : rd_me1b_data1[MXDATB-1:0]; //low end
-assign me1brd1 = (evenchamber) ? rd_me1b_data1[MXDATB-1:0] : rd_me1b_data0[MXDATB-1:0]; //high end
+//assign me1ard0 = (evenchamber) ? rd_me1a_data0[MXDATB-1:0] : rd_me1a_data1[MXDATB-1:0]; //low end
+//assign me1ard1 = (evenchamber) ? rd_me1a_data1[MXDATB-1:0] : rd_me1a_data0[MXDATB-1:0]; //high end
+//assign me1brd0 = (evenchamber) ? rd_me1b_data0[MXDATB-1:0] : rd_me1b_data1[MXDATB-1:0]; //low end
+//assign me1brd1 = (evenchamber) ? rd_me1b_data1[MXDATB-1:0] : rd_me1b_data0[MXDATB-1:0]; //high end
 
-//assign me1ard0 = rd_me1a_data0[MXDATB-1:0]; //low end
-//assign me1ard1 = rd_me1a_data1[MXDATB-1:0]; //high end
-//assign me1brd0 = rd_me1b_data0[MXDATB-1:0]; //low end
-//assign me1brd1 = rd_me1b_data1[MXDATB-1:0]; //high end
+assign me1ard0 = rd_me1a_data0[MXDATB-1:0]; //low end
+assign me1ard1 = rd_me1a_data1[MXDATB-1:0]; //high end
+assign me1brd0 = rd_me1b_data0[MXDATB-1:0]; //low end
+assign me1brd1 = rd_me1b_data1[MXDATB-1:0]; //high end
 
 endmodule

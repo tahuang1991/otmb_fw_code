@@ -104,7 +104,8 @@ assign logic_clock = clock;
 wire [7:0] cluster0_pad_lo;
 wire [7:0] cluster0_pad_hi;
 assign cluster0_pad_lo    = cluster0_vpf ? cluster0_pad : 8'b0;
-assign cluster0_pad_hi    = cluster0_vpf ? (cluster0_pad + cluster0_size) : 8'b0;
+//assign cluster0_pad_hi    = cluster0_vpf ? (cluster0_pad + cluster0_size) : 8'b0;
+assign cluster0_pad_hi    = cluster0_vpf ? (cluster0_pad + cluster0_size < 8'd192 ?  cluster0_pad + cluster0_size : 8'd191) : 8'b0;
  
 wire [WIREBITS-1:0] wire_real_lo, wire_real_hi;
 wire [MXXKYB-1:0] me1a_xky_real_lo, me1a_xky_real_hi, me1b_xky_real_lo, me1b_xky_real_hi;
