@@ -91,6 +91,26 @@ parameter GEMROLLTOMAXWG1_FILE     = "GEMCSCLUT_roll_l1_max_wg_ME11_odd.mem";
 wire [6:0] gem_clct_deltaxky = {gem_clct_deltahs, 2'b00};// convert HS level window to 1/8 strip level window
 
 
+wire [MXXKYB-1:0] me1a_xky_lo_even, me1a_xky_lo_odd, 
+                  me1a_xky_hi_even, me1a_xky_hi_odd, 
+                  me1b_xky_lo_even, me1b_xky_lo_odd, 
+                  me1b_xky_hi_even, me1b_xky_hi_odd; 
+
+wire [WIREBITS-1:0]  wire_lo_even, wire_lo_odd, 
+                     wire_hi_even, wire_hi_odd;
+
+wire [MXXKYB-1:0] me1a_xky_lo, me1a_xky_hi, me1b_xky_lo, me1b_xky_hi; 
+wire [WIREBITS-1:0]  wire_lo, wire_hi;
+
+
+assign me1a_xky_lo = evenchamber ? me1a_xky_lo_even : me1a_xky_lo_odd;
+assign me1a_xky_hi = evenchamber ? me1a_xky_hi_even : me1a_xky_hi_odd;
+assign me1b_xky_lo = evenchamber ? me1b_xky_lo_even : me1b_xky_lo_odd;
+assign me1b_xky_hi = evenchamber ? me1b_xky_hi_even : me1b_xky_hi_odd;
+
+assign wire_lo = evenchamber ? wire_lo_even : wire_lo_odd;
+assign wire_hi = evenchamber ? wire_hi_even : wire_hi_odd;
+
 wire we = 0;
 wire [7:0] w_adr1;
 wire [2:0] w_adr2;
@@ -98,6 +118,12 @@ wire [MXXKYB-1:0] din1 = 0;
 wire [WIREBITS-1:0] din2 = 0;
 
 wire logic_clock;
+//generate
+//if (FALLING_EDGE)
+//  assign logic_clock = ~clock;
+//else
+//  assign logic_clock = clock;
+//endgenerate
 assign logic_clock = clock;
 
 //ME1a and ME1b seperation is at Eta2.1
@@ -106,38 +132,125 @@ wire [7:0] cluster0_pad_hi;
 assign cluster0_pad_lo    = cluster0_vpf ? cluster0_pad : 8'b0;
 assign cluster0_pad_hi    = cluster0_vpf ? (cluster0_pad + cluster0_size) : 8'b0;
  
-wire [WIREBITS-1:0] wire_real_lo, wire_real_hi;
-wire [MXXKYB-1:0] me1a_xky_real_lo, me1a_xky_real_hi, me1b_xky_real_lo, me1b_xky_real_hi;
+//GEM-CSC map, gempad to CSC keyhs
 
-rom_pad_es_evenodd #(
-  .ROM_FILE_ME1A_ODD(GEMPADTOME1AES1_FILE),
-  .ROM_FILE_ME1A_EVEN(GEMPADTOME1AES0_FILE),
-  .ROM_FILE_ME1B_ODD(GEMPADTOME1BES1_FILE),
-  .ROM_FILE_ME1B_EVEN(GEMPADTOME1BES0_FILE)
-) romme1aevenodd (
+//gem_pad_to_csc_xky_lut upad_to_hs(
+//
+//   .clock(logic_clock),
+//   .wen(we), // write enable
+//   .w_adr(w_adr1), // write address
+//   .w_data(din1), // write data
+//
+//   .renodd (~evenchamber),
+//   .reneven(evenchamber),
+//
+//   .me1a_r_adr1  (cluster0_pad_lo), 
+//   .me1a_r_data1 (me1a_xky_lo), 
+//   .me1a_r_adr2  (cluster0_pad_hi), 
+//   .me1a_r_data2 (me1a_xky_hi), 
+//   .me1b_r_adr1  (cluster0_pad_lo), 
+//   .me1b_r_data1 (me1b_xky_lo), 
+//   .me1b_r_adr2  (cluster0_pad_hi), 
+//   .me1b_r_data2 (me1b_xky_hi) 
+//   );
+rom_pad_es #(
+  //.ROM_FILE("GEMCSCLUT_pad_es_ME1a_odd.mem")
+  .ROM_FILE(GEMPADTOME1AES1_FILE)
+) romme1aodd (
   .clock(clock),
-  .evenchamber(evenchamber),   // even pair or not
   .adr0(cluster0_pad_lo),
   .adr1(cluster0_pad_hi),
-  .me1ard0 (me1a_xky_real_lo),
-  .me1ard1 (me1a_xky_real_hi),
-  .me1brd0 (me1b_xky_real_lo),
-  .me1brd1 (me1b_xky_real_hi)
+  .rd0 (me1a_xky_lo_odd),
+  .rd1 (me1a_xky_hi_odd)
 );
 
-
-rom_roll_wg_evenodd #(
-  .ROM_FILE_MIN_ODD(GEMROLLTOMINWG1_FILE),
-  .ROM_FILE_MIN_EVEN(GEMROLLTOMINWG0_FILE),
-  .ROM_FILE_MAX_ODD(GEMROLLTOMAXWG1_FILE),
-  .ROM_FILE_MAX_EVEN(GEMROLLTOMAXWG0_FILE)
-) romwgminevenodd (
+rom_pad_es #(
+  //.ROM_FILE("GEMCSCLUT_pad_es_ME1a_even.mem")
+  .ROM_FILE(GEMPADTOME1AES0_FILE)
+) romme1aeven (
   .clock(clock),
-  .evenchamber(evenchamber),
-  .adr0(cluster0_roll),
-  .rd0 (wire_real_lo),
-  .rd1 (wire_real_hi)
+  .adr0(cluster0_pad_lo),
+  .adr1(cluster0_pad_hi),
+  .rd0 (me1a_xky_lo_even),
+  .rd1 (me1a_xky_hi_even)
 );
+
+rom_pad_es #(
+  //.ROM_FILE("GEMCSCLUT_pad_es_ME1b_odd.mem")
+  .ROM_FILE(GEMPADTOME1BES1_FILE)
+) romme1bodd (
+  .clock(clock),
+  .adr0(cluster0_pad_lo),
+  .adr1(cluster0_pad_hi),
+  .rd0 (me1b_xky_lo_odd),
+  .rd1 (me1b_xky_hi_odd)
+);
+
+rom_pad_es #(
+  //.ROM_FILE("GEMCSCLUT_pad_es_ME1b_even.mem")
+  .ROM_FILE(GEMPADTOME1BES0_FILE)
+) romme1beven (
+  .clock(clock),
+  .adr0(cluster0_pad_lo),
+  .adr1(cluster0_pad_hi),
+  .rd0 (me1b_xky_lo_even),
+  .rd1 (me1b_xky_hi_even)
+);
+
+
+
+// GEM-CSC map, gem roll to CSC wire
+  
+//gem_roll_to_csc_wg_lut uroll_to_wire(
+//    .clock  (logic_clock),
+//    .wen    (we),
+//    .w_adr  (w_adr2),
+//    .w_data (din2),
+//    .renodd (~evenchamber),
+//    .reneven(evenchamber),
+//    .r_adr1 (cluster0_roll),
+//    .r_data1(wire_lo),
+//    .r_adr2 (cluster0_roll),
+//    .r_data2(wire_hi)
+//  );
+
+rom_roll_wg #(
+  //.ROM_FILE("GEMCSCLUT_roll_l1_min_wg_ME11_odd.mem")
+  .ROM_FILE(GEMROLLTOMINWG1_FILE)
+) romwgminodd (
+  .clock(clock),
+  .adr0(cluster0_roll),
+  .rd0 (wire_lo_odd)
+);
+
+rom_roll_wg #(
+  //.ROM_FILE("GEMCSCLUT_roll_l1_max_wg_ME11_odd.mem")
+  .ROM_FILE(GEMROLLTOMAXWG1_FILE)
+) romwgmaxodd (
+  .clock(clock),
+  .adr0(cluster0_roll),
+  .rd0 (wire_hi_odd)
+);
+
+
+rom_roll_wg #(
+  //.ROM_FILE("GEMCSCLUT_roll_l1_min_wg_ME11_even.mem")
+  .ROM_FILE(GEMROLLTOMINWG0_FILE)
+) romwgmineven (
+  .clock(clock),
+  .adr0(cluster0_roll),
+  .rd0 (wire_lo_even)
+);
+
+rom_roll_wg #(
+  //.ROM_FILE("GEMCSCLUT_roll_l1_max_wg_ME11_even.mem")
+  .ROM_FILE(GEMROLLTOMAXWG0_FILE)
+) romwgmaxeven (
+  .clock(clock),
+  .adr0(cluster0_roll),
+  .rd0 (wire_hi_even)
+);
+
 
 
 reg [13:0]    reg_cluster0;
@@ -147,6 +260,27 @@ reg           reg_cluster0_vpf;// valid or not
 //reg [2:0]     reg_cluster0_size; // from 0-7, 0 means 1 gem pad
 reg           reg_cluster0_me1a;
 
+//reg       gem_xshift_sign_etaall[7:0];
+//reg [6:0] gem_xshift_value_etaall[7:0];
+//always @(posedge logic_clock) begin
+//  gem_xshift_sign_etaall[0]  = gem_xshift_sign_eta0;
+//  gem_xshift_sign_etaall[1]  = gem_xshift_sign_eta1;
+//  gem_xshift_sign_etaall[2]  = gem_xshift_sign_eta2;
+//  gem_xshift_sign_etaall[3]  = gem_xshift_sign_eta3;
+//  gem_xshift_sign_etaall[4]  = gem_xshift_sign_eta4;
+//  gem_xshift_sign_etaall[5]  = gem_xshift_sign_eta5;
+//  gem_xshift_sign_etaall[6]  = gem_xshift_sign_eta6;
+//  gem_xshift_sign_etaall[7]  = gem_xshift_sign_eta7;
+//  gem_xshift_value_etaall[0]  = gem_xshift_value_eta0;
+//  gem_xshift_value_etaall[1]  = gem_xshift_value_eta1;
+//  gem_xshift_value_etaall[2]  = gem_xshift_value_eta2;
+//  gem_xshift_value_etaall[3]  = gem_xshift_value_eta3;
+//  gem_xshift_value_etaall[4]  = gem_xshift_value_eta4;
+//  gem_xshift_value_etaall[5]  = gem_xshift_value_eta5;
+//  gem_xshift_value_etaall[6]  = gem_xshift_value_eta6;
+//  gem_xshift_value_etaall[7]  = gem_xshift_value_eta7;
+//end
+//
 
 reg       gem_xshift_sign; 
 reg [6:0] gem_xshift_value; 
@@ -179,12 +313,15 @@ always @(posedge logic_clock) begin
 
 end
 
+wire [WIREBITS-1:0] wire_real_lo, wire_real_hi;
+assign wire_real_lo = (wire_lo < wire_hi) ? wire_lo : wire_hi; // in case of low and high values swapped
+assign wire_real_hi = (wire_lo > wire_hi) ? wire_lo : wire_hi; // in case of low and high values swapped
 
-
-//assign me1a_xky_real_lo = (me1a_xky_lo < me1a_xky_hi) ? me1a_xky_lo : me1a_xky_hi;//even or odd, CSC strip arrangement are different 
-//assign me1a_xky_real_hi = (me1a_xky_lo > me1a_xky_hi) ? me1a_xky_lo : me1a_xky_hi;
-//assign me1b_xky_real_lo = (me1b_xky_lo < me1b_xky_hi) ? me1b_xky_lo : me1b_xky_hi;
-//assign me1b_xky_real_hi = (me1b_xky_lo > me1b_xky_hi) ? me1b_xky_lo : me1b_xky_hi;
+wire [MXXKYB-1:0] me1a_xky_real_lo, me1a_xky_real_hi, me1b_xky_real_lo, me1b_xky_real_hi;
+assign me1a_xky_real_lo = (me1a_xky_lo < me1a_xky_hi) ? me1a_xky_lo : me1a_xky_hi;//even or odd, CSC strip arrangement are different 
+assign me1a_xky_real_hi = (me1a_xky_lo > me1a_xky_hi) ? me1a_xky_lo : me1a_xky_hi;
+assign me1b_xky_real_lo = (me1b_xky_lo < me1b_xky_hi) ? me1b_xky_lo : me1b_xky_hi;
+assign me1b_xky_real_hi = (me1b_xky_lo > me1b_xky_hi) ? me1b_xky_lo : me1b_xky_hi;
 
 // adding matching window
 assign cluster0_cscwire_lo  = (wire_real_lo > gem_alct_deltawire)             ? (wire_real_lo-gem_alct_deltawire) : 7'd0;
