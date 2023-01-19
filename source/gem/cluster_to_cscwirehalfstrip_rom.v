@@ -115,7 +115,7 @@ rom_pad_es_evenodd #(
   .ROM_FILE_ME1A_EVEN(GEMPADTOME1AES0_FILE),
   .ROM_FILE_ME1B_ODD(GEMPADTOME1BES1_FILE),
   .ROM_FILE_ME1B_EVEN(GEMPADTOME1BES0_FILE)
-) romme1aevenodd (
+) romesevenodd (
   .clock(clock),
   .evenchamber(evenchamber),   // even pair or not
   .adr0(cluster0_pad_lo),
@@ -132,7 +132,7 @@ rom_roll_wg_evenodd #(
   .ROM_FILE_MIN_EVEN(GEMROLLTOMINWG0_FILE),
   .ROM_FILE_MAX_ODD(GEMROLLTOMAXWG1_FILE),
   .ROM_FILE_MAX_EVEN(GEMROLLTOMAXWG0_FILE)
-) romwgminevenodd (
+) romwgevenodd (
   .clock(clock),
   .evenchamber(evenchamber),
   .adr0(cluster0_roll),

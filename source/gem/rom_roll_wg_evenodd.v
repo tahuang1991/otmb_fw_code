@@ -1,7 +1,7 @@
 //GEM roll to CSC wiregroup
 //GEM roll: 0-7;    CSC wiregroup: 0-48 for ME11
 
-module rom_roll_wg (
+module rom_roll_wg_evenodd (
   input clock,
   input evenchamber,
   input  [MXADRB-1:0] adr0,

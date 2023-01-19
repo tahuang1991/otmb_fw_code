@@ -10,7 +10,7 @@
 //The most LUT files(rom_patA.mem etc) are taken from https://github.com/cms-data/L1Trigger-CSCTriggerPrimitives and the current firmware is using the version from 2021 April
 
 
-module cluster_to_cscwirehalfstrip_rom (
+module cluster_to_cscwirehalfstrip_rom_old202301 (
 	input                     clock,
 
         input                     evenchamber,   // even pair or not
