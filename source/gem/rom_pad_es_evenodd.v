@@ -30,6 +30,8 @@ reg [MXDATB-1:0] rom_me1a_even [ROMLENGTH-1:0];
 reg [MXDATB-1:0] rom_me1a_odd [ROMLENGTH-1:0];
 reg [MXDATB-1:0] rom_me1b_even [ROMLENGTH-1:0];
 reg [MXDATB-1:0] rom_me1b_odd [ROMLENGTH-1:0];
+reg [MXDATB-1:0] rom_me1a [ROMLENGTH-1:0];
+reg [MXDATB-1:0] rom_me1b [ROMLENGTH-1:0];
 reg [MXDATB-1:0] rd_me1a_data0, rd_me1a_data1;
 reg [MXDATB-1:0] rd_me1b_data0, rd_me1b_data1;
 wire [MXDATB-1:0] din = 0;
@@ -56,13 +58,27 @@ end
 // ROM
 //----------------------------------------------------------------------------------------------------------------------
 
-always @(posedge logic_clock) begin
-  if (we) begin
-    rom_me1a_odd[adr0[MXADRB-1:0]] <=din;  // dummy write to help Xilinx infer a dual port block RAM
-    rom_me1a_even[adr0[MXADRB-1:0]]<=din; 
-    rom_me1b_odd[adr0[MXADRB-1:0]] <=din; 
-    rom_me1b_even[adr0[MXADRB-1:0]]<=din; 
+//always @(posedge logic_clock) begin
+//  if (we) begin
+//    rom_me1a_odd[adr0[MXADRB-1:0]] <=din;  // dummy write to help Xilinx infer a dual port block RAM
+//    rom_me1a_even[adr0[MXADRB-1:0]]<=din; 
+//    rom_me1b_odd[adr0[MXADRB-1:0]] <=din; 
+//    rom_me1b_even[adr0[MXADRB-1:0]]<=din; 
+//  end
+//end
+
+
+generate
+for (iadr=0; iadr<ROMLENGTH; iadr=iadr+1) begin: gemcsclut
+  always @(negedge logic_clock) begin
+    rom_me1a[iadr] <= evenchamber ? rom_me1a_even[iadr] : rom_me1a_odd[iadr];
+    rom_me1b[iadr] <= evenchamber ? rom_me1b_even[iadr] : rom_me1b_odd[iadr];
   end
+  end
+end
+endgenerate
+
+always @(posedge logic_clock) begin
   //adr0: low end pad, adr1: high end pad
   //ME1A LUT: even is increasing and odd is decreasing 
   //ME1B LUT: even is increasing and odd is decreasing
@@ -70,10 +86,10 @@ always @(posedge logic_clock) begin
   //rd_me1a_data1 <= evenchamber ?  rom_me1a_even[adr1[MXADRB-1:0]] : rom_me1a_odd[adr0[MXADRB-1:0]];
   //rd_me1b_data0 <= evenchamber ?  rom_me1b_even[adr0[MXADRB-1:0]] : rom_me1b_odd[adr1[MXADRB-1:0]];
   //rd_me1b_data1 <= evenchamber ?  rom_me1b_even[adr1[MXADRB-1:0]] : rom_me1b_odd[adr0[MXADRB-1:0]];
-  rd_me1a_data0 <= rom_me1a_even[adr0[MXADRB-1:0]];
-  rd_me1a_data1 <= rom_me1a_even[adr1[MXADRB-1:0]];
-  rd_me1b_data0 <= rom_me1b_even[adr0[MXADRB-1:0]];
-  rd_me1b_data1 <= rom_me1b_even[adr1[MXADRB-1:0]];
+  rd_me1a_data0 <= rom_me1a[adr0[MXADRB-1:0]];
+  rd_me1a_data1 <= rom_me1a[adr1[MXADRB-1:0]];
+  rd_me1b_data0 <= rom_me1b[adr0[MXADRB-1:0]];
+  rd_me1b_data1 <= rom_me1b[adr1[MXADRB-1:0]];
 end
 
 assign me1ard0 = (evenchamber) ? rd_me1a_data0[MXDATB-1:0] : rd_me1a_data1[MXDATB-1:0]; //low end

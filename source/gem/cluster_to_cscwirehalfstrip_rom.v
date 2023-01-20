@@ -103,6 +103,7 @@ assign logic_clock = clock;
 //ME1a and ME1b seperation is at Eta2.1
 wire [7:0] cluster0_pad_lo;
 wire [7:0] cluster0_pad_hi;
+//invalid gem pad number is 255;
 assign cluster0_pad_lo    = cluster0_vpf ? cluster0_pad : 8'b0;
 assign cluster0_pad_hi    = cluster0_vpf ? (cluster0_pad + cluster0_size) : 8'b0;
 //assign cluster0_pad_hi    = cluster0_vpf ? (cluster0_pad + cluster0_size < 8'd192 ?  cluster0_pad + cluster0_size : 8'd191) : 8'b0;
