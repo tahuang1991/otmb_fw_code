@@ -453,10 +453,10 @@ module pattern_finder_ccLUT (
   end
 
   // Generate mask for marking adjacent cfeb as hit if nearby keys are over thresh
-  reg [MXHS - 1: 0] adjcfeb_mask_nm1; // Adjacent CFEB active feb flag mask
-  reg [MXHS - 1: 0] adjcfeb_mask_np1;
-  reg [MXHS*2  : 0] deadzone_mask; //max, zone_size=31, [65 : 0], 0-63 halfstrip wide
-  reg [MXHS*2  : 0] pretrig_pos_mask; //max, zone_size=31, [65 : 0], 0-63 halfstrip wide
+  reg [MXHS - 1: 0] adjcfeb_mask_nm1 = 32'b0; // Adjacent CFEB active feb flag mask
+  reg [MXHS - 1: 0] adjcfeb_mask_np1 = 32'b0;
+  reg [MXHS*2  : 0] deadzone_mask = 65'b0; //max, zone_size=31, [65 : 0], 0-63 halfstrip wide
+  reg [MXHS*2  : 0] pretrig_pos_mask = 65'b0; //max, zone_size=31, [65 : 0], 0-63 halfstrip wide
   
   always @(posedge clock) begin
    deadzone_mask[32]  <= 1'b1;

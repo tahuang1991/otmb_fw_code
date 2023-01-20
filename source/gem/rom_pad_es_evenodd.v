@@ -47,11 +47,16 @@ endgenerate
 // Read in ROM File
 //----------------------------------------------------------------------------------------------------------------------
 
+integer i;
 initial begin
   $readmemh(ROM_FILE_ME1A_EVEN, rom_me1a_even);
   $readmemh(ROM_FILE_ME1A_ODD,  rom_me1a_odd);
   $readmemh(ROM_FILE_ME1B_EVEN, rom_me1b_even);
   $readmemh(ROM_FILE_ME1B_ODD,  rom_me1b_odd);
+  for (i=0;  i<ROMLENGTH; i=i+1) begin
+    rom_me1a[i] = 10'b0;
+    rom_me1b[i] = 10'b0;
+  end
 end
 
 //----------------------------------------------------------------------------------------------------------------------
