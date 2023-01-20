@@ -453,20 +453,16 @@ module pattern_finder_ccLUT (
   end
 
   // Generate mask for marking adjacent cfeb as hit if nearby keys are over thresh
-  reg [MXHS - 1: 0] adjcfeb_mask_nm1 = 32'b0; // Adjacent CFEB active feb flag mask
-  reg [MXHS - 1: 0] adjcfeb_mask_np1 = 32'b0;
-  reg [MXHS*2  : 0] deadzone_mask = 65'b0; //max, zone_size=31, [65 : 0], 0-63 halfstrip wide
-  reg [MXHS*2  : 0] pretrig_pos_mask = 65'b0; //max, zone_size=31, [65 : 0], 0-63 halfstrip wide
-  
-  always @(posedge clock) begin
-   deadzone_mask[32]  <= 1'b1;
-   pretrig_pos_mask[32]   <= 1'b1;
-  end
+  reg [MXHS - 1: 0] adjcfeb_mask_nm1; // Adjacent CFEB active feb flag mask
+  reg [MXHS - 1: 0] adjcfeb_mask_np1;
+  reg [MXHS*2  : 0] deadzone_mask; //max, zone_size=31, [65 : 0], 0-63 halfstrip wide
+  reg [MXHS*2  : 0] pretrig_pos_mask; //max, zone_size=31, [65 : 0], 0-63 halfstrip wide
 
   genvar ihs;
   generate
     for (ihs = 0; ihs <= 31; ihs = ihs + 1) begin: genmask
-      always @(posedge clock) begin
+      //always @(posedge clock) begin
+		always @* begin
         adjcfeb_mask_nm1[     ihs] <= (ihs < adjcfeb_dist);
         adjcfeb_mask_np1[31 - ihs] <= (ihs < adjcfeb_dist);
         deadzone_mask[33 + ihs] <= (ihs <= algo2016_dead_time_zone_size); // use <=, so zone_size=4 => dead zone = [-4, +4]
@@ -476,6 +472,12 @@ module pattern_finder_ccLUT (
       end
     end
   endgenerate
+  
+ 
+  initial begin
+    deadzone_mask[32]   <= 1'b1;
+    pretrig_pos_mask[32]   <= 1'b1;
+  end
 
 //-------------------------------------------------------------------------------------------------------------------
 // Stage 4A3: CSC_TYPE_C: Normal ME1B, reversed ME1A
