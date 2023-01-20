@@ -67,13 +67,12 @@ end
 //  end
 //end
 
-
+genvar iadr;
 generate
 for (iadr=0; iadr<ROMLENGTH; iadr=iadr+1) begin: gemcsclut
   always @(negedge logic_clock) begin
     rom_me1a[iadr] <= evenchamber ? rom_me1a_even[iadr] : rom_me1a_odd[iadr];
     rom_me1b[iadr] <= evenchamber ? rom_me1b_even[iadr] : rom_me1b_odd[iadr];
-  end
   end
 end
 endgenerate
