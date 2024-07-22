@@ -293,6 +293,7 @@
 
   reg  [2:0] nlayer_s0 [7:0];
   reg  [2:0] hmt_nhit_thresh = 3'd5;
+  reg  ispeak [2:0]; //for bkg
   always @(posedge clock) begin
       nhits_trig_s0_srl[7] <= nhits_trig_s0_srl[6];
       nhits_trig_s0_srl[6] <= nhits_trig_s0_srl[5];
@@ -311,6 +312,10 @@
       nlayer_s0[5]     <= nlayer_s0[4];
       nlayer_s0[6]     <= nlayer_s0[5];
       nlayer_s0[7]     <= nlayer_s0[6];
+
+      ispeak[0]        <= nhits_trig_s0_sig_peak;
+      ispeak[1]        <= ispeak[0];
+      ispeak[2]        <= ispeak[1];
   end
 
   //signal: over 3BX;   control region: over 4BX 
@@ -322,7 +327,8 @@
   //peak conditio: nhits_trig_s0_sig >= nhits_trig_s0_bx789 && nhits_trig_s0_sig >= nhits_trig_s0_bx89A
   wire nhits_compare_s0_sig_789 = (nhits_trig_s0_srl[3] > nhits_trig_s0_srl[0]) || (nhits_trig_s0_srl[3] == nhits_trig_s0_srl[0] &&  nhits_trig_s0_srl[2]> nhits_trig_s0_srl[1]);
   wire nhits_compare_s0_sig_89A = (nhits_trig_s0_srl[3] + nhits_trig_s0_srl[2] >  nhits_trig_s0_srl[0] + nhits_chamber) || (nhits_trig_s0_srl[3] + nhits_trig_s0_srl[2] ==  nhits_trig_s0_srl[0] + nhits_chamber && nhits_trig_s0_srl[2] > nhits_trig_s0_srl[0]);
-  wire nhits_trig_s0_sig_peak = nhits_compare_s0_sig_789 && nhits_compare_s0_sig_89A;
+  //wire nhits_trig_s0_sig_peak = nhits_compare_s0_sig_789 && nhits_compare_s0_sig_89A;
+  wire nhits_trig_s0_sig_peak = (nhits_compare_s0_sig_789 || nlayer_s0[1] < hmt_nhit_thresh) && (nhits_compare_s0_sig_89A || nlayer_s0[0] < hmt_nhit_thresh);
 
   //requirement of num of layers with hit is only in the central BX
   wire nlayer_pass_thresh_sig = nlayer_s0[2] >= hmt_nhit_thresh;
@@ -334,8 +340,8 @@
   //wire hmt_bit3_s0 = ((nhits_trig_s0_bkg >= hmt_thresh2) || (nhits_trig_s0_bkg >= hmt_thresh3)) &  (~|hmt_fired_s0_ff) & (~hmt_reset) & nlayer_pass_thresh_bkg;
   wire [1:0] hmt_intime_s0  = nhits_trig_s0_sig >= hmt_thresh3 ? 2'b11 : (nhits_trig_s0_sig >= hmt_thresh2 ? 2'b10 : {1'b0, nhits_trig_s0_sig >= hmt_thresh1});
   wire [1:0] hmt_outtime_s0 = nhits_trig_s0_bkg >= hmt_thresh3 ? 2'b11 : (nhits_trig_s0_bkg >= hmt_thresh2 ? 2'b10 : {1'b0, nhits_trig_s0_bkg >= hmt_thresh1});
-  wire hmt_intime_good  = (~|hmt_fired_s0_ff) & (~hmt_reset) & nlayer_pass_thresh_sig;
-  wire hmt_outtime_good = (~|hmt_fired_s0_ff) & (~hmt_reset) & nlayer_pass_thresh_bkg;
+  wire hmt_intime_good  = (~|hmt_fired_s0_ff) & (~hmt_reset) & nlayer_pass_thresh_sig & nhits_trig_s0_sig_peak;
+  wire hmt_outtime_good = (~|hmt_fired_s0_ff) & (~hmt_reset) & nlayer_pass_thresh_bkg & ispeak[2];
   //wire [MXHMTB-1:0] hmt_cathode_s0 = hmt_enable ? {hmt_bit3_s0, hmt_bit2_s0, hmt_bit1_s0, hmt_bit0_s0} : 4'b0;
   wire [MXHMTB-1:0] hmt_cathode_s0 = hmt_enable ? { hmt_outtime_s0 & {2{hmt_outtime_good}}, hmt_intime_s0 & {2{hmt_intime_good}}} : 4'b0 ;
 
